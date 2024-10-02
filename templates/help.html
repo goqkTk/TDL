@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문의</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menubar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/help.css') }}">
+    <link rel="website icon" type="png" href="../../static/img/icon.png">
+</head>
+<body>
+    <nav class="menubar">
+        <div class="tab">
+            <button onclick="location.href='/'">메인</button>
+            <button onclick="location.href='/calendar'">달력</button>
+            <button class="active">문의하기</button>
+            <button onclick="location.href='/account'">계정</button>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="type" id="group">
+            <p>문의 유형 선택</p>
+            <input type="text" id="type-input" placeholder="문의 유형을 선택하세요" readonly>
+            <ul id="list" class="dropdown-list">
+                <li><span class="tag">버그 제보</span>기능 오류</li>
+                <li><span class="tag">버그 제보</span>화면 표시 문제</li>
+                <li><span class="tag">피드백</span>디자인 개선 아이디어</li>
+                <li><span class="tag">피드백</span>기능 추가 아이디어</li>
+                <li><span class="tag">피드백</span>기능 사용 불편사항</li>
+                <li><span class="tag">데이터</span>데이터 동기화 문제</li>
+                <li><span class="tag">데이터</span>데이터 손실 / 오류</li>
+                <li><span class="tag">호환성</span>브라우저 호환성 문제</li>
+                <li><span class="tag">호환성</span>기기 호환성 문제</li>
+                <li><span class="tag">기타</span>기타</li>
+            </ul>
+        </div>
+        <div class="content" id="group">
+            <p>문의 내용</p>
+            <textarea name="content" id="content" placeholder="문의 내용을 입력하세요"></textarea>
+        </div>
+        <div class="image">
+            <p>이미지 첨부 (최대 5장)</p>
+            <div id="image-upload-container" class="image-upload-container">
+              <div id="image-preview-container"></div>
+              <div id="upload-button" class="upload-button">+</div>
+            </div>
+            <input type="file" id="file-input" style="display: none;" multiple>
+            <span id="image-error-message" class="error-message"></span>
+          </div>
+        <button id="submit" type="submit">제출</button>
+    </div>
+</body>
+<script src="{{ url_for('static', filename='js/help.js') }}"></script>
+</html>

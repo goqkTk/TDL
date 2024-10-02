@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메인</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menubar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="website icon" type="png" href="../../static/img/icon.png">
+</head>
+<body>
+    <nav class="menubar">
+        <div class="tab">
+            <button class="active">메인</button>
+            <button onclick="location.href='/calendar'">달력</button>
+            <button onclick="location.href='/help'">문의하기</button>
+            <button onclick="location.href='/account'">계정</button>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="sidebar">
+            <div class="menu">
+                <button class="search" id="menu_btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>검색</span>
+                </button>
+                <button class="setting" id="menu_btn">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>설정</span>
+                </button>
+                <button class="donate" id="menu_btn">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    <span>개발자 도와주기</span>
+                </button>
+            </div>
+            <hr>
+            <div class="categories">
+                <button class="todo selected" id="category_btn">할 일</button>
+                <button class="success" id="category_btn" onclick="location.href='/success'">완료</button>
+                <button class="favorite" id="category_btn" onclick="location.href='/favorite'">즐겨찾기</button>
+            </div>
+            <hr>
+            <div class="other_categories">
+                <button id="add-category"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+        <div class="contents">
+            {% for todo in todo %}
+            <div id="todo" class="todo-item{% if todo[4] == 1 %} active{% endif %}{% if todo[9] == 1 %} fixed{% endif %}" todo-id="{{ todo[0] }}" data-fixed="{{ 'true' if todo[9] == 1 else 'false' }}" data-order="{{ todo[7] }}">
+                <button id="grip"><i class="fa-solid fa-grip-vertical"></i></button>
+                <h3 class="title">{{ todo[2] }}</h3>
+                <p class="detail">{{ todo[3] }}</p>
+                <button id="fix" data-id="{{ todo[0] }}">
+                    <img src="{{ url_for('static', filename='img/pin-' + ('on' if todo[8] else 'off') + '.png') }}" alt="고정 아이콘">
+                </button>
+                <button id="favorite" class="favorite-btn" data-id="{{ todo[0] }}">
+                    <i class="fa-{% if todo[4] %}solid{% else %}regular{% endif %} fa-star"{% if todo[4] %} style="color: #FFD43B;"{% endif %}></i>
+                </button>
+                <button id="other"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                <button id="success" data-id="{{ todo[0] }}">
+                    <i class="fas fa-{% if todo[6] == 1 %}check-circle{% else %}circle{% endif %}"></i>
+                </button>
+                <div class="other-container" style="display: none;">
+                    <div class="edit-group" id="other-group">
+                        <i class="fa-solid fa-pen"></i>수정
+                    </div>
+                    <div class="remove-group" id="other-group">
+                        <i class="fa-regular fa-trash-can"></i>삭제
+                    </div>
+                    <div class="detail-group" id="other-group">
+                        <i class="fa-solid fa-circle-info"></i>상세 정보
+                    </div>
+                </div>
+                <div class="info-container" style="display: none;">
+                    <p>생성일: {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}</p>
+                    <p>수정일: {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button id="add-content"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    <div class="add-modal-background" style="display: none;">
+        <div class="add-modal">
+            <h2>할 일 추가</h2>
+            <button id="add-close"><i class="fa-solid fa-xmark"></i></button>
+            <hr>
+            <div class="input-group">
+                <input name="title" id="title" autocomplete="off" placeholder=" ">
+                <div class="label-title">할 일</div>
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <div class="input-group">
+                <input name="detail" id="detail" autocomplete="off" placeholder=" ">
+                <div class="label-detail">상세 내용</div>
+            </div>
+            <button id="add">추가</button>
+        </div>
+    </div>
+    <div class="edit-modal-background" style="display: none;">
+        <div class="edit-modal">
+            <h2>할 일 수정</h2>
+            <button id="edit-close"><i class="fa-solid fa-xmark"></i></button>
+            <hr>
+            <div class="input-group">
+                <input type="text" name="edit-title" id="edit-title" autocomplete="off" placeholder=" ">
+                <div class="edit-label-title">할 일</div>
+            </div>
+            <div class="input-group">
+                <input type="text" name="edit-detail" id="edit-detail" autocomplete="off" placeholder=" ">
+                <div class="edit-label-detail">상세 내용</div>
+            </div>
+            <input type="hidden" id="edit-todo-id">
+            <button id="edit">수정</button>
+        </div>
+    </div>
+    <div class="confirm-modal-background" style="display: none;">
+        <div class="confirm-modal">
+            <h3>정말 삭제하시겠습니까?</h3>
+            <div class="between">
+                <button id="yes">삭제</button>
+                <button id="no">취소</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="{{ url_for('static', filename='js/main/main.js') }}"></script>
+</html>

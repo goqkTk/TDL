@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계정</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menubar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link rel="website icon" type="png" href="../../static/img/icon.png">
+</head>
+<body>
+    <nav class="menubar">
+        <div class="tab">
+            <button onclick="location.href='/'">메인</button>
+            <button onclick="location.href='/calendar'">달력</button>
+            <button onclick="location.href='/help'">문의하기</button>
+            <button class="active">계정</button>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="login-register">
+            <div class="select">
+                <button id="login" class="selected">로그인</button>
+                <button id="register" onclick="location.href='/register'">회원가입</button>
+            </div>
+        </div>
+        <div class="input">
+            <form method="post" action="/login">
+                <div class="id" id="group">
+                    <input type="text" id="id" name="id" placeholder=" " autocomplete="off" required>
+                    <label for="id">아이디 또는 이메일</label>
+                </div>
+                <div class="pw" id="group">
+                    <input type="password" id="pw" name="pw" placeholder=" ">
+                    <label for="pw">비밀번호</label>
+                    <button type="button" id="pw-see"><i class="fa-solid fa-eye-slash"></i></button>
+                </div>
+                <div class="between">
+                    <div class="auto-login">
+                        <input type="checkbox" id="autologin" name="autologin"><label for="autologin"></label>
+                        <label for="autologin">자동로그인</label>
+                    </div>
+                    <a href="/forgot">비밀번호 찾기</a>
+                </div>
+                <button id="submit" type="submit">로그인</button>
+            </form>
+        </div>
+    </div>
+</body>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</html>

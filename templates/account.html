@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계정</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menubar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+    <link rel="website icon" type="png" href="../../static/img/icon.png">
+</head>
+<body>
+    <nav class="menubar">
+        <div class="tab">
+            <button onclick="location.href='/'">메인</button>
+            <button onclick="location.href='/calendar'">달력</button>
+            <button onclick="location.href='/help'">문의하기</button>
+            <button class="active">계정</button>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="id"><span>{{ user_id }}</span></div>
+        <hr>
+        <div class="pw">
+            <span id="title">비밀번호</span>
+            <div class="between-pw">
+                <div class="pw-view">
+                    <span id="pw">**********</span>
+                    <button id="pw-see"><i class="fa-solid fa-eye-slash"></i></button>
+                </div>
+                <button id="pw-edit">수정</button>
+            </div>
+        </div>
+        <div class="email">
+            <span id="title">이메일</span>
+            <div class="between-email">
+                <div class="email-view"><span id="email">jty_419@naver.com</span></div>
+                <button id="email-edit">수정</button>
+            </div>
+        </div>
+        <div class="mode">
+            <div class="light"><span>라이트 모드</span></div>
+            <input type="checkbox" id="DarkLight" name="darklight">
+            <div class="dark"><span>다크 모드</span></div>
+        </div>
+        <div class="quit">
+            <button onclick="location.href='/logout'" id="logout">로그아웃</button>
+            <div class="vertical-line"></div>
+            <button id="delete">탈퇴하기</button>
+        </div>
+    </div>
+</body>
+</html>

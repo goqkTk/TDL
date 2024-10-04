@@ -22,8 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let draggedItem = null;
     let placeholder = null;
     let isDragging = false;
-    let startScrollY;
-    let originalRect;
+    let startY, startScrollY;
     let dragOffsetY;
 
     document.querySelectorAll('.todo-item').forEach(item => {
@@ -72,47 +71,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
         e.preventDefault();
         draggedItem = todoItem;
-        originalRect = todoItem.getBoundingClientRect();
-        const computedStyle = window.getComputedStyle(todoItem);
-        dragOffsetY = e.clientY - originalRect.top;
+        const rect = todoItem.getBoundingClientRect();
+        dragOffsetY = e.clientY - rect.top;
         startY = e.clientY;
         startScrollY = window.scrollY;
         isDragging = true;
 
+        // placeholder 생성 및 스타일 적용
         placeholder = document.createElement('div');
         placeholder.className = 'todo-item-placeholder';
-        placeholder.style.height = `${originalRect.height}px`;
-        placeholder.style.marginBottom = computedStyle.marginBottom;
+        placeholder.style.height = `${rect.height}px`;
+        placeholder.style.marginBottom = window.getComputedStyle(todoItem).marginBottom;
         placeholder.style.border = '2px dashed #ccc';
         placeholder.style.backgroundColor = '#f0f0f0';
+        todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);
 
-        const originalStyles = {
-            position: draggedItem.style.position,
-            zIndex: draggedItem.style.zIndex,
-            boxShadow: draggedItem.style.boxShadow,
-            transition: draggedItem.style.transition,
-            background: draggedItem.style.background,
-            opacity: draggedItem.style.opacity
-        };
+        // 현재 적용된 스타일 가져오기
+        const computedStyle = window.getComputedStyle(todoItem);
 
-        Object.assign(draggedItem.style, {
+        // 드래그되는 요소의 스타일 설정
+        Object.assign(todoItem.style, {
             position: 'fixed',
             zIndex: '1000',
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
+            backgroundColor: computedStyle.backgroundColor,
             boxShadow: '0 0 10px rgba(0,0,0,0.3)',
             transition: 'none',
-            background: computedStyle.background,
             opacity: '0.9',
-            width: `${originalRect.width}px`,
-            height: `${originalRect.height}px`,
-            left: `${originalRect.left}px`,
-            top: `${originalRect.top}px`,
-            paddingLeft: '50px',
-            paddingTop: '15px'
+            padding: computedStyle.padding,
+            boxSizing: 'border-box'
         });
 
-        todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);
-        document.body.appendChild(draggedItem);
-        draggedItem.originalStyles = originalStyles;
+        document.body.appendChild(todoItem);
     });
 
     document.addEventListener('mousemove', function(e) {
@@ -136,18 +129,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('mouseup', function() {
         if (!isDragging) return;
         isDragging = false;
-    
+
         placeholder.parentNode.insertBefore(draggedItem, placeholder);
         placeholder.parentNode.removeChild(placeholder);
-    
-        Object.assign(draggedItem.style, draggedItem.originalStyles);
-        draggedItem.style.position = '';
-        draggedItem.style.top = '';
-        draggedItem.style.left = '';
-        draggedItem.style.width = '';
-        draggedItem.style.height = '';
-    
-        delete draggedItem.originalStyles;
+
+        // 원래 스타일로 복원
+        draggedItem.removeAttribute('style');
+
         updateTodoOrder();
         draggedItem = null;
         placeholder = null;

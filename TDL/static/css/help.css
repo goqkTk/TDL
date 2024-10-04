@@ -1,0 +1,206 @@
+form {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    background-color: #E7E7E7;
+    border-radius: 15px;
+    height: 650px;
+    width: 800px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
+    margin: 40px auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.type, .content, .image {
+    position: relative;
+    width: 80%;
+    margin-top: 15px;
+}
+
+.content, .image { margin-top: 5px !important; }
+
+#type-input, #content {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+#type-input {
+    cursor: pointer;
+    background-color: white;
+}
+
+#content {
+    height: 250px;
+    resize: none;
+    font-family: Arial, sans-serif;
+}
+
+.dropdown-list {
+    display: none;
+    position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 0 0 5px 5px;
+    background-color: white;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    top: 100%;
+    z-index: 1000;
+    text-align: left;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-list li {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-list li:hover { background-color: #f0f0f0; }
+
+.dropdown-list .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-right: 10px;
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.type p, .content p, .image p {
+    text-align: left;
+    color: gray;
+    margin-bottom: 3px;
+    margin-left: 3px;
+}
+
+.image {
+    display: flex;
+    flex-direction: column;
+}
+
+.image-upload-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-height: 100px;
+    padding: 10px 10px 0;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.image-upload-container.drag-over { background-color: #f0f0f0; }
+
+#image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.image-preview-container {
+    position: relative;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.upload-button {
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    color: #ccc;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    background-color: #fff;
+}
+
+.image-preview {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+}
+
+.delete-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: pointer;
+    color: red;
+    background-color: none;
+    border-radius: 50%;
+    padding: 3px;
+    font-size: 16px;
+    display: none;
+    transition: transform 0.3s ease;
+}
+
+.image-preview-container:hover .delete-icon { display: block; }
+.delete-icon:hover { transform: scale(1.2); }
+.delete-icon:hover::before {
+    content: "\f057";
+    font-weight: 900;
+}
+
+button[type='submit'] {
+    width: 150px;
+    height: 50px;
+    margin-top: 10px;
+    background-color: #BDD971;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    font-size: 18px;
+}
+
+button[type='submit']:hover { background-color: #aec867; }
+
+#type-input.error, #content.error {
+    border: 2px solid red;
+    background-color: #fff0f0;
+}
+
+.error-message {
+    display: none;
+    color: red;
+    font-size: 14px;
+    position: absolute;
+    left: 3px;
+    width: 100%;
+    text-align: left;
+}
+
+.image .error-message {
+    bottom: auto;
+    top: 100%;
+    margin-top: -10px;
+    margin-left: 3px;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계정</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menubar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forgot.css') }}">
+    <link rel="website icon" type="png" href="../../static/img/icon.png">
+</head>
+<body>
+    <nav class="menubar">
+        <div class="tab">
+            <button onclick="location.href='/'">메인</button>
+            <button onclick="location.href='/calendar'">달력</button>
+            <button onclick="location.href='/help'">문의하기</button>
+            <button class="active">계정</button>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="login-register">
+            <div class="select">
+                <button id="login" onclick="location.href='/login'">로그인</button>
+                <button id="register" onclick="location.href='/register'">회원가입</button>
+                <button id="forgot" class="selected">비밀번호 찾기</button>
+            </div>
+        </div>
+        <div class="input">
+            <div class="id" id="group">
+                <input type="text" id="id" name="id" autocomplete="off" placeholder=" ">
+                <label for="id">아이디 또는 이메일</label>
+                <button type="button" id="id-check">확인</button>
+            </div>
+            <div class="code" id="group" style="display: none;">
+                <input type="text" id="code" name="code" autocomplete="off" placeholder=" ">
+                <label for="code">인증코드</label>
+                <button type="button" id="code-check">확인</button>
+            </div>
+            <div class="pw_group" style="display: none;">
+                <div class="pw" id="group">
+                    <input type="password" id="pw" name="pw" autocomplete="off" placeholder=" ">
+                    <label for="pw">새 비밀번호</label>
+                    <button type="button" id="pw-see"><i class="fa-solid fa-eye-slash"></i></button>
+                </div>
+                <div class="pw_c" id="group">
+                    <input type="password" id="pw_c" name="pw_c" autocomplete="off" placeholder=" ">
+                    <label for="pw_c">새 비밀번호 확인</label>
+                    <button type="button" id="pw_c-see"><i class="fa-solid fa-eye-slash"></i></button>
+                </div>
+                <button id="submit" type="submit">비밀번호 변경</button>
+            </div>
+        </div>
+    </div>
+    </div>    
+</body>
+<script src="{{ url_for('static', filename='js/forgot.js') }}"></script>
+</html>

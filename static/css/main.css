@@ -77,12 +77,13 @@ html, body {
     padding-right: 90px;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
 .contents #todo.fixed {
     border: 2px solid #FFA500;
     box-shadow: 0 4px 8px rgba(255, 165, 0, 0.2);
+    background-color: #FFF8E1;
 }
 
 .contents #todo.fixed #grip { cursor: not-allowed; }

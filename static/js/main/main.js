@@ -77,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function() {
         startScrollY = window.scrollY;
         isDragging = true;
 
-        // placeholder 생성 및 스타일 적용
         placeholder = document.createElement('div');
         placeholder.className = 'todo-item-placeholder';
         placeholder.style.height = `${rect.height}px`;
@@ -86,10 +85,8 @@ document.addEventListener('DOMContentLoaded', function() {
         placeholder.style.backgroundColor = '#f0f0f0';
         todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);
 
-        // 현재 적용된 스타일 가져오기
         const computedStyle = window.getComputedStyle(todoItem);
 
-        // 드래그되는 요소의 스타일 설정
         Object.assign(todoItem.style, {
             position: 'fixed',
             zIndex: '1000',
@@ -132,10 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         placeholder.parentNode.insertBefore(draggedItem, placeholder);
         placeholder.parentNode.removeChild(placeholder);
-
-        // 원래 스타일로 복원
         draggedItem.removeAttribute('style');
-
         updateTodoOrder();
         draggedItem = null;
         placeholder = null;
@@ -547,10 +541,7 @@ function updateTodoOrder() {
     const fixedItems = todoItems.filter(item => item.classList.contains('fixed'));
     const unfixedItems = todoItems.filter(item => !item.classList.contains('fixed'));
 
-    // Keep fixed items at their current positions
     fixedItems.sort((a, b) => parseInt(a.getAttribute('data-order')) - parseInt(b.getAttribute('data-order')));
-
-    // Reorder unfixed items
     todoContainer.innerHTML = '';
     fixedItems.forEach(item => todoContainer.appendChild(item));
     unfixedItems.forEach(item => todoContainer.appendChild(item));

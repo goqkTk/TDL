@@ -25,11 +25,11 @@ def update_todo_fix(user_id, todo_id, is_fixed):
             sql = """
             UPDATE todo 
             SET `order` = (
-                SELECT min_order - 1
+                SELECT max_order + 1
                 FROM (
-                    SELECT COALESCE(MIN(`order`), 0) as min_order 
+                    SELECT COALESCE(MAX(`order`), -1) + 1 as max_order 
                     FROM todo 
-                    WHERE user_id = %s AND `order` IS NOT NULL AND is_fixed = FALSE
+                    WHERE user_id = %s AND `order` IS NOT NULL
                 ) AS subquery
             ),
             is_fixed = FALSE

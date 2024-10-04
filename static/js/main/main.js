@@ -253,12 +253,6 @@ document.addEventListener('DOMContentLoaded', function() {
             editmodalBackground.style.display = 'none';
         });
     }
-    
-    editmodalBackground.addEventListener('click', function(event) {
-        if (event.target === editmodalBackground) {
-            editmodalBackground.style.display = 'none';
-        }
-    });
 
     const editBtn = document.getElementById('edit');
     if (editBtn) {
@@ -280,20 +274,21 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.todo) {
+                if (data.success) {
                     editmodalBackground.style.display = 'none';
                     const todoItem = document.querySelector(`.todo-item[todo-id="${todoId}"]`);
                     if (todoItem) {
-                        todoItem.querySelector('.title').textContent = data.todo.title;
-                        todoItem.querySelector('.detail').textContent = data.todo.detail;
+                        todoItem.querySelector('.title').textContent = title;
+                        todoItem.querySelector('.detail').textContent = detail;
                         const infoContainer = todoItem.querySelector('.info-container');
                         if (infoContainer) {
+                            const now = new Date();
+                            const formattedDate = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
                             infoContainer.innerHTML = `
-                                <p>생성일: ${data.todo.day || '정보 없음'}</p>
-                                <p>수정일: ${data.todo.edit_day || '수정되지 않음'}</p>
+                                <p>생성일: ${data.created_at || '정보 없음'}</p>
+                                <p>수정일: ${formattedDate}</p>
                             `;
                         }
-                        console.log('Todo updated:', data.todo);
                     }
                 } else {
                     console.error('할 일 수정 실패');

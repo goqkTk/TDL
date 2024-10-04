@@ -47,7 +47,7 @@
         </div>
         <div class="contents">
             {% for todo in todo %}
-            <div id="todo" class="todo-item{% if todo[4] == 1 %} active{% endif %}{% if todo[9] == 1 %} fixed{% endif %}" todo-id="{{ todo[0] }}" fixed="{{ 'true' if todo[9] == 1 else 'false' }}" order="{{ todo[7] }}">
+            <div id="todo" class="todo-item{% if todo[4] == 1 %} active{% endif %}{% if todo[9] == 1 %} fixed{% endif %}" todo-id="{{ todo[0] }}" data-fixed="{{ 'true' if todo[9] == 1 else 'false' }}" data-order="{{ todo[7] }}">
                 <button id="grip"><i class="fa-solid fa-grip-vertical"></i></button>
                 <h3 class="title">{{ todo[2] }}</h3>
                 <p class="detail">{{ todo[3] }}</p>
@@ -73,9 +73,8 @@
                     </div>
                 </div>
                 <div class="info-container" style="display: none;">
-                    생성일: {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}
-                    <br>
-                    수정일: {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}
+                    <p>생성일: {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}</p>
+                    <p>수정일: {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}</p>
                 </div>
             </div>
             {% endfor %}

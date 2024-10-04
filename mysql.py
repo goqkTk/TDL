@@ -25,11 +25,11 @@ def update_todo_fix(user_id, todo_id, is_fixed):
             sql = """
             UPDATE todo 
             SET `order` = (
-                SELECT max_order + 1
+                SELECT min_order - 1
                 FROM (
-                    SELECT COALESCE(MAX(`order`), -1) + 1 as max_order 
+                    SELECT COALESCE(MIN(`order`), 0) as min_order 
                     FROM todo 
-                    WHERE user_id = %s AND `order` IS NOT NULL
+                    WHERE user_id = %s AND `order` IS NOT NULL AND is_fixed = FALSE
                 ) AS subquery
             ),
             is_fixed = FALSE
@@ -142,22 +142,11 @@ def update_todo_db(todo_id, title, detail):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     try:
-        # 현재 todo 정보를 가져옵니다
-        cursor.execute("SELECT title, detail FROM todo WHERE id = %s", (todo_id,))
-        current_todo = cursor.fetchone()
-        
-        if current_todo and (current_todo[0] != title or current_todo[1] != detail):
-            # 내용이 변경되었을 때만 edit_day를 업데이트합니다
-            sql = "UPDATE todo SET title = %s, detail = %s, edit_day = CURRENT_TIMESTAMP WHERE id = %s"
-            cursor.execute(sql, (title, detail, todo_id))
-        else:
-            # 내용이 변경되지 않았다면 edit_day를 업데이트하지 않습니다
-            sql = "UPDATE todo SET title = %s, detail = %s WHERE id = %s"
-            cursor.execute(sql, (title, detail, todo_id))
-        
+        current_time = datetime.now()
+        sql = "UPDATE todo SET title = %s, detail = %s, edit_day = %s WHERE id = %s"
+        cursor.execute(sql, (title, detail, current_time, todo_id))
         db.commit()
-        
-        # 업데이트된 todo 정보를 가져옵니다
+        print(f"Update successful: todo_id={todo_id}, new_edit_day={current_time}")
         cursor.execute("SELECT * FROM todo WHERE id = %s", (todo_id,))
         updated_todo = cursor.fetchone()
         success = True

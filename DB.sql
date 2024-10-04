@@ -87,7 +87,7 @@ CREATE TABLE `todo` (
   `edit_day` datetime DEFAULT NULL,
   `is_fixed` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -96,7 +96,7 @@ CREATE TABLE `todo` (
 
 LOCK TABLES `todo` WRITE;
 /*!40000 ALTER TABLE `todo` DISABLE KEYS */;
-INSERT INTO `todo` VALUES (1,'test','test1','테스트1','2024-09-20 11:17:38',1,0,0,9999,NULL,0),(2,'test','test2','테스트2','2024-09-21 00:33:47',0,0,3,9999,'2024-10-04 14:52:28',0),(7,'test','test3','테스트3','2024-09-25 13:58:10',0,0,1,9999,NULL,0),(9,'test','test4','테스트4','2024-09-25 14:26:42',0,0,2,9999,NULL,0),(11,'test','김은진 존나 때리기','하루에 한 번 존나 처맞기 + 은우 몫','2024-10-01 20:59:49',0,1,NULL,NULL,NULL,1);
+INSERT INTO `todo` VALUES (1,'test','test1','테스트1','2024-09-20 11:17:38',1,0,0,9999,NULL,0),(2,'test','test2','테스트2','2024-09-21 00:33:47',0,0,1,9999,'2024-10-05 00:05:37',0),(7,'test','test3','테스트3','2024-09-25 13:58:10',0,0,2,9999,NULL,0),(9,'test','test4','테스트4','2024-09-25 14:26:42',0,0,3,9999,NULL,0),(11,'test','김은진 존나 때리기','하루에 한 번 존나 처맞기 + 은우 몫','2024-10-01 20:59:49',0,1,NULL,NULL,NULL,1);
 /*!40000 ALTER TABLE `todo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -144,4 +144,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-10-04 17:49:07
+-- Dump completed on 2024-10-05  0:07:02

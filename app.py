@@ -186,8 +186,18 @@ def update_todo():
     todo_id = data['todo_id']
     title = data['title']
     detail = data['detail']
-    success = update_todo_db(todo_id, title, detail)
-    return jsonify({'success': success})
+    success, updated_todo = update_todo_db(todo_id, title, detail)
+    if success and updated_todo:
+        response_data = {
+            'success': True,
+            'title': updated_todo[2],
+            'detail': updated_todo[3],
+            'created_at': updated_todo[4].strftime('%Y년 %m월 %d일 %H:%M:%S') if updated_todo[4] else '정보 없음',
+            'updated_at': updated_todo[9].strftime('%Y년 %m월 %d일 %H:%M:%S') if updated_todo[9] else '수정되지 않음'
+        }
+        return jsonify(response_data)
+    else:
+        return jsonify({'success': False, 'message': '할 일 수정에 실패했습니다.'}), 400
 
 @app.route('/update_fix', methods=['POST'])
 def update_fix():

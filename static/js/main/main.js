@@ -272,23 +272,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     detail: detail
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server responded with status: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Server response:', data); // 디버깅을 위한 로그
                 if (data.success) {
                     editmodalBackground.style.display = 'none';
                     const todoItem = document.querySelector(`.todo-item[todo-id="${todoId}"]`);
                     if (todoItem) {
-                        todoItem.querySelector('.title').textContent = title;
-                        todoItem.querySelector('.detail').textContent = detail;
+                        todoItem.querySelector('.title').textContent = data.title;
+                        todoItem.querySelector('.detail').textContent = data.detail;
                         const infoContainer = todoItem.querySelector('.info-container');
                         if (infoContainer) {
-                            const now = new Date();
-                            const formattedDate = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+                            console.log('Updating info container'); // 디버깅을 위한 로그
                             infoContainer.innerHTML = `
-                                <p>생성일: ${data.created_at || '정보 없음'}</p>
-                                <p>수정일: ${formattedDate}</p>
+                                <p>생성일: ${data.created_at}</p>
+                                <p>수정일: ${data.updated_at}</p>
                             `;
+                            console.log('Updated info container:', infoContainer.innerHTML); // 디버깅을 위한 로그
+                        } else {
+                            console.log('Info container not found'); // 디버깅을 위한 로그
                         }
+                    } else {
+                        console.log('Todo item not found'); // 디버깅을 위한 로그
                     }
                 } else {
                     console.error('할 일 수정 실패');
@@ -296,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
+                alert('할 일 수정 중 오류가 발생했습니다: ' + error.message);
             });
         });
     }

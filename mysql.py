@@ -4,11 +4,12 @@ from datetime import datetime, timedelta
 def get_todo_by_id(todo_id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
-    sql = "SELECT * FROM todo WHERE id = %s"
-    cursor.execute(sql, (todo_id,))
-    result = cursor.fetchone()
-    db.close()
-    return result
+    try:
+        cursor.execute("SELECT * FROM todo WHERE id = %s", (todo_id,))
+        todo = cursor.fetchone()
+    finally:
+        db.close()
+    return todo
 
 def update_todo_fix(user_id, todo_id, is_fixed):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
@@ -146,12 +147,10 @@ def update_todo_db(todo_id, title, detail):
         sql = "UPDATE todo SET title = %s, detail = %s, edit_day = %s WHERE id = %s"
         cursor.execute(sql, (title, detail, current_time, todo_id))
         db.commit()
-        print(f"Update successful: todo_id={todo_id}, new_edit_day={current_time}")
-        cursor.execute("SELECT * FROM todo WHERE id = %s", (todo_id,))
+        cursor.execute("SELECT id, user_id, title, detail, day, success, favorite, `order`, order_favorite, edit_day, is_fixed FROM todo WHERE id = %s", (todo_id,))
         updated_todo = cursor.fetchone()
         success = True
     except Exception as e:
-        print(f"할 일 수정 오류: {str(e)}")
         db.rollback()
         success = False
         updated_todo = None

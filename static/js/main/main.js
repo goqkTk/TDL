@@ -61,6 +61,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const todoItem = gripElement.closest('.todo-item');
         if (!todoItem) return;
 
+        if (todoItem.classList.contains('fixed')) {
+            e.preventDefault();
+            todoItem.classList.add('shake');
+            setTimeout(() => {
+                todoItem.classList.remove('shake');
+            }, 500);
+            return;
+        }
+
         e.preventDefault();
         draggedItem = todoItem;
         originalRect = todoItem.getBoundingClientRect();
@@ -526,19 +535,9 @@ function repositionUnfixedItem(todoItem) {
 }
 
 function getPlaceholderPosition(container, y) {
-    const draggableElements = [...container.querySelectorAll('.todo-item, .todo-item-placeholder')];
-    const fixedItems = draggableElements.filter(item => item.classList.contains('fixed'));
-    const lastFixedItem = fixedItems[fixedItems.length - 1];
+    const draggableElements = [...container.querySelectorAll('.todo-item:not(.fixed), .todo-item-placeholder')];
     
-    // If there are fixed items, ensure the placeholder is always after them
-    if (lastFixedItem) {
-        const lastFixedItemRect = lastFixedItem.getBoundingClientRect();
-        if (y < lastFixedItemRect.bottom) {
-            return { element: lastFixedItem, beforeElement: false };
-        }
-    }
-    
-    for (let i = fixedItems.length; i < draggableElements.length; i++) {
+    for (let i = 0; i < draggableElements.length; i++) {
         const box = draggableElements[i].getBoundingClientRect();
         const boxCenter = box.top + box.height / 2;
         
@@ -547,11 +546,11 @@ function getPlaceholderPosition(container, y) {
         }
     }
     
-    if (draggableElements.length > fixedItems.length) {
+    if (draggableElements.length > 0) {
         return { element: draggableElements[draggableElements.length - 1], beforeElement: false };
     }
     
-    return { element: lastFixedItem || null, beforeElement: false };
+    return { element: null, beforeElement: false };
 }
 
 function updateTodoOrder() {

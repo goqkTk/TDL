@@ -77,7 +77,7 @@ html, body {
     padding-right: 90px;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
 .contents #todo.fixed {
@@ -85,6 +85,8 @@ html, body {
     box-shadow: 0 4px 8px rgba(255, 165, 0, 0.2);
     background-color: #FFF8E1;
 }
+
+.contents #todo.fixed #grip { cursor: not-allowed; }
 
 .contents #todo .title {
     font-size: 18px;
@@ -150,6 +152,7 @@ html, body {
     top: 50%;
     transform: translateY(-50%);
     cursor: move;
+    user-select: none;
 }
 
 #other {
@@ -487,3 +490,14 @@ html, body {
     max-height: 150px;
     overflow-y: auto;
 }
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
+}
+
+.contents #todo.fixed.shake { animation: shake 0.4s ease-in-out; }

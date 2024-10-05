@@ -17,6 +17,7 @@ html, body {
     background: #4d4d4d;
     position: relative;
     flex-shrink: 0;
+    overflow: visible;
 }
 
 .sidebar .menu, 
@@ -48,6 +49,15 @@ html, body {
 .sidebar #add-category {
     text-align: center !important;
     font-size: 17px !important;
+}
+
+.copyright {
+    position: absolute;
+    color: white;
+    text-align: center;
+    font-size: 13px;
+    bottom: 75px;
+    left: 33px;
 }
 
 .contents { 

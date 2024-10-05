@@ -106,7 +106,7 @@ def get_todo(user_id, completed=False):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     sql = f"""
-    SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed
+    SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, edit_day, is_fixed
     FROM todo 
     WHERE user_id = %s AND success = %s 
     ORDER BY 
@@ -147,10 +147,12 @@ def update_todo_db(todo_id, title, detail):
         sql = "UPDATE todo SET title = %s, detail = %s, edit_day = %s WHERE id = %s"
         cursor.execute(sql, (title, detail, current_time, todo_id))
         db.commit()
+        
         cursor.execute("SELECT id, user_id, title, detail, day, success, favorite, `order`, order_favorite, edit_day, is_fixed FROM todo WHERE id = %s", (todo_id,))
         updated_todo = cursor.fetchone()
         success = True
     except Exception as e:
+        print(f"Error updating todo: {str(e)}")
         db.rollback()
         success = False
         updated_todo = None

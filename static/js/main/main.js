@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 infoContainer.style.display = 'none';
             }
+            todoItem.querySelector('.other-container').style.display = 'none';
         });
     });
 
@@ -223,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             otherContainer.style.display = otherContainer.style.display === 'none' || otherContainer.style.display === '' ? 'block' : 'none';
+            todoItem.querySelector('.info-container').style.display = 'none';
         });
     });
 

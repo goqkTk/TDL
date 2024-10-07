@@ -493,7 +493,7 @@ html, body {
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1001;
-    width: 200px;
+    width: 240px;
     font-size: 14px;
     padding: 10px;
     max-height: 150px;
@@ -510,3 +510,9 @@ html, body {
 }
 
 .contents #todo.fixed.shake { animation: shake 0.4s ease-in-out; }
+
+.info-container p:first-of-type span:first-of-type,
+.info-container p:last-of-type span:first-of-type { font-weight: bold; font-size: 15px; }
+
+.info-container p:first-of-type span:last-of-type,
+.info-container p:last-of-type span:last-of-type { color: #666; }

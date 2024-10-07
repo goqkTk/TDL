@@ -76,8 +76,8 @@
                     </div>
                 </div>
                 <div class="info-container" style="display: none;">
-                    생성일: {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}
-                    수정일: {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}
+                    <p><span><i class="fa-regular fa-calendar-plus"></i> 생성일</span><span> {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}</span></p>
+                    <p><span><i class="fa-solid fa-pen"></i> 수정일</span><span> {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}</span></p>
                 </div>
             </div>
             {% endfor %}

@@ -217,7 +217,7 @@ def update_todo_success(todo_id, is_success):
 def get_completed_todos(user_id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
-    sql = "SELECT id, title, detail, favorite, day, success FROM todo WHERE user_id = %s AND success = 1"
+    sql = "SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day FROM todo WHERE user_id = %s AND success = 1"
     cursor.execute(sql, (user_id,))
     result = cursor.fetchall()
     db.close()

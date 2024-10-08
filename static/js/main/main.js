@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                console.log('Server response:', data); // 디버깅을 위한 로그
+                console.log('Server response:', data);
                 if (data.success) {
                     editmodalBackground.style.display = 'none';
                     const todoItem = document.querySelector(`.todo-item[todo-id="${todoId}"]`);
@@ -290,17 +290,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         todoItem.querySelector('.detail').textContent = data.detail;
                         const infoContainer = todoItem.querySelector('.info-container');
                         if (infoContainer) {
-                            console.log('Updating info container'); // 디버깅을 위한 로그
+                            console.log('Updating info container');
                             infoContainer.innerHTML = `
                                 <p>생성일: ${data.created_at}</p>
                                 <p>수정일: ${data.updated_at}</p>
                             `;
-                            console.log('Updated info container:', infoContainer.innerHTML); // 디버깅을 위한 로그
+                            console.log('Updated info container:', infoContainer.innerHTML);
                         } else {
-                            console.log('Info container not found'); // 디버깅을 위한 로그
+                            console.log('Info container not found');
                         }
                     } else {
-                        console.log('Todo item not found'); // 디버깅을 위한 로그
+                        console.log('Todo item not found');
                     }
                 } else {
                     console.error('할 일 수정 실패');

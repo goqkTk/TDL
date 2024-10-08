@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     const actionBtns = document.querySelectorAll('#success, #delete');
     const favoriteBtns = document.querySelectorAll('.favorite-btn');
+    const otherBtns = document.querySelectorAll('#other');
     const contents = document.querySelector('.contents');
+    const confirmModalBackground = document.querySelector('.confirm-modal-background');
+    const yesBtn = document.getElementById('yes');
+    const noBtn = document.getElementById('no');
+    const detailButtons = document.querySelectorAll('.detail-group');
 
     let draggedItem = null;
     let placeholder = null;
@@ -84,6 +89,74 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('click', handleFavoriteClick);
         });
     }
+
+    detailButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const todoItem = this.closest('.todo-item');
+            const infoContainer = todoItem.querySelector('.info-container');
+            
+            document.querySelectorAll('.other-container, .info-container').forEach(container => {
+                container.style.display = 'none';
+            });
+            if (infoContainer.style.display === 'none' || infoContainer.style.display === '') {
+                infoContainer.style.display = 'block';
+            } else {
+                infoContainer.style.display = 'none';
+            }
+            todoItem.querySelector('.other-container').style.display = 'none';
+        });
+    });
+
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.other-container, .info-container').forEach(container => {
+            container.style.display = 'none';
+        });
+    });
+
+    document.querySelectorAll('.remove-group').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const todoItem = this.closest('.todo-item');
+            todoToRemove = todoItem;
+            confirmModalBackground.style.display = 'flex';
+        });
+    });
+
+    noBtn.addEventListener('click', function() {
+        confirmModalBackground.style.display = 'none';
+        todoToRemove = null;
+    });
+
+    yesBtn.addEventListener('click', function() {
+        if (todoToRemove) {
+            const todoId = todoToRemove.getAttribute('todo-id');
+            deleteTodo(todoId, todoToRemove);
+            confirmModalBackground.style.display = 'none';
+        }
+    });
+
+    otherBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const todoItem = this.closest('.todo-item');
+            const otherContainer = todoItem.querySelector('.other-container');
+            
+            document.querySelectorAll('.other-container').forEach(container => {
+                if (container !== otherContainer) {
+                    container.style.display = 'none';
+                }
+            });
+            otherContainer.style.display = otherContainer.style.display === 'none' || otherContainer.style.display === '' ? 'block' : 'none';
+            todoItem.querySelector('.info-container').style.display = 'none';
+        });
+    });
+
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.other-container').forEach(container => {
+            container.style.display = 'none';
+        });
+    });
 
     function handleFavoriteClick() {
         const todoId = this.getAttribute('data-id');
@@ -192,6 +265,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function deleteTodo(todoId, todoElement) {
+    fetch('/delete_todo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({todo_id: todoId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            todoElement.remove();
+            checkEmptySuccess();
+        } else {
+            console.error('할 일 삭제 실패');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 function setupPlaceholder(todoItem, computedStyle) {
     placeholder = document.createElement('div');

@@ -44,12 +44,15 @@
             <div class="other_categories">
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
             </div>
+            <div class="copyright">
+                <span>&copy; 2024. TDL All rights reserved.</span>
+            </div>
         </div>
         <div class="contents">
             {% for todo in todo %}
                 <div id="todo" class="todo-item" todo-id="{{ todo[0] }}">
-                    <h3 class="title">{{ todo[1] }}</h3>
-                    <p class="detail">{{ todo[2] }}</p>
+                    <h3 class="title">{{ todo[2] }}</h3>
+                    <p class="detail">{{ todo[3] }}</p>
                     <button id="favorite" class="favorite-btn" data-id="{{ todo[0] }}" data-favorite="{{ 'true' if todo[3] == 1 else 'false' }}">
                         <i class="fa-star {% if todo[3] == 1 %}fa-solid{% else %}fa-regular{% endif %}"></i>
                     </button>
@@ -57,8 +60,30 @@
                     <button id="delete" class="delete-btn" data-id="{{ todo[0] }}">
                         <i class="fa-regular fa-circle-xmark"></i>
                     </button>
+                    <div class="other-container" style="display: none;">
+                        <div class="remove-group" id="other-group">
+                            <i class="fa-regular fa-trash-can"></i>삭제
+                        </div>
+                        <div class="detail-group" id="other-group">
+                            <i class="fa-solid fa-circle-info"></i>상세 정보
+                        </div>
+                    </div>
+                    <div class="info-container" style="display: none;">
+                        <p><span><i class="fa-regular fa-calendar-plus"></i> 생성일</span><span> {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}</span></p>
+                        <p><span><i class="fa-solid fa-pen"></i> 수정일</span><span> {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}</span></p>
+                        <p><span><i class="fa-solid fa-circle-check"></i> 완료일</span><span> </span></p>
+                    </div>
                 </div>
             {% endfor %}
+        </div>
+    </div>
+    <div class="confirm-modal-background" style="display: none;">
+        <div class="confirm-modal">
+            <h3>정말 삭제하시겠습니까?</h3>
+            <div class="between">
+                <button id="yes">삭제</button>
+                <button id="no">취소</button>
+            </div>
         </div>
     </div>
 </body>

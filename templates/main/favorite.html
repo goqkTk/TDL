@@ -44,6 +44,9 @@
             <div class="other_categories">
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
             </div>
+            <div class="copyright">
+                <span>&copy; 2024. TDL All rights reserved.</span>
+            </div>
         </div>
         <div class="contents">
             {% set favorite_count = namespace(value=0) %}
@@ -61,6 +64,21 @@
                         <button id="success" data-id="{{ todo[0] }}">
                             <i class="fas fa-{% if todo[6] == 1 %}check-circle{% else %}circle{% endif %}"></i>
                         </button>
+                        <div class="other-container" style="display: none;">
+                            <div class="edit-group" id="other-group">
+                                <i class="fa-solid fa-pen"></i>수정
+                            </div>
+                            <div class="remove-group" id="other-group">
+                                <i class="fa-regular fa-trash-can"></i>삭제
+                            </div>
+                            <div class="detail-group" id="other-group">
+                                <i class="fa-solid fa-circle-info"></i>상세 정보
+                            </div>
+                        </div>
+                        <div class="info-container" style="display: none;">
+                            <p><span><i class="fa-regular fa-calendar-plus"></i> 생성일</span><span> {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}</span></p>
+                            <p><span><i class="fa-solid fa-pen"></i> 수정일</span><span> {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}</span></p>
+                        </div>
                     </div>
                     {% endif %}
                 {% endfor %}
@@ -71,6 +89,32 @@
                     <p>메인 페이지에서 별 모양 아이콘을 클릭하여 항목을 즐겨찾기에 추가할 수 있습니다</p>
                 </div>
                 {% endif %}
+        </div>
+    </div>
+    <div class="edit-modal-background" style="display: none;">
+        <div class="edit-modal">
+            <h2>할 일 수정</h2>
+            <button id="edit-close"><i class="fa-solid fa-xmark"></i></button>
+            <hr>
+            <div class="input-group">
+                <input type="text" name="edit-title" id="edit-title" autocomplete="off" placeholder=" ">
+                <div class="edit-label-title">할 일</div>
+            </div>
+            <div class="input-group">
+                <input type="text" name="edit-detail" id="edit-detail" autocomplete="off" placeholder=" ">
+                <div class="edit-label-detail">상세 내용</div>
+            </div>
+            <input type="hidden" id="edit-todo-id">
+            <button id="edit">수정</button>
+        </div>
+    </div>
+    <div class="confirm-modal-background" style="display: none;">
+        <div class="confirm-modal">
+            <h3>정말 삭제하시겠습니까?</h3>
+            <div class="between">
+                <button id="yes">삭제</button>
+                <button id="no">취소</button>
+            </div>
         </div>
     </div>
 </body>

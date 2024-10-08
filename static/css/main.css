@@ -511,8 +511,8 @@ html, body {
 
 .contents #todo.fixed.shake { animation: shake 0.4s ease-in-out; }
 
-.info-container p:first-of-type span:first-of-type,
-.info-container p:last-of-type span:first-of-type { font-weight: bold; font-size: 15px; }
+.info-container p span:first-of-type,
+.info-container p span:first-of-type { font-weight: bold; font-size: 15px; }
 
-.info-container p:first-of-type span:last-of-type,
-.info-container p:last-of-type span:last-of-type { color: #666; }
+.info-container p span:last-of-type,
+.info-container p span:last-of-type { color: #666; }

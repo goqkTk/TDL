@@ -171,8 +171,8 @@ def update_favorite_order():
 @app.route('/success', methods=['GET'])
 def success():
     user_id = session.get('user_id')
-    completed_todos = get_completed_todos(user_id) if user_id else []
-    return render_template('main/success.html', user_id=user_id, todo=completed_todos)
+    todo = get_completed_todos(user_id)
+    return render_template('main/success.html', user_id=user_id, todo=todo)
 
 @app.route('/favorite', methods=['GET', 'POST'])
 def favorite():

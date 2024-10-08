@@ -1,8 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const favoriteBtns = document.querySelectorAll('.favorite-btn');
     const actionBtns = document.querySelectorAll('#success, #delete');
+    const otherBtns = document.querySelectorAll('#other');
     const contents = document.querySelector('.contents');
-    const dragColor = '#f0f0f0';
+    const editmodalBackground = document.querySelector('.edit-modal-background');
+    const confirmModalBackground = document.querySelector('.confirm-modal-background');
+    const yesBtn = document.getElementById('yes');
+    const noBtn = document.getElementById('no');
+    const detailButtons = document.querySelectorAll('.detail-group');
 
     let draggedItem = null;
     let placeholder = null;
@@ -101,7 +106,153 @@ document.addEventListener('DOMContentLoaded', function() {
         placeholder = null;
     });
 
-    // 즐겨찾기 버튼 설정
+    detailButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const todoItem = this.closest('.todo-item');
+            const infoContainer = todoItem.querySelector('.info-container');
+            
+            document.querySelectorAll('.other-container, .info-container').forEach(container => {
+                container.style.display = 'none';
+            });
+            if (infoContainer.style.display === 'none' || infoContainer.style.display === '') {
+                infoContainer.style.display = 'block';
+            } else {
+                infoContainer.style.display = 'none';
+            }
+            todoItem.querySelector('.other-container').style.display = 'none';
+        });
+    });
+
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.other-container, .info-container').forEach(container => {
+            container.style.display = 'none';
+        });
+    });
+
+    document.querySelectorAll('.edit-group').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const todoItem = this.closest('.todo-item');
+            const todoId = todoItem.getAttribute('todo-id');
+            const title = todoItem.querySelector('.title').textContent;
+            const detail = todoItem.querySelector('.detail').textContent;
+    
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-detail').value = detail;
+            document.getElementById('edit-todo-id').value = todoId;
+    
+            editmodalBackground.style.display = 'flex';
+        });
+    });
+
+    const editCloseBtn = document.getElementById('edit-close');
+    if (editCloseBtn) {
+        editCloseBtn.addEventListener('click', function() {
+            editmodalBackground.style.display = 'none';
+        });
+    }
+
+    const editBtn = document.getElementById('edit');
+    if (editBtn) {
+        editBtn.addEventListener('click', function() {
+            const todoId = document.getElementById('edit-todo-id').value;
+            const title = document.getElementById('edit-title').value;
+            const detail = document.getElementById('edit-detail').value;
+
+            fetch('/update_todo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    todo_id: todoId,
+                    title: title,
+                    detail: detail
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server responded with status: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Server response:', data);
+                if (data.success) {
+                    editmodalBackground.style.display = 'none';
+                    const todoItem = document.querySelector(`.todo-item[todo-id="${todoId}"]`);
+                    if (todoItem) {
+                        todoItem.querySelector('.title').textContent = data.title;
+                        todoItem.querySelector('.detail').textContent = data.detail;
+                        const infoContainer = todoItem.querySelector('.info-container');
+                        if (infoContainer) {
+                            console.log('Updating info container');
+                            infoContainer.innerHTML = `
+                                <p>생성일: ${data.created_at}</p>
+                                <p>수정일: ${data.updated_at}</p>
+                            `;
+                            console.log('Updated info container:', infoContainer.innerHTML);
+                        } else {
+                            console.log('Info container not found');
+                        }
+                    } else {
+                        console.log('Todo item not found');
+                    }
+                } else {
+                    console.error('할 일 수정 실패');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('할 일 수정 중 오류가 발생했습니다: ' + error.message);
+            });
+        });
+    }
+
+    document.querySelectorAll('.remove-group').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const todoItem = this.closest('.todo-item');
+            todoToRemove = todoItem;
+            confirmModalBackground.style.display = 'flex';
+        });
+    });
+
+    noBtn.addEventListener('click', function() {
+        confirmModalBackground.style.display = 'none';
+        todoToRemove = null;
+    });
+
+    yesBtn.addEventListener('click', function() {
+        if (todoToRemove) {
+            const todoId = todoToRemove.getAttribute('todo-id');
+            deleteTodo(todoId, todoToRemove);
+            confirmModalBackground.style.display = 'none';
+        }
+    });
+
+    otherBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const todoItem = this.closest('.todo-item');
+            const otherContainer = todoItem.querySelector('.other-container');
+            
+            document.querySelectorAll('.other-container').forEach(container => {
+                if (container !== otherContainer) {
+                    container.style.display = 'none';
+                }
+            });
+            otherContainer.style.display = otherContainer.style.display === 'none' || otherContainer.style.display === '' ? 'block' : 'none';
+            todoItem.querySelector('.info-container').style.display = 'none';
+        });
+    });
+
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.other-container').forEach(container => {
+            container.style.display = 'none';
+        });
+    });
+
     favoriteBtns.forEach(btn => {
         const starIcon = btn.querySelector('i');
         const todoDiv = btn.closest('.todo-item');
@@ -109,13 +260,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         btn.addEventListener('click', handleFavoriteClick);
     });
-
-    // 액션 버튼 설정
     setupActionButtons();
-
     checkEmptyFavorites();
 
-    // 즐겨찾기 클릭 처리
     function handleFavoriteClick() {
         const todoId = this.getAttribute('data-id');
         const starIcon = this.querySelector('i');
@@ -146,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 액션 버튼 설정
     function setupActionButtons() {
         actionBtns.forEach(btn => {
             const icon = btn.querySelector('i');
@@ -180,7 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 액션 버튼 클릭 처리
     function handleActionButtonClick() {
         const todoId = this.getAttribute('data-id');
         const todoItem = this.closest('.todo-item');
@@ -211,7 +356,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 플레이스홀더 위치 계산
+function deleteTodo(todoId, todoElement) {
+    fetch('/delete_todo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({todo_id: todoId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            todoElement.remove();
+            checkEmptyFavorites();
+        } else {
+            console.error('할 일 삭제 실패');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
 function getPlaceholderPosition(container, y) {
     const draggableElements = [...container.querySelectorAll('.todo-item, .todo-item-placeholder')];
     
@@ -229,7 +395,6 @@ function getPlaceholderPosition(container, y) {
     return { element: null, beforeElement: false };
 }
 
-// 할 일 순서 업데이트
 function updateTodoOrder() {
     const todoItems = document.querySelectorAll('.todo-item');
     const newOrder = Array.from(todoItems)

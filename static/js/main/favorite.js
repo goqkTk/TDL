@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', function() {
             height: `${originalRect.height}px`,
             left: `${originalRect.left}px`,
             top: `${originalRect.top}px`,
-            paddingLeft: '50px',
-            paddingTop: '15px'
+            padding: computedStyle.padding,
+            boxSizing: 'border-box'
         });
 
         todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);

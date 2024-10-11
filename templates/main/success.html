@@ -71,7 +71,62 @@
                     <div class="info-container" style="display: none;">
                         <p><span><i class="fa-regular fa-calendar-plus"></i> 생성일</span><span> {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}</span></p>
                         <p><span><i class="fa-solid fa-pen"></i> 수정일</span><span> {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}</span></p>
-                        <p><span><i class="fa-solid fa-circle-check"></i> 완료일</span><span> {{ todo[11].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[11] else '정보 없음' }}</span></p>
+                        <p><span><i class="fa-solid fa-circle-check"></i> 완료일</span><span> {{ todo[11].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[11] else '정보 없음' }}</span><br>
+                            <span class="completion-message">
+                                {% if todo[12] is not none %}
+                                    {% set days = todo[12] %}
+                                    {% if days == 0 %}
+                                        {% set instant_complete_messages = [
+                                            "번개 빠른 완료!",
+                                            "초스피드 달성!",
+                                            "순식간에 해치웠어요!",
+                                            "당일 완벽 수행!",
+                                            "즉시 실천, 바로 성공!"
+                                        ] %}
+                                        {{ instant_complete_messages | random }}
+                                    {% elif days < 7 %}
+                                        {% set daily_complete_messages = [
+                                            days ~ "일 만에 달성! 빠른 실천력이 돋보여요 👍",
+                                            "딱 " ~ days ~ "일 걸렸어요! 효율적인 당신 👏",
+                                            days ~ "일간의 집중, 멋진 결과예요!",
+                                            "목표 달성까지 단 " ~ days ~ "일, 대단해요!",
+                                            days ~ "일 만에 해냈어요! 당신의 열정이 빛나요"
+                                        ] %}
+                                        {{ daily_complete_messages | random }}
+                                    {% elif days < 30 %}
+                                        {% set weeks = (days // 7) %}
+                                        {% set weekly_complete_messages = [
+                                            weeks ~ "주 만에 성공! 꾸준함의 결실이네요",
+                                            weeks ~ "주 동안 포기하지 않은 당신, 대단해요!",
+                                            weeks ~ "주간의 노력이 빛을 발했어요",
+                                            "목표 달성까지 " ~ weeks ~ "주, 당신의 의지가 만든 결과예요",
+                                            weeks ~ "주 만에 해냈어요! 작심삼일? 당신은 작심" ~ days ~ "일!"
+                                        ] %}
+                                        {{ weekly_complete_messages | random }}
+                                    {% elif days < 365 %}
+                                        {% set months = (days // 30) %}
+                                        {% set monthly_complete_messages = [
+                                            months ~ "개월의 여정, 마침내 목표 달성!",
+                                            months ~ "개월 동안 꾸준히 노력한 당신, 정말 대단해요",
+                                            "와우! " ~ months ~ "개월 만에 해냈어요. 끈기의 승리군요",
+                                            months ~ "개월간의 도전, 결실을 맺었네요. 축하합니다!",
+                                            "목표를 향한 " ~ months ~ "개월간의 여정, 당신은 진정한 챔피언!"
+                                        ] %}
+                                        {{ monthly_complete_messages | random }}
+                                    {% else %}
+                                        {% set years = (days // 365) %}
+                                        {% set yearly_complete_messages = [
+                                            years ~ "년 만에 드디어 완료! 당신의 끈기에 박수를 👏👏👏",
+                                            "와우! " ~ years ~ "년의 노력이 결실을 맺었어요. 대단합니다",
+                                            years ~ "년간의 도전, 마침내 성공! 당신은 진정한 영웅이에요",
+                                            "목표를 향한 " ~ years ~ "년의 여정, 감동적입니다",
+                                            years ~ "년 동안 포기하지 않은 당신, 정말 자랑스러워요"
+                                        ] %}
+                                        {{ yearly_complete_messages | random }}
+                                    {% endif %}
+                                {% endif %}
+                            </span>
+                        </p>
                     </div>
                 </div>
             {% endfor %}

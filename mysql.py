@@ -1,6 +1,12 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+def calculate_days_to_complete(created_at, completed_at):
+    if created_at and completed_at:
+        delta = completed_at.date() - created_at.date()
+        return delta.days
+    return None
+
 def get_todo_by_id(todo_id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()

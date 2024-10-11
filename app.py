@@ -171,8 +171,13 @@ def update_favorite_order():
 @app.route('/success', methods=['GET'])
 def success():
     user_id = session.get('user_id')
-    todo = get_completed_todos(user_id)
-    return render_template('main/success.html', user_id=user_id, todo=todo)
+    todos = get_completed_todos(user_id)
+    todos_with_info = []
+    for todo in todos:
+        days = (todo[11] - todo[5]).days if todo[11] and todo[5] else None
+        weeks = days // 7 if days is not None else None
+        todos_with_info.append(todo + (days, weeks))
+    return render_template('main/success.html', user_id=user_id, todo=todos_with_info)
 
 @app.route('/favorite', methods=['GET', 'POST'])
 def favorite():

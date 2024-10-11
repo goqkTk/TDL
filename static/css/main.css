@@ -486,14 +486,14 @@ html, body {
 
 .info-container {
     position: absolute;
-    top: 40px;
+    top: 0;
     right: 0;
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1001;
-    width: 240px;
+    width: 350px;
     font-size: 14px;
     padding: 10px;
     max-height: 150px;
@@ -516,3 +516,11 @@ html, body {
 
 .info-container p span:last-of-type,
 .info-container p span:last-of-type { color: #666; }
+
+.completion-message {
+    color: #5bc55b !important;
+    display: block;
+    text-align: center;
+    margin-top: auto;
+    padding-top: 5px;
+}

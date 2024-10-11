@@ -12,18 +12,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const otherBtns = document.querySelectorAll('#other');
     const contents = document.querySelector('.contents');
     const confirmModalBackground = document.querySelector('.confirm-modal-background');
+    const donateBtn = document.querySelector('.donate');
+    const donateclose = document.getElementById('donate-close');
+    const donateModalBackground = document.querySelector('.donate-modal-background');
     const yesBtn = document.getElementById('yes');
     const noBtn = document.getElementById('no');
     const fixButtons = document.querySelectorAll('#fix');
     const detailButtons = document.querySelectorAll('.detail-group');
+    const donateOptions = document.querySelectorAll('.chocolate, .pocari');
+    const qrOverlay = document.querySelector('.qr-overlay');
+    const qrImage = qrOverlay.querySelector('.qr-image');
+    const backButton = qrOverlay.querySelector('.back-button');
 
     let todoToRemove = null;
 
     let draggedItem = null;
     let placeholder = null;
     let isDragging = false;
-    let startY, startScrollY;
+    let startScrollY;
     let dragOffsetY;
+
+    donateOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          const qrSrc = this.getAttribute('data-qr');
+          qrImage.src = "{{ url_for('static', filename='img/') }}" + qrSrc;
+          qrOverlay.style.display = 'flex';
+        });
+      });
+      
+      backButton.addEventListener('click', function() {
+        qrOverlay.style.display = 'none';
+      });
 
     document.querySelectorAll('.todo-item').forEach(item => {
         const isFixed = item.getAttribute('data-fixed') === 'true';
@@ -248,6 +267,18 @@ document.addEventListener('DOMContentLoaded', function() {
             editmodalBackground.style.display = 'flex';
         });
     });
+
+    if (donateBtn && donateModalBackground) {
+        donateBtn.addEventListener('click', function() {
+            donateModalBackground.style.display = 'flex';
+        });
+    }
+
+    if (donateclose && donateModalBackground) {
+        donateclose.addEventListener('click', function() {
+            donateModalBackground.style.display = 'none';
+        });
+    }
 
     const editCloseBtn = document.getElementById('edit-close');
     if (editCloseBtn) {

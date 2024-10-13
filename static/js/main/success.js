@@ -6,7 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmModalBackground = document.querySelector('.confirm-modal-background');
     const yesBtn = document.getElementById('yes');
     const noBtn = document.getElementById('no');
+    const donateBtn = document.querySelector('.donate');
+    const donateclose = document.getElementById('donate-close');
+    const donateModalBackground = document.querySelector('.donate-modal-background');
     const detailButtons = document.querySelectorAll('.detail-group');
+    const donateOptions = document.querySelectorAll('.chocolate, .pocari');
+    const qrOverlay = document.querySelector('.qr-overlay');
+    const qrImage = qrOverlay.querySelector('.qr-image');
+    const backButton = qrOverlay.querySelector('.back-button');
 
     let draggedItem = null;
     let placeholder = null;
@@ -14,6 +21,27 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let dragOffsetY;
     let originalRect;
+
+    donateOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          const qrSrc = this.classList.contains('chocolate') ? 'chocolate-QR.jpg' : 'pocari-QR.jpg';
+          qrImage.src = `/static/img/${qrSrc}`;
+          qrOverlay.style.display = 'flex';
+        });
+    });
+    backButton.addEventListener('click', function() { qrOverlay.style.display = 'none'; });
+
+    if (donateBtn && donateModalBackground) {
+        donateBtn.addEventListener('click', function() {
+            donateModalBackground.style.display = 'flex';
+        });
+    }
+
+    if (donateclose && donateModalBackground) {
+        donateclose.addEventListener('click', function() {
+            donateModalBackground.style.display = 'none';
+        });
+    }
 
     contents.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);

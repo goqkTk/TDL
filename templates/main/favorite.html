@@ -117,6 +117,32 @@
             </div>
         </div>
     </div>
+    <div class="donate-modal-background" style="display: none;">
+        <div class="donate-modal">
+            <button id="donate-close"><i class="fa-solid fa-xmark"></i></button>
+            <h3>개발자 도와주기</h3>
+            <p>개발자에게 간식 살 돈을 보태주세요. <br> 개발자는 하루에 한 번 꼭 이것을 먹어요.</p>
+            <p><i class="fa-solid fa-triangle-exclamation"></i> 아무런 혜택도 주지 않습니다.</p>
+            <div class="chocolate">
+                <img src="{{ url_for('static', filename='img/dreamcacao.jpg') }}" alt="드림 카카오 이미지">
+                <div>
+                    드림 카카오 초콜릿 사주기<br>
+                    ₩4,000
+                </div>
+            </div>
+            <div class="pocari">
+                <img src="{{ url_for('static', filename='img/pocari.png') }}" alt="포카리스웨트 이미지">
+                <div>
+                    포카리 스웨트 사주기<br>
+                    ₩2,500
+                </div>
+            </div>
+            <div class="qr-overlay" style="display: none;">
+                <img src="" alt="QR Code" class="qr-image">
+                <button class="back-button"><i class="fa-solid fa-arrow-left"></i></button>
+            </div>
+        </div>
+    </div>
 </body>
 <script src="{{ url_for('static', filename='js/main/favorite.js') }}"></script>
 </html>

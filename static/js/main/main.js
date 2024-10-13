@@ -34,15 +34,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     donateOptions.forEach(option => {
         option.addEventListener('click', function() {
-          const qrSrc = this.getAttribute('data-qr');
-          qrImage.src = "{{ url_for('static', filename='img/') }}" + qrSrc;
+          const qrSrc = this.classList.contains('chocolate') ? 'chocolate-QR.jpg' : 'pocari-QR.jpg';
+          qrImage.src = `/static/img/${qrSrc}`;
           qrOverlay.style.display = 'flex';
         });
-      });
-      
-      backButton.addEventListener('click', function() {
-        qrOverlay.style.display = 'none';
-      });
+    });
+    backButton.addEventListener('click', function() { qrOverlay.style.display = 'none'; });
 
     document.querySelectorAll('.todo-item').forEach(item => {
         const isFixed = item.getAttribute('data-fixed') === 'true';

@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startY = e.clientY;
         startScrollY = window.scrollY;
         isDragging = true;
+        document.body.classList.add('dragging');
 
         placeholder = document.createElement('div');
         placeholder.className = 'todo-item-placeholder';
@@ -143,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('mouseup', function() {
         if (!isDragging) return;
         isDragging = false;
+        document.body.classList.remove('dragging');
 
         placeholder.parentNode.insertBefore(draggedItem, placeholder);
         placeholder.parentNode.removeChild(placeholder);

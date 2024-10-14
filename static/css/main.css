@@ -46,6 +46,17 @@ html, body {
     background: #a5a5a532; 
 }
 
+body.dragging * {
+    cursor: s-resize !important;
+    user-select: none !important;
+}
+
+body.dragging .sidebar #menu_btn:hover, 
+body.dragging .sidebar #category_btn:hover, 
+body.dragging .sidebar #add-category:hover { 
+    background: none; 
+}
+
 .sidebar #add-category {
     text-align: center !important;
     font-size: 17px !important;
@@ -160,8 +171,8 @@ html, body {
     left: 3px;
     top: 50%;
     transform: translateY(-50%);
-    cursor: move;
     user-select: none;
+    cursor: s-resize;
 }
 
 #other {
@@ -551,11 +562,6 @@ html, body {
     background-color: #fffbe6 !important;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-}
-
-#grip {
-    cursor: move;
-    user-select: none;
 }
 
 #other, #favorite, #success, #fix, #delete { position: absolute; }

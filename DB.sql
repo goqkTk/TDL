@@ -63,7 +63,7 @@ CREATE TABLE `email_verifications` (
 
 LOCK TABLES `email_verifications` WRITE;
 /*!40000 ALTER TABLE `email_verifications` DISABLE KEYS */;
-INSERT INTO `email_verifications` VALUES ('jty_419@naver.com','Wxjp2DNPrCOm9cRQl0RpPw9r0UH-jSmNL_eEggs3WM4','2024-09-11 01:03:18','2024-09-11 10:13:18',1),('tdlhelp02@gmail.com','nCpv_I-Vxzc8LOCcFNvNUFVvQIf-2t-V6O0TBqm-9FU','2024-09-11 01:04:21','2024-09-11 10:14:21',1);
+INSERT INTO `email_verifications` VALUES ('jty_419@naver.com','Wxjp2DNPrCOm9cRQl0RpPw9r0UH-jSmNL_eEggs3WM4','2024-09-11 01:03:18','2024-09-11 10:13:18',1),('tdlhelp02@gmail.com','nCpv_I-Vxzc8LOCcFNvNUFVvQIf-2t-V6O0TBqm-9FU','2024-09-11 01:04:21','2024-09-11 10:14:21',1),('simik1082@gmail.com','l1ENvkx2eN16xqFkxcHCJAO8UXTxnNv4wVp-8VQx_9s','2024-10-14 04:58:49','2024-10-14 14:08:49',1);
 /*!40000 ALTER TABLE `email_verifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -88,7 +88,7 @@ CREATE TABLE `todo` (
   `is_fixed` tinyint(1) DEFAULT '0',
   `success_day` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -97,7 +97,7 @@ CREATE TABLE `todo` (
 
 LOCK TABLES `todo` WRITE;
 /*!40000 ALTER TABLE `todo` DISABLE KEYS */;
-INSERT INTO `todo` VALUES (2,'test','test2','테스트2','2024-09-21 00:33:47',0,0,1,9999,'2024-10-05 12:47:45',0,NULL),(7,'test','test3','테스트3','2024-09-25 13:58:10',1,0,2,9999,NULL,0,'2024-10-10 10:53:34'),(9,'test','test4','테스트4','2024-09-25 14:26:42',0,1,2,1,'2024-10-08 10:47:25',0,NULL),(11,'test','김은진 존나 때리기','하루에 한 번 존나 처맞기 + 은우 몫','2024-10-01 20:59:49',0,1,NULL,0,NULL,1,NULL);
+INSERT INTO `todo` VALUES (2,'test','test2','테스트2','2024-09-21 00:33:47',0,0,1,9999,'2024-10-05 12:47:45',0,NULL),(7,'test','test3','테스트3','2024-09-25 13:58:10',0,0,2,9999,NULL,0,NULL),(9,'test','test4','테스트4','2024-09-25 14:26:42',0,1,3,1,'2024-10-08 10:47:25',0,NULL),(11,'test','김은진 존나 때리기','하루에 한 번 존나 처맞기 + 은우 몫','2024-10-01 20:59:49',0,1,NULL,0,NULL,1,NULL),(23,'test','당일 완료','','2024-10-11 08:41:07',1,0,4,9999,NULL,0,'2024-10-11 08:43:42'),(24,'test','일주일 내 완료','','2024-10-05 12:00:00',1,0,5,9999,NULL,0,'2024-10-11 08:43:43'),(25,'test','한 달 내 완료','','2024-09-23 12:00:00',1,0,7,9999,NULL,0,'2024-10-11 08:43:46'),(26,'test','주 완료','','2024-09-01 12:00:00',1,0,6,9999,NULL,0,'2024-10-11 08:43:44'),(27,'test','연 완료','','2022-12-31 12:00:00',1,0,8,9999,NULL,0,'2024-10-11 08:43:46');
 /*!40000 ALTER TABLE `todo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -145,4 +145,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-10-10 11:04:10
+-- Dump completed on 2024-10-14 14:52:48

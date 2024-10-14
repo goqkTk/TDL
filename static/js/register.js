@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const idInput = document.getElementById('id');
     const idCheckButton = document.getElementById('id-check');
     const passwordInputField = document.getElementById('pw');
     const passwordCheckField = document.getElementById('pw_c');
@@ -259,16 +260,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function validateId() {
+        const id = idInput.value.trim();
+        
+        if (id === '') {
+            hideErrorMessage('id');
+            updateIdFieldStyle();
+            return;
+        }
+
+        if (id.includes(' ')) {
+            setupErrorMessage('id', '아이디에 공백은 사용할 수 없습니다');
+            updateIdFieldStyle();
+            idCheckButton.classList.remove('checked');
+            return;
+        }
+
+        hideErrorMessage('id');
+        updateIdFieldStyle();
+    }
+
+    function updateIdFieldStyle() {
+        const errorMessage = idInput.closest('#group').querySelector('.error-message');
+        if (errorMessage && errorMessage.style.display !== 'none') {
+            idInput.style.borderBottom = '1px solid red';
+        } else if (document.activeElement === idInput) {
+            idInput.style.borderBottom = '1px solid #03A9F4';
+        } else {
+            idInput.style.borderBottom = '1px solid gray';
+        }
+    }
+
+    idInput.addEventListener('input', validateId);
+    idInput.addEventListener('focus', updateIdFieldStyle);
+    idInput.addEventListener('blur', updateIdFieldStyle);
+
     idCheckButton.onclick = function() {
         if (this.classList.contains('checked')) {
             return;
         }
     
-        const idInput = document.getElementById('id');
         const id = idInput.value.trim();
         
         if (id === '') {
             setupErrorMessage('id', '아이디를 입력해주세요');
+            idInput.style.borderBottom = '1px solid red';
+            return;
+        }
+
+        if (id.includes(' ')) {
+            setupErrorMessage('id', '아이디에 공백은 사용할 수 없습니다');
             idInput.style.borderBottom = '1px solid red';
             return;
         }

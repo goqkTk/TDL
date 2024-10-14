@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
+    const modalBackgrounds = document.querySelectorAll('.confirm-modal-background, .donate-modal-background');
 
     let draggedItem = null;
     let placeholder = null;
@@ -21,6 +22,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let dragOffsetY;
     let originalRect;
+
+    modalBackgrounds.forEach(background => {
+        background.addEventListener('click', function(event) {
+            if (event.target === this) {
+                this.style.display = 'none';
+            }
+        });
+    });
+
+    const modals = document.querySelectorAll('.confirm-modal, .donate-modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    });
 
     donateOptions.forEach(option => {
         option.addEventListener('click', function() {

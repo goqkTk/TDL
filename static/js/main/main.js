@@ -3,8 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const actionBtns = document.querySelectorAll('#success, #delete');
     const addBtn = document.getElementById('add');
     const detailInput = document.getElementById('detail');
-    const addclose = document.getElementById('add-close');
-    const editclose = document.getElementById('edit-close');
     const addmodalBackground = document.querySelector('.add-modal-background');
     const editmodalBackground = document.querySelector('.edit-modal-background');
     const addContentBtn = document.getElementById('add-content');
@@ -13,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const contents = document.querySelector('.contents');
     const confirmModalBackground = document.querySelector('.confirm-modal-background');
     const donateBtn = document.querySelector('.donate');
-    const donateclose = document.getElementById('donate-close');
     const donateModalBackground = document.querySelector('.donate-modal-background');
     const yesBtn = document.getElementById('yes');
     const noBtn = document.getElementById('no');
@@ -23,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
+    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background');
 
     let todoToRemove = null;
 
@@ -31,6 +29,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let isDragging = false;
     let startScrollY;
     let dragOffsetY;
+
+    modalBackgrounds.forEach(background => {
+        background.addEventListener('click', function(event) {
+            if (event.target === this) {
+                this.style.display = 'none';
+            }
+        });
+    });
+
+    const modals = document.querySelectorAll('.add-modal, .edit-modal, .confirm-modal, .donate-modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    });
 
     donateOptions.forEach(option => {
         option.addEventListener('click', function() {
@@ -273,19 +286,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (donateclose && donateModalBackground) {
-        donateclose.addEventListener('click', function() {
-            donateModalBackground.style.display = 'none';
-        });
-    }
-
-    const editCloseBtn = document.getElementById('edit-close');
-    if (editCloseBtn) {
-        editCloseBtn.addEventListener('click', function() {
-            editmodalBackground.style.display = 'none';
-        });
-    }
-
     const editBtn = document.getElementById('edit');
     if (editBtn) {
         editBtn.addEventListener('click', function() {
@@ -412,18 +412,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editContentBtn) {
         editContentBtn.addEventListener('click', function() {
             if (editmodalBackground) editmodalBackground.style.display = 'flex';
-        });
-    }
-
-    if (addclose) {
-        addclose.addEventListener('click', function() {
-            addmodalBackground.style.display = 'none';
-        });
-    }
-
-    if (editclose) {
-        editclose.addEventListener('click', function() {
-            editmodalBackground.style.display = 'none';
         });
     }
 

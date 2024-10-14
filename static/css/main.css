@@ -432,6 +432,7 @@ body.dragging .sidebar #add-category:hover {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s;
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
     width: 40% !important;
     margin-top: 10px;
     margin-bottom: 10px;

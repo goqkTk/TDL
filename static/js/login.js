@@ -37,16 +37,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function validateId() {
         const id = idInput.value.trim();
         if (id !== '') {
-            fetch('/check_id', {
+            fetch('/check_id_or_email', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
-                body: `id=${encodeURIComponent(id)}`
+                body: JSON.stringify({ identifier: id })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.is_unique) {
+                if (!data.exists) {
                     setErrorStyle(idInput, '사용자를 찾을 수 없습니다');
                 } else {
                     clearErrorStyle(idInput);
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let isValid = true;
 
         if (id === '') {
-            setErrorStyle(idInput, '아이디를 입력해주세요');
+            setErrorStyle(idInput, '아이디 또는 이메일을 입력해주세요');
             isValid = false;
         } else {
             clearErrorStyle(idInput);

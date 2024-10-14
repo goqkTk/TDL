@@ -402,7 +402,7 @@ def check_id_or_email():
     identifier = data['identifier']
     user = get_user_by_id_or_email(identifier)
     if user:
-        return jsonify({'exists': True, 'email': user['email']})
+        return jsonify({'exists': True})
     return jsonify({'exists': False})
 
 @app.route('/send_verification_code', methods=['POST'])

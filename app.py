@@ -127,6 +127,10 @@ def main():
     completed = get_todo(user_id, completed=True) if user_id else []
     return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, datetime=datetime)
 
+@app.route('/check_login')
+def check_login():
+    return jsonify({'logged_in': 'user_id' in session})
+
 @app.route('/add_todo', methods=['POST'])
 def add_todo_route():
     user_id = session.get('user_id')

@@ -577,17 +577,6 @@ body.dragging .sidebar #add-category:hover {
     pointer-events: none;
 }
 
-#title:focus,
-#detail:focus,
-#title:not(:placeholder-shown),
-#detail:not(:placeholder-shown),
-#edit-title:focus,
-#edit-detail:focus,
-#edit-title:not(:placeholder-shown),
-#edit-detail:not(:placeholder-shown) {
-    border: 1px solid #03A9F4;
-}
-
 #title:focus + .label-title,
 #detail:focus + .label-detail,
 #title:not(:placeholder-shown) + .label-title,
@@ -780,12 +769,8 @@ body.dragging .sidebar #add-category:hover {
 }
 
 @keyframes donateButtonMove {
-    0%, 100% {
-        transform: translateX(0);
-    }
-    50% {
-        transform: translateX(5px);
-    }
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(5px); }
 }
 
 #menu_btn.donate:hover {

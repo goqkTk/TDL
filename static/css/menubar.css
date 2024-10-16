@@ -45,6 +45,7 @@ nav {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    white-space: nowrap;
 }
 
 .tab button::before {
@@ -58,18 +59,13 @@ nav {
     transition: all 0.3s ease;
 }
 
-.tab button:hover::before {
-    left: 0;
-}
+.tab button:hover::before { left: 0; }
+.tab button:nth-of-type(3) { width: 110px; }
 
 .tab button:hover {
     background: rgba(128, 128, 128, 0.5);
     transform: translateY(-3px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.tab button:nth-of-type(3) {
-    width: 110px;
 }
 
 .tab button.active {
@@ -79,18 +75,11 @@ nav {
 }
 
 @keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(255, 152, 0, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
-    }
+    0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
 }
 
-/* 메뉴 전체에 대한 물결 효과 */
 .tab::after {
     content: '';
     position: absolute;
@@ -104,10 +93,48 @@ nav {
 }
 
 @keyframes wave {
-    0% {
-        transform: translate(-50%, -50%) rotate(0deg);
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@media screen and (max-width: 768px) {
+    nav { height: 60px; }
+    .tab { gap: 10px; }
+
+    .tab button {
+        font-size: 16px;
+        width: auto;
+        min-width: 60px;
+        height: 35px;
+        padding: 0 10px;
     }
-    100% {
-        transform: translate(-50%, -50%) rotate(360deg);
+
+    .tab button:nth-of-type(3) {
+        width: auto;
+        min-width: 80px;
     }
+}
+
+@media screen and (max-width: 480px) {
+    nav { height: 50px; }
+    .tab { gap: 5px; }
+
+    .tab button {
+        font-size: 14px;
+        min-width: 50px;
+        height: 30px;
+        padding: 0 5px;
+    }
+
+    .tab button:nth-of-type(3) { min-width: 70px; }
+}
+
+@media screen and (max-width: 360px) {
+    .tab button {
+        font-size: 12px;
+        min-width: 40px;
+        padding: 0 3px;
+    }
+
+    .tab button:nth-of-type(3) { min-width: 60px; }
 }

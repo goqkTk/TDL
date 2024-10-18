@@ -48,13 +48,14 @@ def get_todos_by_category(user_id, category_id):
     cursor = db.cursor()
     try:
         sql = """
-        SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day
+        SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
         FROM todo 
         WHERE user_id = %s AND category_id = %s AND success = 0
         ORDER BY is_fixed DESC, `order` ASC, day DESC
         """
         cursor.execute(sql, (user_id, category_id))
-        return cursor.fetchall()
+        todos = cursor.fetchall()
+        return [dict(zip([column[0] for column in cursor.description], todo)) for todo in todos]
     finally:
         db.close()
 
@@ -155,21 +156,38 @@ def add_todo(user_id, title, detail, category_id=None):
         current_time = datetime.now()
         sql = "INSERT INTO todo (user_id, title, detail, day, edit_day, category_id) VALUES (%s, %s, %s, %s, NULL, %s)"
         cursor.execute(sql, (user_id, title, detail, current_time, category_id))
+        todo_id = cursor.lastrowid
         db.commit()
-        success = True
+        
+        sql = "SELECT * FROM todo WHERE id = %s"
+        cursor.execute(sql, (todo_id,))
+        new_todo = cursor.fetchone()
+        return {
+            'id': new_todo[0],
+            'user_id': new_todo[1],
+            'title': new_todo[2],
+            'detail': new_todo[3],
+            'favorite': new_todo[5],
+            'day': new_todo[4],
+            'success': new_todo[6],
+            'order': new_todo[7],
+            'order_favorite': new_todo[8],
+            'is_fixed': new_todo[10],
+            'edit_day': new_todo[9],
+            'category_id': new_todo[12]  # category_id의 인덱스를 확인하세요
+        }
     except Exception as e:
         print(f"할 일 추가 오류: {str(e)}")
         db.rollback()
-        success = False
+        return None
     finally:
         db.close()
-    return success
 
 def get_todo(user_id, completed=False):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     sql = f"""
-    SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day
+    SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
     FROM todo 
     WHERE user_id = %s AND success = %s 
     ORDER BY 

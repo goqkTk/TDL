@@ -538,15 +538,194 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    
+    function addTodoToDOM(todo) {
+        const contents = document.querySelector('.contents');
+        const todoDiv = document.createElement('div');
+        todoDiv.id = 'todo';
+        todoDiv.className = `todo-item${todo.favorite ? ' active' : ''}${todo.is_fixed ? ' fixed' : ''}`;
+        todoDiv.setAttribute('todo-id', todo.id);
+        todoDiv.setAttribute('fixed', todo.is_fixed ? 'true' : 'false');
+        todoDiv.setAttribute('order', todo.order);
+        todoDiv.setAttribute('category-id', todo.category_id);
+    
+        const createdDate = todo.day ? new Date(todo.day) : new Date();
+        const editedDate = todo.edit_day ? new Date(todo.edit_day) : null;
+    
+        todoDiv.innerHTML = `
+            <button id="grip"><i class="fa-solid fa-grip-vertical"></i></button>
+            <h3 id="todo2" class="title">${todo.title}</h3>
+            <p class="detail">${todo.detail}</p>
+            <button id="fix"><img src="/static/img/pin-${todo.is_fixed ? 'on' : 'off'}.png" alt="고정 아이콘"></button>
+            <button id="favorite" class="favorite-btn" data-id="${todo.id}">
+                <i class="fa-${todo.favorite ? 'solid' : 'regular'} fa-star"></i>
+            </button>
+            <button id="other"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <button id="success" data-id="${todo.id}"><i class="fa-regular fa-circle-check"></i></button>
+            <div class="other-container" style="display: none;">
+                <div class="edit-group">수정</div>
+                <div class="remove-group">삭제</div>
+                <div class="detail-group">상세 정보</div>
+            </div>
+            <div class="info-container" style="display: none;">
+                <p>생성일: ${createdDate.toLocaleString()}</p>
+                <p>수정일: ${editedDate ? editedDate.toLocaleString() : '수정되지 않음'}</p>
+            </div>
+        `;
+    
+        const noMainMessage = contents.querySelector('.no-main-message');
+        if (noMainMessage) {
+            contents.removeChild(noMainMessage);
+        }
+    
+        contents.insertBefore(todoDiv, contents.firstChild);
+        
+        setupNewTodoEventListeners(todoDiv);
+    }
+
+    function setupNewTodoEventListeners(todoDiv) {
+        const favoriteBtn = todoDiv.querySelector('.favorite-btn');
+        const starIcon = favoriteBtn.querySelector('i');
+        updateFavoriteUI(starIcon, todoDiv);
+
+        favoriteBtn.addEventListener('click', function() {
+            const todoId = this.getAttribute('data-id');
+            const isFavorite = starIcon.classList.contains('fa-solid');
+            
+            fetch('/update_favorite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    todo_id: todoId,
+                    is_favorite: !isFavorite
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateFavoriteUI(starIcon, todoDiv, !isFavorite);
+                } else {
+                    console.error('즐겨찾기 업데이트 실패');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        const otherBtn = todoDiv.querySelector('#other');
+        const otherContainer = todoDiv.querySelector('.other-container');
+        const infoContainer = todoDiv.querySelector('.info-container');
+
+        otherBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.querySelectorAll('.other-container').forEach(container => {
+                if (container !== otherContainer) {
+                    container.style.display = 'none';
+                }
+            });
+            otherContainer.style.display = otherContainer.style.display === 'none' || otherContainer.style.display === '' ? 'block' : 'none';
+            infoContainer.style.display = 'none';
+        });
+
+        const editGroup = todoDiv.querySelector('.edit-group');
+        editGroup.addEventListener('click', function() {
+            const todoId = todoDiv.getAttribute('todo-id');
+            const title = todoDiv.querySelector('.title').textContent;
+            const detail = todoDiv.querySelector('.detail').textContent;
+    
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-detail').value = detail;
+            document.getElementById('edit-todo-id').value = todoId;
+    
+            editmodalBackground.style.display = 'flex';
+        });
+
+        const removeGroup = todoDiv.querySelector('.remove-group');
+        removeGroup.addEventListener('click', function(e) {
+            e.stopPropagation();
+            todoToRemove = todoDiv;
+            confirmModalBackground.style.display = 'flex';
+        });
+
+        const detailGroup = todoDiv.querySelector('.detail-group');
+        detailGroup.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const infoContainer = todoDiv.querySelector('.info-container');
+            const otherContainer = todoDiv.querySelector('.other-container');
+            
+            document.querySelectorAll('.other-container, .info-container').forEach(container => {
+                container.style.display = 'none';
+            });
+            if (infoContainer.style.display === 'none' || infoContainer.style.display === '') {
+                infoContainer.style.display = 'block';
+            } else {
+                infoContainer.style.display = 'none';
+            }
+            otherContainer.style.display = 'none';
+        });
+
+        const fixButton = todoDiv.querySelector('#fix');
+        fixButton.addEventListener('click', function() {
+            const todoId = todoDiv.getAttribute('todo-id');
+            const isFixed = !todoDiv.classList.contains('fixed');
+            updateFixStatus(todoId, isFixed);
+        });
+
+        const successButton = todoDiv.querySelector('#success');
+        successButton.addEventListener('click', function() {
+            const todoId = this.getAttribute('data-id');
+            
+            fetch('/update_success', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    todo_id: todoId,
+                    is_success: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    todoDiv.remove();
+                    checkEmptyMain();
+                } else {
+                    console.error('완료 상태 업데이트 실패');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+
     if (addBtn) {
         addBtn.addEventListener('click', function() {
             const title = titleInput ? titleInput.value : '';
             const detail = detailInput ? detailInput.value : '';
-            const categoryId = document.getElementById('category-id') ? document.getElementById('category-id').value : null;
+            const categoryIdElement = document.getElementById('category-id');
+            const categoryId = categoryIdElement ? categoryIdElement.value : null;
             
             if (!title.trim()) {
                 setupErrorMessage('title', '할 일을 입력해주세요');
                 return;
+            }
+
+            if (data.success) {
+                if (addmodalBackground) addmodalBackground.style.display = 'none';
+                const currentCategoryId = document.getElementById('category-id').value;
+                if (currentCategoryId && data.todo.category_id == currentCategoryId) {
+                    addTodoToDOM(data.todo);
+                }
+                checkEmptyMain();
+                if (titleInput) titleInput.value = '';
+                if (detailInput) detailInput.value = '';
+            } else {
+                setupErrorMessage('title', data.message || '할 일 추가에 실패했습니다.');
             }
     
             fetch('/add_todo', {
@@ -564,7 +743,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     if (addmodalBackground) addmodalBackground.style.display = 'none';
-                    location.reload();
+                    addTodoToDOM(data.todo);
+                    checkEmptyMain();
+                    if (titleInput) titleInput.value = '';
+                    if (detailInput) detailInput.value = '';
                 } else {
                     setupErrorMessage('title', data.message || '할 일 추가에 실패했습니다.');
                 }

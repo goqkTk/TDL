@@ -86,7 +86,14 @@
                 </div>
             </div>
             {% endfor %}
+            {% if not todos %}
+            <div class="no-main-message">
+                <p>할 일 목록이 비어있습니다</p>
+                <p>새로운 할 일을 추가해보세요!</p>
+            </div>
+            {% endif %}
         </div>
+        <input type="hidden" id="category-id" value="{{ category_id }}">
         <button id="add-content"><i class="fa-solid fa-plus"></i></button>
     </div>
     <div class="add-modal-background" style="display: none;">
@@ -100,7 +107,6 @@
             </div>
             <div class="input-group">
                 <input name="detail" id="detail" autocomplete="off" placeholder=" ">
-                <input type="hidden" id="category-id" value="{{ category[0] }}">
                 <div class="label-detail">상세 내용</div>
             </div>
             <button id="add">추가</button>

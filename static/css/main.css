@@ -462,7 +462,7 @@ body.dragging .sidebar #add-category:hover {
 }
 
 #add-category-input {
-    width: 90%;
+    width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -862,14 +862,7 @@ body.dragging .sidebar #add-category:hover {
     transition: background-color 0.3s;
 }
 
-#category_btn:hover, #add-category:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-#add-category {
-    margin-top: 10px;
-    font-style: italic;
-}
+#category_btn:hover, #add-category:hover { background-color: rgba(255, 255, 255, 0.1); }
 
 .category-link {
     text-decoration: none;

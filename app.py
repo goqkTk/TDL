@@ -158,12 +158,12 @@ def category_page(category_id):
     
     category = get_category(category_id)
     if not category or category[1] != user_id:
-        return "카테고리를 찾을 수 없습니다.", 404
+        return redirect('/')
     
     todos = get_todos_by_category(user_id, category_id)
     categories = get_categories(user_id)
     
-    return render_template('category.html', user_id=user_id, category=category, todos=todos, categories=categories, datetime=datetime)
+    return render_template('category.html', user_id=user_id, category=category, todos=todos, categories=categories, datetime=datetime, category_id=category_id)
 
 @app.route('/add_todo', methods=['POST'])
 def add_todo_route():
@@ -179,9 +179,14 @@ def add_todo_route():
     if not title:
         return jsonify({'success': False, 'message': '제목을 입력해주세요.'})
 
-    success = add_todo(user_id, title, detail, category_id)
-    if success:
-        return jsonify({'success': True, 'message': '할 일이 추가되었습니다.'})
+    new_todo = add_todo(user_id, title, detail, category_id)
+    if new_todo:
+        if isinstance(new_todo['day'], datetime):
+            new_todo['day'] = new_todo['day'].isoformat()
+        if isinstance(new_todo['edit_day'], datetime):
+            new_todo['edit_day'] = new_todo['edit_day'].isoformat() if new_todo['edit_day'] else None
+        
+        return jsonify({'success': True, 'message': '할 일이 추가되었습니다.', 'todo': new_todo})
     else:
         return jsonify({'success': False, 'message': '할 일 추가에 실패했습니다.'})
 

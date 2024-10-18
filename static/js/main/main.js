@@ -20,9 +20,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
-    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background');
+    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background, .add-category-modal-background');
     const loginRequiredModal = document.querySelector('.login-required-modal-background');
     const goToLoginBtn = document.getElementById('go-to-login');
+    const addCategoryBtn = document.getElementById('add-category');
+    const addCategoryBackground = document.querySelector('.add-category-modal-background');
+    const addCategoryInput = document.getElementById('add-category-input');
+    const confirmCategoryBtn = document.getElementById('confirm-category');
 
     let todoToRemove = null;
 
@@ -56,6 +60,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', function() {
+            addCategoryBackground.style.display = 'flex';
+            if (addCategoryInput) {
+                addCategoryInput.value = '';
+            }
+        });
+    }
+
+    if (confirmCategoryBtn) {
+        confirmCategoryBtn.addEventListener('click', function() {
+            const categoryName = addCategoryInput ? addCategoryInput.value : '';
+            
+            if (!categoryName.trim()) {
+                setupErrorMessage(addCategoryInput, '카테고리 이름을 입력해주세요');
+                return;
+            }
+            addCategoryBackground.style.display = 'none';
+            addCategoryInput.value = '';
+            clearErrorMessage(addCategoryInput);
+        });
+    }
+
+    if (addCategoryInput) {
+        addCategoryInput.addEventListener('focus', function() {
+            clearErrorMessage(this);
+        });
+    }
+
     if (goToLoginBtn) {
         goToLoginBtn.addEventListener('click', function() {
             window.location.href = '/login';
@@ -72,6 +105,9 @@ document.addEventListener('DOMContentLoaded', function() {
         background.addEventListener('click', function(event) {
             if (event.target === this) {
                 this.style.display = 'none';
+                if (addCategoryInput) {
+                    addCategoryInput.value = '';
+                }
             }
         });
     });
@@ -695,6 +731,15 @@ function setupErrorMessage(inputId, messageText) {
     errorMessage.textContent = messageText;
     errorMessage.style.display = 'block';
     inputElement.classList.add('error');
+}
+
+function clearErrorMessage(inputElement) {
+    const inputGroup = inputElement.closest('.input-group');
+    const errorMessage = inputGroup.querySelector('.error-message');
+    if (errorMessage) {
+        errorMessage.style.display = 'none';
+    }
+    inputElement.classList.remove('error');
 }
 
 function checkEmptyMain() {

@@ -158,6 +158,17 @@
             <button id="go-to-login">로그인하러 가볼까요?</button>
         </div>
     </div>
+    <div class="add-category-modal-background" style="display: none;">
+        <div class="add-category-modal">
+            <h2>새 카테고리 추가</h2>
+            <p>새로운 카테고리에게 멋진 이름을 지어주세요</p>
+            <div class="input-group">
+                <input type="text" name="add-category-input" id="add-category-input" autocomplete="off">
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <button id="confirm-category">확인</button>
+        </div>
+    </div>
 </body>
 <script src="{{ url_for('static', filename='js/main/main.js') }}"></script>
 </html>

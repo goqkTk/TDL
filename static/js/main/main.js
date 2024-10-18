@@ -714,19 +714,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 setupErrorMessage('title', '할 일을 입력해주세요');
                 return;
             }
-
-            if (data.success) {
-                if (addmodalBackground) addmodalBackground.style.display = 'none';
-                const currentCategoryId = document.getElementById('category-id').value;
-                if (currentCategoryId && data.todo.category_id == currentCategoryId) {
-                    addTodoToDOM(data.todo);
-                }
-                checkEmptyMain();
-                if (titleInput) titleInput.value = '';
-                if (detailInput) detailInput.value = '';
-            } else {
-                setupErrorMessage('title', data.message || '할 일 추가에 실패했습니다.');
-            }
     
             fetch('/add_todo', {
                 method: 'POST',
@@ -743,7 +730,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     if (addmodalBackground) addmodalBackground.style.display = 'none';
-                    addTodoToDOM(data.todo);
+                    const currentCategoryId = document.getElementById('category-id') ? document.getElementById('category-id').value : null;
+                    if ((!currentCategoryId && !data.todo.category_id) || (currentCategoryId && data.todo.category_id == currentCategoryId)) {
+                        addTodoToDOM(data.todo);
+                    }
                     checkEmptyMain();
                     if (titleInput) titleInput.value = '';
                     if (detailInput) detailInput.value = '';

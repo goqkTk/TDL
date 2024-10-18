@@ -54,20 +54,20 @@
             </div>
         </div>
         <div class="contents">
-            {% for todo in todo %}
-            <div id="todo" class="todo-item{% if todo[4] == 1 %} active{% endif %}{% if todo[9] == 1 %} fixed{% endif %}" todo-id="{{ todo[0] }}" data-fixed="{{ 'true' if todo[9] == 1 else 'false' }}" data-order="{{ todo[7] }}">
+            {% for todo in todos %}
+            <div id="todo" class="todo-item{% if todo.favorite == 1 %} active{% endif %}{% if todo.is_fixed == 1 %} fixed{% endif %}" todo-id="{{ todo.id }}" fixed="{{ 'true' if todo.is_fixed == 1 else 'false' }}" order="{{ todo.order }}">
                 <button id="grip"><i class="fa-solid fa-grip-vertical"></i></button>
-                <h3 class="title">{{ todo[2] }}</h3>
-                <p class="detail">{{ todo[3] }}</p>
-                <button id="fix" data-id="{{ todo[0] }}">
-                    <img src="{{ url_for('static', filename='img/pin-' + ('on' if todo[8] else 'off') + '.png') }}" alt="고정 아이콘">
+                <h3 class="title">{{ todo.title }}</h3>
+                <p class="detail">{{ todo.detail }}</p>
+                <button id="fix">
+                    <img src="{{ url_for('static', filename='img/pin-' + ('on' if todo.is_fixed else 'off') + '.png') }}" alt="고정 아이콘">
                 </button>
-                <button id="favorite" class="favorite-btn" data-id="{{ todo[0] }}">
-                    <i class="fa-{% if todo[4] %}solid{% else %}regular{% endif %} fa-star"{% if todo[4] %} style="color: #FFD43B;"{% endif %}></i>
+                <button id="favorite" class="favorite-btn" data-id="{{ todo.id }}">
+                    <i class="fa-{% if todo.favorite == 1 %}solid{% else %}regular{% endif %} fa-star"></i>
                 </button>
                 <button id="other"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                <button id="success" data-id="{{ todo[0] }}">
-                    <i class="fas fa-{% if todo[6] == 1 %}check-circle{% else %}circle{% endif %}"></i>
+                <button id="success" data-id="{{ todo.id }}">
+                    <i class="fa-regular fa-circle-check"></i>
                 </button>
                 <div class="other-container" style="display: none;">
                     <div class="edit-group" id="other-group">
@@ -81,8 +81,8 @@
                     </div>
                 </div>
                 <div class="info-container" style="display: none;">
-                    <p><span><i class="fa-regular fa-calendar-plus"></i> 생성일</span><span> {{ todo[5].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[5] else '정보 없음' }}</span></p>
-                    <p><span><i class="fa-solid fa-pen"></i> 수정일</span><span> {{ todo[10].strftime('%Y년 %m월 %d일 %H:%M:%S') if todo[10] else '수정되지 않음' }}</span></p>
+                    <p><span><i class="fa-regular fa-calendar-plus"></i> 생성일</span><span> {{ todo.day.strftime('%Y년 %m월 %d일 %H:%M:%S') if todo.day else '정보 없음' }}</span></p>
+                    <p><span><i class="fa-solid fa-pen"></i> 수정일</span><span> {{ todo.edit_day.strftime('%Y년 %m월 %d일 %H:%M:%S') if todo.edit_day else '수정되지 않음' }}</span></p>
                 </div>
             </div>
             {% endfor %}

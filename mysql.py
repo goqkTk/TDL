@@ -51,13 +51,38 @@ def get_todos_by_category(user_id, category_id):
         SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
         FROM todo 
         WHERE user_id = %s AND category_id = %s AND success = 0
-        ORDER BY is_fixed DESC, `order` ASC, day DESC
+        ORDER BY is_fixed DESC, `order` ASC, favorite DESC, day DESC
         """
         cursor.execute(sql, (user_id, category_id))
         todos = cursor.fetchall()
         return [dict(zip([column[0] for column in cursor.description], todo)) for todo in todos]
     finally:
         db.close()
+
+def get_todo_without_category(user_id, completed=False):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    sql = f"""
+    SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
+    FROM todo 
+    WHERE user_id = %s AND success = %s AND (category_id IS NULL OR category_id = 1 OR favorite = 1 OR is_fixed = 1)
+    ORDER BY 
+        is_fixed DESC,
+        CASE 
+            WHEN is_fixed = 1 THEN `order`
+            ELSE 9999
+        END ASC,
+        CASE 
+            WHEN is_fixed = 0 THEN `order`
+            ELSE 9999
+        END ASC,
+        favorite DESC,
+        day DESC
+    """
+    cursor.execute(sql, (user_id, 1 if completed else 0))
+    result = cursor.fetchall()
+    db.close()
+    return result
 
 def calculate_days_to_complete(created_at, completed_at):
     if created_at and completed_at:
@@ -174,7 +199,7 @@ def add_todo(user_id, title, detail, category_id=None):
             'order_favorite': new_todo[8],
             'is_fixed': new_todo[10],
             'edit_day': new_todo[9],
-            'category_id': new_todo[12]  # category_id의 인덱스를 확인하세요
+            'category_id': new_todo[12]
         }
     except Exception as e:
         print(f"할 일 추가 오류: {str(e)}")

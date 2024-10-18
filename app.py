@@ -123,8 +123,8 @@ register_html = """
 @app.route('/', methods=['GET', 'POST'])
 def main():
     user_id = session.get('user_id')
-    todo = get_todo(user_id, completed=False) if user_id else []
-    completed = get_todo(user_id, completed=True) if user_id else []
+    todo = get_todo_without_category(user_id, completed=False) if user_id else []
+    completed = get_todo_without_category(user_id, completed=True) if user_id else []
     categories = get_categories(user_id) if user_id else []
     return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, categories=categories, datetime=datetime)
 

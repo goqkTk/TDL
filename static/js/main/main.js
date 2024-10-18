@@ -77,10 +77,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 setupErrorMessage(addCategoryInput, '카테고리 이름을 입력해주세요');
                 return;
             }
-            addCategoryBackground.style.display = 'none';
-            addCategoryInput.value = '';
-            clearErrorMessage(addCategoryInput);
+    
+            fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({category_name: categoryName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addCategoryBackground.style.display = 'none';
+                    addCategoryInput.value = '';
+                    clearErrorMessage(addCategoryInput);
+                    // 페이지 새로고침
+                    window.location.reload();
+                } else {
+                    setupErrorMessage(addCategoryInput, data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                setupErrorMessage(addCategoryInput, '카테고리 추가 중 오류가 발생했습니다.');
+            });
         });
+    }
+    
+    function addCategoryToSidebar(categoryId, categoryName) {
+        console.log('Adding category to sidebar:', categoryId, categoryName);
+        const otherCategories = document.querySelector('.other_categories');
+        const addCategoryBtn = document.getElementById('add-category');
+        
+        if (!otherCategories || !addCategoryBtn) {
+            console.error('Required elements not found');
+            return;
+        }
+    
+        const newCategory = document.createElement('button');
+        newCategory.id = 'category_btn';
+        newCategory.setAttribute('data-category-id', categoryId);
+        newCategory.textContent = categoryName;
+        
+        // 'Add Category' 버튼이 .other_categories 내부에 있는지 확인
+        if (otherCategories.contains(addCategoryBtn)) {
+            // 새 카테고리를 'Add Category' 버튼 바로 앞에 삽입
+            otherCategories.insertBefore(newCategory, addCategoryBtn);
+        } else {
+            // 'Add Category' 버튼이 .other_categories 내부에 없으면 맨 뒤에 추가
+            otherCategories.appendChild(newCategory);
+        }
+    
+        // 'Add Category' 버튼을 .other_categories의 마지막 자식으로 이동
+        otherCategories.appendChild(addCategoryBtn);
     }
 
     if (addCategoryInput) {
@@ -493,12 +542,13 @@ document.addEventListener('DOMContentLoaded', function() {
         addBtn.addEventListener('click', function() {
             const title = titleInput ? titleInput.value : '';
             const detail = detailInput ? detailInput.value : '';
+            const categoryId = document.getElementById('category-id') ? document.getElementById('category-id').value : null;
             
             if (!title.trim()) {
                 setupErrorMessage('title', '할 일을 입력해주세요');
                 return;
             }
-
+    
             fetch('/add_todo', {
                 method: 'POST',
                 headers: {
@@ -506,7 +556,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     title: title,
-                    detail: detail
+                    detail: detail,
+                    category_id: categoryId
                 })
             })
             .then(response => response.json())

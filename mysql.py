@@ -1,6 +1,63 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+def add_category_db(user_id, category_name):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    try:
+        sql = "INSERT INTO categories (user_id, name) VALUES (%s, %s)"
+        cursor.execute(sql, (user_id, category_name))
+        category_id = cursor.lastrowid
+        db.commit()
+        success = True
+    except Exception as e:
+        print(f"카테고리 추가 오류: {str(e)}")
+        db.rollback()
+        success = False
+        category_id = None
+    finally:
+        db.close()
+    return success, category_id
+
+def get_categories(user_id):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    try:
+        sql = "SELECT id, name FROM categories WHERE user_id = %s ORDER BY id"
+        cursor.execute(sql, (user_id,))
+        categories = cursor.fetchall()
+        return categories
+    except Exception as e:
+        print(f"카테고리 조회 오류: {str(e)}")
+        return []
+    finally:
+        db.close()
+
+def get_category(category_id):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    try:
+        sql = "SELECT id, user_id, name FROM categories WHERE id = %s"
+        cursor.execute(sql, (category_id,))
+        return cursor.fetchone()
+    finally:
+        db.close()
+
+def get_todos_by_category(user_id, category_id):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    try:
+        sql = """
+        SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day
+        FROM todo 
+        WHERE user_id = %s AND category_id = %s AND success = 0
+        ORDER BY is_fixed DESC, `order` ASC, day DESC
+        """
+        cursor.execute(sql, (user_id, category_id))
+        return cursor.fetchall()
+    finally:
+        db.close()
+
 def calculate_days_to_complete(created_at, completed_at):
     if created_at and completed_at:
         delta = completed_at.date() - created_at.date()
@@ -91,13 +148,13 @@ def update_favorites_order(user_id, new_order):
         db.close()
     return success
 
-def add_todo(user_id, title, detail):
+def add_todo(user_id, title, detail, category_id=None):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     try:
         current_time = datetime.now()
-        sql = "INSERT INTO todo (user_id, title, detail, day, edit_day) VALUES (%s, %s, %s, %s, NULL)"
-        cursor.execute(sql, (user_id, title, detail, current_time))
+        sql = "INSERT INTO todo (user_id, title, detail, day, edit_day, category_id) VALUES (%s, %s, %s, %s, NULL, %s)"
+        cursor.execute(sql, (user_id, title, detail, current_time, category_id))
         db.commit()
         success = True
     except Exception as e:

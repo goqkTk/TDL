@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>메인</title>
+    <title>카테고리</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/menubar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
@@ -36,15 +36,15 @@
             </div>
             <hr>
             <div class="categories">
-                <button class="todo selected" id="category_btn">할 일</button>
+                <button class="todo" id="category_btn" onclick="location.href='/'">할 일</button>
                 <button class="success" id="category_btn" onclick="location.href='/success'">완료</button>
                 <button class="favorite" id="category_btn" onclick="location.href='/favorite'">즐겨찾기</button>
             </div>
             <hr>
             <div class="other_categories">
-                {% for category in categories %}
-                <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
-                    <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
+                {% for cat in categories %}
+                <a href="{{ url_for('category_page', category_id=cat[0]) }}" class="category-link">
+                    <button id="category_btn" data-category-id="{{ cat[0] }}" {% if cat[0] == category[0] %}class="selected"{% endif %}>{{ cat[1] }}</button>
                 </a>
                 {% endfor %}
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
@@ -100,6 +100,7 @@
             </div>
             <div class="input-group">
                 <input name="detail" id="detail" autocomplete="off" placeholder=" ">
+                <input type="hidden" id="category-id" value="{{ category[0] }}">
                 <div class="label-detail">상세 내용</div>
             </div>
             <button id="add">추가</button>

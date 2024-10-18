@@ -108,6 +108,8 @@ html, body {
     cursor: default;
 }
 
+.sidebar #category_btn.selected:hover { background-color: rgba(134, 134, 134, 0.779) !important; }
+
 .sidebar hr { 
     border: 1px solid rgb(190, 190, 190); 
     width: 90%; 
@@ -841,4 +843,41 @@ body.dragging .sidebar #add-category:hover {
     animation: none;
     transform: translateX(0);
     background: #a5a5a532;
+}
+
+.other_categories {
+    display: flex;
+    flex-direction: column;
+}
+
+#category_btn, #add-category {
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    margin-bottom: 5px;
+    border: none;
+    background: none;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#category_btn:hover, #add-category:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#add-category {
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.category-link {
+    text-decoration: none;
+    display: block;
+    width: 100%;
+}
+
+.category-link button {
+    width: 100%;
+    text-align: left;
 }

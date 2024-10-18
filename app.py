@@ -125,11 +125,45 @@ def main():
     user_id = session.get('user_id')
     todo = get_todo(user_id, completed=False) if user_id else []
     completed = get_todo(user_id, completed=True) if user_id else []
-    return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, datetime=datetime)
+    categories = get_categories(user_id) if user_id else []
+    return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, categories=categories, datetime=datetime)
 
 @app.route('/check_login')
 def check_login():
     return jsonify({'logged_in': 'user_id' in session})
+
+@app.route('/add_category', methods=['POST'])
+def add_category():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+
+    data = request.json
+    category_name = data.get('category_name')
+
+    if not category_name:
+        return jsonify({'success': False, 'message': '카테고리 이름을 입력해주세요.'})
+
+    success, category_id = add_category_db(user_id, category_name)
+    if success:
+        return jsonify({'success': True, 'message': '카테고리가 추가되었습니다.', 'category_id': category_id})
+    else:
+        return jsonify({'success': False, 'message': '카테고리 추가에 실패했습니다.'})
+
+@app.route('/category/<int:category_id>', methods=['GET'])
+def category_page(category_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect('/login')
+    
+    category = get_category(category_id)
+    if not category or category[1] != user_id:
+        return "카테고리를 찾을 수 없습니다.", 404
+    
+    todos = get_todos_by_category(user_id, category_id)
+    categories = get_categories(user_id)
+    
+    return render_template('category.html', user_id=user_id, category=category, todos=todos, categories=categories, datetime=datetime)
 
 @app.route('/add_todo', methods=['POST'])
 def add_todo_route():
@@ -140,11 +174,12 @@ def add_todo_route():
     data = request.json
     title = data.get('title')
     detail = data.get('detail')
+    category_id = data.get('category_id')
 
     if not title:
         return jsonify({'success': False, 'message': '제목을 입력해주세요.'})
 
-    success = add_todo(user_id, title, detail)
+    success = add_todo(user_id, title, detail, category_id)
     if success:
         return jsonify({'success': True, 'message': '할 일이 추가되었습니다.'})
     else:

@@ -48,9 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (detailInput) detailInput.value = '';
                         }
                     } else {
-                        if (addmodalBackground) {
-                            addmodalBackground.style.display = 'none';
-                        }
+                        if (addmodalBackground) addmodalBackground.style.display = 'none';
                         loginRequiredModal.style.display = 'flex';
                     }
                 })
@@ -62,10 +60,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (addCategoryBtn) {
         addCategoryBtn.addEventListener('click', function() {
-            addCategoryBackground.style.display = 'flex';
-            if (addCategoryInput) {
-                addCategoryInput.value = '';
-            }
+            fetch('/check_login')
+                .then(response => response.json())
+                .then(data => {
+                    if(data.logged_in) {
+                        addCategoryBackground.style.display = 'flex';
+                        if (addCategoryInput) addCategoryInput.value = '';
+                    } else {
+                        if(addCategoryBackground) addCategoryBackground.style.display = 'none';
+                        loginRequiredModal.style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         });
     }
 

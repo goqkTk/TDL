@@ -86,6 +86,13 @@
                 </div>
             </div>
             {% endfor %}
+
+            {% if not todos %}
+            <div class="no-main-message">
+                <p>할 일 목록이 비어있습니다</p>
+                <p>새로운 할 일을 추가해보세요!</p>
+            </div>
+            {% endif %}
         </div>
         <button id="add-content"><i class="fa-solid fa-plus"></i></button>
     </div>

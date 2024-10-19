@@ -123,10 +123,11 @@ register_html = """
 @app.route('/', methods=['GET', 'POST'])
 def main():
     user_id = session.get('user_id')
-    todo = get_todo_without_category(user_id, completed=False) if user_id else []
+    todos = get_todo_without_category(user_id, completed=False) if user_id else []
+    is_empty = len(todos) == 0
     completed = get_todo_without_category(user_id, completed=True) if user_id else []
     categories = get_categories(user_id) if user_id else []
-    return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, categories=categories, datetime=datetime)
+    return render_template('main/main.html', user_id=user_id, todos=todos, is_empty=is_empty, completed=completed, categories=categories, datetime=datetime)
 
 @app.route('/check_login')
 def check_login():
@@ -216,18 +217,20 @@ def update_favorite_order():
 def success():
     user_id = session.get('user_id')
     todos = get_completed_todos(user_id)
+    categories = get_categories(user_id) if user_id else []
     todos_with_info = []
     for todo in todos:
         days = (todo[11] - todo[5]).days if todo[11] and todo[5] else None
         weeks = days // 7 if days is not None else None
         todos_with_info.append(todo + (days, weeks))
-    return render_template('main/success.html', user_id=user_id, todo=todos_with_info)
+    return render_template('main/success.html', user_id=user_id, todo=todos_with_info, categories=categories)
 
 @app.route('/favorite', methods=['GET', 'POST'])
 def favorite():
     user_id = session.get('user_id')
     todo = get_favorite(user_id)
-    return render_template('main/favorite.html', user_id=user_id, todo=todo)
+    categories = get_categories(user_id) if user_id else []
+    return render_template('main/favorite.html', user_id=user_id, todo=todo, categories=categories)
 
 @app.route('/update_todo', methods=['POST'])
 def update_todo():

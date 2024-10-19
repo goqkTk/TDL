@@ -65,7 +65,7 @@ def get_todo_without_category(user_id, completed=False):
     sql = f"""
     SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
     FROM todo 
-    WHERE user_id = %s AND success = %s AND (category_id IS NULL OR category_id = 1 OR favorite = 1 OR is_fixed = 1)
+    WHERE user_id = %s AND success = %s AND (category_id IS NULL OR category_id = 1)
     ORDER BY 
         is_fixed DESC,
         CASE 
@@ -235,7 +235,7 @@ def get_favorite(user_id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     sql = """
-    SELECT id, user_id, title, detail, favorite, day 
+    SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
     FROM todo 
     WHERE user_id = %s AND favorite = 1 AND success = 0
     ORDER BY `order_favorite` ASC

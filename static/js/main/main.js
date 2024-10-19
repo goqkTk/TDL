@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const favoriteBtns = document.querySelectorAll('.favorite-btn');
     const actionBtns = document.querySelectorAll('#success, #delete');
     const addBtn = document.getElementById('add');
     const detailInput = document.getElementById('detail');
@@ -35,6 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let isDragging = false;
     let startScrollY;
     let dragOffsetY;
+
+    checkEmptyMain();
 
     if (addContentBtn) {
         addContentBtn.addEventListener('click', function() {
@@ -341,13 +342,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    favoriteBtns.forEach(btn => {
-        const starIcon = btn.querySelector('i');
-        const todoDiv = btn.closest('.todo-item');
-        updateFavoriteUI(starIcon, todoDiv);
-
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const todoId = this.getAttribute('data-id');
+            const todoDiv = this.closest('.todo-item');
+            const starIcon = this.querySelector('i');
             const isFavorite = starIcon.classList.contains('fa-solid');
             
             fetch('/update_favorite', {
@@ -589,6 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
         contents.insertBefore(todoDiv, contents.firstChild);
         
         setupNewTodoEventListeners(todoDiv);
+        checkEmptyMain();
     }
 
     function setupNewTodoEventListeners(todoDiv) {
@@ -974,19 +974,32 @@ function clearErrorMessage(inputElement) {
 }
 
 function checkEmptyMain() {
-    const mainItems = document.querySelectorAll('.contents .todo-item');
-    const existingMessage = document.querySelector('.no-main-message');
+    console.log("checkEmptyMain 함수 실행");
+    const mainItems = document.querySelectorAll('.contents > .todo-item');
+    const noMainMessage = document.querySelector('.no-main-message');
     
-    if (mainItems.length === 0 && !existingMessage) {
-        const noMainMessage = document.createElement('div');
-        noMainMessage.className = 'no-main-message';
-        noMainMessage.innerHTML = `
-            <p>할 일 목록이 비어있습니다</p>
-            <p>새로운 할 일을 추가해보세요!</p>
-        `;
-        document.querySelector('.contents').appendChild(noMainMessage);
-    } else if (mainItems.length > 0 && existingMessage) {
-        existingMessage.remove();
+    console.log("할 일 항목 개수:", mainItems.length);
+    console.log("메시지 요소 존재 여부:", !!noMainMessage);
+
+    if (mainItems.length === 0) {
+        console.log("할 일 없음, 메시지 표시");
+        if (noMainMessage) {
+            noMainMessage.style.display = 'block';
+        } else {
+            console.log("메시지 요소 없음, 생성");
+            const newMessage = document.createElement('div');
+            newMessage.className = 'no-main-message';
+            newMessage.innerHTML = `
+                <p>할 일 목록이 비어있습니다</p>
+                <p>새로운 할 일을 추가해보세요!</p>
+            `;
+            document.querySelector('.contents').appendChild(newMessage);
+        }
+    } else {
+        console.log("할 일 있음, 메시지 숨김");
+        if (noMainMessage) {
+            noMainMessage.remove();
+        }
     }
 }
 

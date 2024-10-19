@@ -118,7 +118,7 @@ CREATE TABLE `todo` (
   PRIMARY KEY (`id`),
   KEY `fk_category` (`category_id`),
   CONSTRAINT `fk_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -127,7 +127,7 @@ CREATE TABLE `todo` (
 
 LOCK TABLES `todo` WRITE;
 /*!40000 ALTER TABLE `todo` DISABLE KEYS */;
-INSERT INTO `todo` VALUES (2,'test','test2','테스트2','2024-09-21 00:33:47',0,0,1,9999,'2024-10-05 12:47:45',0,NULL,1),(7,'test','test3','테스트3','2024-09-25 13:58:10',0,0,2,9999,NULL,0,NULL,1),(9,'test','test4','테스트4','2024-09-25 14:26:42',0,1,3,1,'2024-10-08 10:47:25',0,NULL,3),(11,'test','김은진 존나 때리기','하루에 한 번 존나 처맞기 + 은우 몫','2024-10-01 20:59:49',0,1,NULL,0,NULL,1,NULL,3),(23,'test','당일 완료','','2024-10-11 08:41:07',1,0,4,9999,NULL,0,'2024-10-11 08:43:42',2),(24,'test','일주일 내 완료','','2024-10-05 12:00:00',1,0,5,9999,NULL,0,'2024-10-11 08:43:43',2),(25,'test','한 달 내 완료','','2024-09-23 12:00:00',1,0,7,9999,NULL,0,'2024-10-11 08:43:46',2),(26,'test','주 완료','','2024-09-01 12:00:00',1,0,6,9999,NULL,0,'2024-10-11 08:43:44',2),(27,'test','연 완료','','2022-12-31 12:00:00',1,0,8,9999,NULL,0,'2024-10-11 08:43:46',2);
+INSERT INTO `todo` VALUES (2,'test','test2','테스트2','2024-09-21 00:33:47',0,0,1,9999,'2024-10-05 12:47:45',0,NULL,1),(7,'test','test3','테스트3','2024-09-25 13:58:10',0,0,2,9999,NULL,0,NULL,1),(9,'test','test4','테스트4','2024-09-25 14:26:42',0,1,3,1,'2024-10-08 10:47:25',0,NULL,3),(11,'test','김은진 존나 때리기','하루에 한 번 존나 처맞기 + 은우 몫','2024-10-01 20:59:49',0,1,NULL,0,NULL,1,NULL,3),(23,'test','당일 완료','','2024-10-11 08:41:07',1,0,4,9999,NULL,0,'2024-10-11 08:43:42',2),(24,'test','일주일 내 완료','','2024-10-05 12:00:00',1,0,5,9999,NULL,0,'2024-10-11 08:43:43',2),(25,'test','한 달 내 완료','','2024-09-23 12:00:00',1,0,7,9999,NULL,0,'2024-10-11 08:43:46',2),(26,'test','주 완료','','2024-09-01 12:00:00',1,0,6,9999,NULL,0,'2024-10-11 08:43:44',2),(27,'test','연 완료','','2022-12-31 12:00:00',1,0,8,9999,NULL,0,'2024-10-11 08:43:46',2),(49,'test','asdf','','2024-10-19 13:43:27',0,0,0,9999,NULL,0,NULL,14),(50,'test','asdf1','','2024-10-19 13:43:33',0,0,1,9999,NULL,0,NULL,14),(51,'test','asdf2','','2024-10-19 13:43:37',0,0,2,9999,NULL,0,NULL,14);
 /*!40000 ALTER TABLE `todo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -175,4 +175,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-10-18 18:10:58
+-- Dump completed on 2024-10-19 14:23:30

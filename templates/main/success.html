@@ -42,6 +42,11 @@
             </div>
             <hr>
             <div class="other_categories">
+                {% for category in categories %}
+                <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
+                    <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
+                </a>
+                {% endfor %}
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
             </div>
             <div class="copyright">

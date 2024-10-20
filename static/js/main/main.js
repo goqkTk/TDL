@@ -111,34 +111,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    
-    function addCategoryToSidebar(categoryId, categoryName) {
-        console.log('Adding category to sidebar:', categoryId, categoryName);
-        const otherCategories = document.querySelector('.other_categories');
-        const addCategoryBtn = document.getElementById('add-category');
-        
-        if (!otherCategories || !addCategoryBtn) {
-            console.error('Required elements not found');
-            return;
-        }
-    
-        const newCategory = document.createElement('button');
-        newCategory.id = 'category_btn';
-        newCategory.setAttribute('data-category-id', categoryId);
-        newCategory.textContent = categoryName;
-        
-        // 'Add Category' 버튼이 .other_categories 내부에 있는지 확인
-        if (otherCategories.contains(addCategoryBtn)) {
-            // 새 카테고리를 'Add Category' 버튼 바로 앞에 삽입
-            otherCategories.insertBefore(newCategory, addCategoryBtn);
-        } else {
-            // 'Add Category' 버튼이 .other_categories 내부에 없으면 맨 뒤에 추가
-            otherCategories.appendChild(newCategory);
-        }
-    
-        // 'Add Category' 버튼을 .other_categories의 마지막 자식으로 이동
-        otherCategories.appendChild(addCategoryBtn);
-    }
 
     if (addCategoryInput) {
         addCategoryInput.addEventListener('focus', function() {

@@ -1,12 +1,4 @@
-* { user-select: none; font-family: 'font', sans-serif; }
-
-@font-face {
-    font-family: 'font';
-    font-style: normal;
-    font-weight: 400;
-    src: url('//fastly.jsdelivr.net/font-nanumlight/1.0/NanumBarunGothicWeb.eot');
-    src: url('//fastly.jsdelivr.net/font-nanumlight/1.0/NanumBarunGothicWeb.eot?#iefix') format('embedded-opentype'), url('//fastly.jsdelivr.net/font-nanumlight/1.0/NanumBarunGothicWeb.woff') format('woff'), url('//fastly.jsdelivr.net/font-nanumlight/1.0/NanumBarunGothicWeb.ttf') format('truetype');
-}
+* { user-select: none; }
 
 html, body {
     background: #F2F2F2;

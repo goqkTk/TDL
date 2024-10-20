@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const favoriteBtns = document.querySelectorAll('.favorite-btn');
     const actionBtns = document.querySelectorAll('#success, #delete');
     const addBtn = document.getElementById('add');
     const detailInput = document.getElementById('detail');
@@ -34,8 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let isDragging = false;
     let startScrollY;
     let dragOffsetY;
-
-    checkEmptyMain();
 
     if (addContentBtn) {
         addContentBtn.addEventListener('click', function() {
@@ -187,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
     backButton.addEventListener('click', function() { qrOverlay.style.display = 'none'; });
 
     document.querySelectorAll('.todo-item').forEach(item => {
-        const isFixed = item.getAttribute('data-fixed') === 'true';
+        const isFixed = item.getAttribute('fixed') === 'true';
         updateFixItemUI(item, isFixed);
     });
 
@@ -342,11 +341,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.querySelectorAll('.favorite-btn').forEach(btn => {
+    favoriteBtns.forEach(btn => {
+        const starIcon = btn.querySelector('i');
+        const todoDiv = btn.closest('.todo-item');
+        updateFavoriteUI(starIcon, todoDiv);
+
         btn.addEventListener('click', function() {
             const todoId = this.getAttribute('data-id');
-            const todoDiv = this.closest('.todo-item');
-            const starIcon = this.querySelector('i');
             const isFavorite = starIcon.classList.contains('fa-solid');
             
             fetch('/update_favorite', {
@@ -588,7 +589,6 @@ document.addEventListener('DOMContentLoaded', function() {
         contents.insertBefore(todoDiv, contents.firstChild);
         
         setupNewTodoEventListeners(todoDiv);
-        checkEmptyMain();
     }
 
     function setupNewTodoEventListeners(todoDiv) {
@@ -781,11 +781,12 @@ document.addEventListener('DOMContentLoaded', function() {
     checkEmptyMain();
 
     document.querySelectorAll('#fix').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(event) {
+            event.stopPropagation();
             const todoItem = this.closest('.todo-item');
             const todoId = todoItem.getAttribute('todo-id');
-            const isFixed = !todoItem.classList.contains('fixed');
-            updateFixStatus(todoId, isFixed);
+            const isFixed = todoItem.classList.contains('fixed');
+            updateFixStatus(todoId, !isFixed);
         });
     });
     updateTodoOrder();
@@ -793,11 +794,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function updateFixItemUI(item, isFixed) {
     item.classList.toggle('fixed', isFixed);
-    item.setAttribute('data-fixed', isFixed);
-    const fixButton = item.querySelector('#fix');
+    item.setAttribute('fixed', isFixed);
+    const fixButton = item.querySelector('#fix img');
     if (fixButton) {
-        const img = fixButton.querySelector('img');
-        img.src = '/static/img/pin-' + (isFixed ? 'on' : 'off') + '.png';
+        fixButton.src = `/static/img/pin-${isFixed ? 'on' : 'off'}.png`;
     }
 }
 
@@ -815,7 +815,13 @@ function updateFixStatus(todoId, isFixed) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            const todoItem = document.querySelector(`.todo-item[todo-id="${todoId}"]`);
+            if (todoItem) {
+                updateFixItemUI(todoItem, isFixed);
+                updateTodoOrder();
+            }
+        } else {
+            console.error('고정 상태 업데이트 실패');
         }
     })
     .catch(error => {
@@ -872,7 +878,6 @@ function updateTodoOrder() {
     const fixedItems = todoItems.filter(item => item.classList.contains('fixed'));
     const unfixedItems = todoItems.filter(item => !item.classList.contains('fixed'));
 
-    fixedItems.sort((a, b) => parseInt(a.getAttribute('data-order')) - parseInt(b.getAttribute('data-order')));
     todoContainer.innerHTML = '';
     fixedItems.forEach(item => todoContainer.appendChild(item));
     unfixedItems.forEach(item => todoContainer.appendChild(item));
@@ -894,7 +899,7 @@ function updateTodoOrder() {
         if (data.success) {
             todoItems.forEach((item, index) => {
                 if (!item.classList.contains('fixed')) {
-                    item.setAttribute('data-order', index);
+                    item.setAttribute('order', index);
                 }
             });
         } else {
@@ -974,32 +979,19 @@ function clearErrorMessage(inputElement) {
 }
 
 function checkEmptyMain() {
-    console.log("checkEmptyMain 함수 실행");
-    const mainItems = document.querySelectorAll('.contents > .todo-item');
-    const noMainMessage = document.querySelector('.no-main-message');
+    const mainItems = document.querySelectorAll('.contents .todo-item');
+    const existingMessage = document.querySelector('.no-main-message');
     
-    console.log("할 일 항목 개수:", mainItems.length);
-    console.log("메시지 요소 존재 여부:", !!noMainMessage);
-
-    if (mainItems.length === 0) {
-        console.log("할 일 없음, 메시지 표시");
-        if (noMainMessage) {
-            noMainMessage.style.display = 'block';
-        } else {
-            console.log("메시지 요소 없음, 생성");
-            const newMessage = document.createElement('div');
-            newMessage.className = 'no-main-message';
-            newMessage.innerHTML = `
-                <p>할 일 목록이 비어있습니다</p>
-                <p>새로운 할 일을 추가해보세요!</p>
-            `;
-            document.querySelector('.contents').appendChild(newMessage);
-        }
-    } else {
-        console.log("할 일 있음, 메시지 숨김");
-        if (noMainMessage) {
-            noMainMessage.remove();
-        }
+    if (mainItems.length === 0 && !existingMessage) {
+        const noMainMessage = document.createElement('div');
+        noMainMessage.className = 'no-main-message';
+        noMainMessage.innerHTML = `
+            <p>할 일 목록이 비어있습니다</p>
+            <p>새로운 할 일을 추가해보세요!</p>
+        `;
+        document.querySelector('.contents').appendChild(noMainMessage);
+    } else if (mainItems.length > 0 && existingMessage) {
+        existingMessage.remove();
     }
 }
 

@@ -895,9 +895,18 @@ function checkForHighlight() {
             todoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             todoElement.addEventListener('animationend', function() {
                 this.classList.remove('highlight-shake');
+                removeHighlightParam();
             });
+        } else {
+            removeHighlightParam();
         }
     }
+}
+
+function removeHighlightParam() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('highlight');
+    window.history.replaceState({}, '', url);
 }
 
 function updateFixItemUI(item, isFixed) {

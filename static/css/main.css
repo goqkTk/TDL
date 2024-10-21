@@ -1034,13 +1034,94 @@ body.dragging .sidebar #add-category:hover {
 
 #category_btn:hover, #add-category:hover { background-color: rgba(255, 255, 255, 0.1); }
 
-.category-link {
-    text-decoration: none;
-    display: block;
+.category-container {
+    position: relative;
     width: 100%;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
 }
 
-.category-link button {
+.category-link {
+    text-decoration: none;
+    flex-grow: 1;
+    display: block;
+}
+
+#category_btn {
     width: 100%;
     text-align: left;
+    padding: 10px;
+    border: none;
+    background: none;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
+
+.category-container:hover #category_btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+#edit-delete {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    padding: 5px;
+}
+
+.category-container:hover { transform: translateX(5px); }
+.category-container:hover #edit-delete { opacity: 1; }
+#edit-delete i { font-size: 16px; }
+
+#add-category {
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    border: none;
+    background: none;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#add-category:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+.edit-delete-container {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1001;
+    width: 150px;
+    font-size: 14px;
+    display: none;
+}
+
+#edit-delete-group {
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    color: #333;
+}
+
+#edit-delete-group i {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+#edit-delete-group:hover { background-color: #f0f0f0; }
+.edit i { color: black; }
+.delete i { color: #F44336; }

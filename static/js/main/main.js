@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('category-search-input');
     const searchResults = document.getElementById('category-search-results');
     const searchLabel = document.getElementById('search-label');
+    const editDeleteButtons = document.querySelector('#edit-delete');
 
     let todoToRemove = null;
 

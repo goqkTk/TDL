@@ -43,9 +43,20 @@
             <hr>
             <div class="other_categories">
                 {% for category in categories %}
-                <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
-                    <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
-                </a>
+                <div class="category-container">
+                    <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
+                        <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
+                    </a>
+                    <button id="edit-delete"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+                <div class="edit-delete-container" style="display: none;">
+                    <div class="edit" id="edit-delete-group">
+                        <i class="fa-solid fa-pen"></i>수정
+                    </div>
+                    <div class="delete" id="edit-delete-group">
+                        <i class="fa-regular fa-trash-can"></i>삭제
+                    </div>
+                </div>
                 {% endfor %}
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
             </div>

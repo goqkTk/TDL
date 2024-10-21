@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchModalBackground = document.querySelector('.search-modal-background');
     const searchInput = document.getElementById('category-search-input');
     const searchResults = document.getElementById('category-search-results');
+    const searchLabel = document.getElementById('search-label');
 
     let draggedItem = null;
     let placeholder = null;
@@ -29,10 +30,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (searchBtn) {
         searchBtn.addEventListener('click', function() {
-            if (searchModalBackground) {
-                searchModalBackground.style.display = 'flex';
-                if (searchInput) searchInput.focus();
-            }
+            fetch('/check_login')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.logged_in) {
+                        if (searchModalBackground) {
+                            searchModalBackground.style.display = 'flex';
+                            if (searchInput) {
+                                searchInput.value = '';
+                                searchInput.focus();
+                            }
+                            if (searchResults) {
+                                searchResults.innerHTML = '';
+                            }
+                            if (searchLabel) {
+                                searchLabel.innerHTML = '힌트를 주시면 제가 찾아볼게요';
+                                searchLabel.classList.remove('no-results', 'has-results');
+                            }
+                        }
+                    } else {
+                        if (searchModalBackground) searchModalBackground.style.display = 'none';
+                        loginRequiredModal.style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         });
     }
 
@@ -49,39 +72,75 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 searchResults.innerHTML = '';
-                data.categories.forEach(category => {
-                    const categoryElement = document.createElement('div');
-                    categoryElement.textContent = `카테고리: ${category.name}`;
-                    categoryElement.addEventListener('click', function() {
-                        window.location.href = `/category/${category.id}`;
+                if (data.categories.length === 0 && data.todos.length === 0) {
+                    searchLabel.innerHTML = '단서가 부족한 거 같아요. 다른 힌트는 없나요?';
+                    searchLabel.classList.add('no-results');
+                    searchLabel.classList.remove('has-results');
+                } else {
+                    searchLabel.innerHTML = '이거 같은데요?!';
+                    searchLabel.classList.add('has-results');
+                    searchLabel.classList.remove('no-results');
+                    
+                    data.categories.forEach(category => {
+                        const categoryElement = document.createElement('div');
+                        categoryElement.className = 'search-result-item';
+                        categoryElement.innerHTML = `
+                            <span class="result-type category">카테고리</span>
+                            ${category.name}
+                        `;
+                        categoryElement.addEventListener('click', function() {
+                            window.location.href = `/category/${category.id}`;
+                        });
+                        searchResults.appendChild(categoryElement);
                     });
-                    searchResults.appendChild(categoryElement);
-                });
-                data.todos.forEach(todo => {
-                    const todoElement = document.createElement('div');
-                    todoElement.textContent = `할 일: ${todo.title}`;
-                    todoElement.addEventListener('click', function() {
-                        if (todo.category_id) {
-                            window.location.href = `/category/${todo.category_id}?highlight=${todo.id}`;
-                        } else {
-                            window.location.href = `/?highlight=${todo.id}`;
-                        }
+                    data.todos.forEach(todo => {
+                        const todoElement = document.createElement('div');
+                        todoElement.className = 'search-result-item';
+                        todoElement.innerHTML = `
+                            <span class="result-type todo">할 일</span>
+                            ${todo.title}
+                        `;
+                        todoElement.addEventListener('click', function() {
+                            if (todo.category_id) {
+                                window.location.href = `/category/${todo.category_id}?highlight=${todo.id}`;
+                            } else {
+                                window.location.href = `/?highlight=${todo.id}`;
+                            }
+                        });
+                        searchResults.appendChild(todoElement);
                     });
-                    searchResults.appendChild(todoElement);
-                });
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
             });
         } else {
             searchResults.innerHTML = '';
+            searchLabel.innerHTML = '힌트를 주시면 제가 찾아볼게요';
+            searchLabel.classList.remove('no-results', 'has-results');
         }
+    });
+
+    searchInput.addEventListener('focus', function() {
+        if (this.value.length === 0) {
+            searchLabel.classList.add('focus');
+        }
+    });
+    
+    searchInput.addEventListener('blur', function() {
+        searchLabel.classList.remove('focus');
     });
 
     modalBackgrounds.forEach(background => {
         background.addEventListener('click', function(event) {
             if (event.target === this) {
                 this.style.display = 'none';
+                if (searchInput) searchInput.value = '';
+                if (searchResults) searchResults.innerHTML = '';
+                if (searchLabel) {
+                    searchLabel.innerHTML = '힌트를 주시면 제가 찾아볼게요';
+                    searchLabel.classList.remove('no-results', 'has-results');
+                }
             }
         });
     });

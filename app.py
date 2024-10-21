@@ -123,7 +123,8 @@ def main():
     todo = get_todo_without_category(user_id, completed=False) if user_id else []
     completed = get_todo_without_category(user_id, completed=True) if user_id else []
     categories = get_categories(user_id) if user_id else []
-    return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, categories=categories, datetime=datetime)
+    is_todo_empty = len(todo) == 0
+    return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, categories=categories, datetime=datetime, is_todo_empty=is_todo_empty)
 
 @app.route('/check_login')
 def check_login():

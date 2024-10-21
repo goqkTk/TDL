@@ -36,6 +36,33 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let dragOffsetY;
 
+    const todoContainer = document.querySelector('.contents');
+    let isCurrentlyEmpty = todoContainer.querySelector('.todo-item') === null;
+
+    function checkEmptyMain() {
+        const todoContainer = document.querySelector('.contents');
+        const mainItems = todoContainer.querySelectorAll('.todo-item');
+        const existingMessage = todoContainer.querySelector('.no-main-message');
+        
+        if (mainItems.length === 0) {
+            if (!existingMessage) {
+                const noMainMessage = document.createElement('div');
+                noMainMessage.className = 'no-main-message';
+                noMainMessage.innerHTML = `
+                    <p>할 일 목록이 비어있습니다</p>
+                    <p>새로운 할 일을 추가해보세요!</p>
+                `;
+                todoContainer.appendChild(noMainMessage);
+            }
+        } else {
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+        }
+    }
+    checkEmptyMain();
+    setTimeout(checkEmptyMain, 100);
+
     if (addContentBtn) {
         addContentBtn.addEventListener('click', function() {
             fetch('/check_login')
@@ -520,7 +547,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
     function addTodoToDOM(todo) {
-        const contents = document.querySelector('.contents');
         const todoDiv = document.createElement('div');
         todoDiv.id = 'todo';
         todoDiv.className = `todo-item${todo.favorite ? ' active' : ''}${todo.is_fixed ? ' fixed' : ''}`;
@@ -543,24 +569,32 @@ document.addEventListener('DOMContentLoaded', function() {
             <button id="other"><i class="fa-solid fa-ellipsis-vertical"></i></button>
             <button id="success" data-id="${todo.id}"><i class="fa-regular fa-circle-check"></i></button>
             <div class="other-container" style="display: none;">
-                <div class="edit-group">수정</div>
-                <div class="remove-group">삭제</div>
-                <div class="detail-group">상세 정보</div>
-            </div>
+                    <div class="edit-group" id="other-group">
+                        <i class="fa-solid fa-pen"></i>수정
+                    </div>
+                    <div class="remove-group" id="other-group">
+                        <i class="fa-regular fa-trash-can"></i>삭제
+                    </div>
+                    <div class="detail-group" id="other-group">
+                        <i class="fa-solid fa-circle-info"></i>상세 정보
+                    </div>
+                </div>
             <div class="info-container" style="display: none;">
                 <p>생성일: ${createdDate.toLocaleString()}</p>
                 <p>수정일: ${editedDate ? editedDate.toLocaleString() : '수정되지 않음'}</p>
             </div>
         `;
     
-        const noMainMessage = contents.querySelector('.no-main-message');
-        if (noMainMessage) {
-            contents.removeChild(noMainMessage);
+        if (isCurrentlyEmpty) {
+            const noMainMessage = todoContainer.querySelector('.no-main-message');
+            if (noMainMessage) {
+                noMainMessage.remove();
+            }
         }
     
-        contents.insertBefore(todoDiv, contents.firstChild);
-        
+        todoContainer.insertBefore(todoDiv, todoContainer.firstChild);
         setupNewTodoEventListeners(todoDiv);
+        isCurrentlyEmpty = false;
     }
 
     function setupNewTodoEventListeners(todoDiv) {
@@ -691,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const categoryId = categoryIdElement ? categoryIdElement.value : null;
             
             if (!title.trim()) {
-                setupErrorMessage('title', '할 일을 입력해주세요');
+                setupErrorMessage(titleInput, '할 일을 입력해주세요');
                 return;
             }
     
@@ -718,12 +752,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (titleInput) titleInput.value = '';
                     if (detailInput) detailInput.value = '';
                 } else {
-                    setupErrorMessage('title', data.message || '할 일 추가에 실패했습니다.');
+                    setupErrorMessage(titleInput, data.message || '할 일 추가에 실패했습니다.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                setupErrorMessage('title', '오류가 발생했습니다.');
+                setupErrorMessage(titleInput, '오류가 발생했습니다.');
             });
         });
     }
@@ -731,9 +765,39 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.remove-group').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
-            const todoItem = this.closest('.todo-item');
-            todoToRemove = todoItem;
+            todoToRemove = this.closest('.todo-item');
             confirmModalBackground.style.display = 'flex';
+        });
+    });
+
+    document.querySelectorAll('#success').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const todoId = this.getAttribute('data-id');
+            const todoItem = this.closest('.todo-item');
+            
+            fetch('/update_success', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    todo_id: todoId,
+                    is_success: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    todoItem.remove();
+                    isCurrentlyEmpty = todoContainer.querySelectorAll('.todo-item').length === 0;
+                    checkEmptyMain();
+                } else {
+                    console.error('완료 상태 업데이트 실패');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         });
     });
 
@@ -747,6 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const todoId = todoToRemove.getAttribute('todo-id');
             deleteTodo(todoId, todoToRemove);
             confirmModalBackground.style.display = 'none';
+            todoToRemove = null;
         }
     });
 
@@ -895,7 +960,7 @@ function deleteTodo(todoId, todoElement) {
     .then(data => {
         if (data.success) {
             todoElement.remove();
-            checkEmptyMain();
+            window.location.reload();
         } else {
             console.error('할 일 삭제 실패');
         }
@@ -923,8 +988,7 @@ function updateFavoriteUI(starIcon, todoDiv, isFavorite = null) {
     }
 }
 
-function setupErrorMessage(inputId, messageText) {
-    const inputElement = document.getElementById(inputId);
+function setupErrorMessage(inputElement, messageText) {
     if (!inputElement) return;
     const inputGroup = inputElement.closest('.input-group');
     if (!inputGroup) return;
@@ -948,23 +1012,6 @@ function clearErrorMessage(inputElement) {
         errorMessage.style.display = 'none';
     }
     inputElement.classList.remove('error');
-}
-
-function checkEmptyMain() {
-    const mainItems = document.querySelectorAll('.contents .todo-item');
-    const existingMessage = document.querySelector('.no-main-message');
-    
-    if (mainItems.length === 0 && !existingMessage) {
-        const noMainMessage = document.createElement('div');
-        noMainMessage.className = 'no-main-message';
-        noMainMessage.innerHTML = `
-            <p>할 일 목록이 비어있습니다</p>
-            <p>새로운 할 일을 추가해보세요!</p>
-        `;
-        document.querySelector('.contents').appendChild(noMainMessage);
-    } else if (mainItems.length > 0 && existingMessage) {
-        existingMessage.remove();
-    }
 }
 
 const titleInput = document.getElementById('title');

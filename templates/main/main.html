@@ -54,8 +54,14 @@
             </div>
         </div>
         <div class="contents">
+            {% if is_todo_empty %}
+            <div class="no-main-message">
+                <p>할 일 목록이 비어있습니다</p>
+                <p>새로운 할 일을 추가해보세요!</p>
+            </div>
+            {% endif %}
             {% for todo in todo %}
-            <div id="todo" class="todo-item{% if todo[4] == 1 %} active{% endif %}{% if todo[9] == 1 %} fixed{% endif %}" todo-id="{{ todo[0] }}" data-fixed="{{ 'true' if todo[9] == 1 else 'false' }}" data-order="{{ todo[7] }}">
+            <div id="todo" class="todo-item{% if todo[4] == 1 %} active{% endif %}{% if todo[9] == 1 %} fixed{% endif %}" data-is-empty="{{ 'true' if is_todo_empty else 'false' }}" todo-id="{{ todo[0] }}" data-fixed="{{ 'true' if todo[9] == 1 else 'false' }}" data-order="{{ todo[7] }}">
                 <button id="grip"><i class="fa-solid fa-grip-vertical"></i></button>
                 <h3 class="title">{{ todo[2] }}</h3>
                 <p class="detail">{{ todo[3] }}</p>

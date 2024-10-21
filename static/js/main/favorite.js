@@ -15,7 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
-    const modalBackgrounds = document.querySelectorAll('.edit-modal-background, .confirm-modal-background, .donate-modal-background');
+    const modalBackgrounds = document.querySelectorAll('.edit-modal-background, .confirm-modal-background, .donate-modal-background, .search-modal-background');
+    const searchBtn = document.querySelector('.search');
+    const searchModalBackground = document.querySelector('.search-modal-background');
+    const searchInput = document.getElementById('category-search-input');
+    const searchResults = document.getElementById('category-search-results');
 
     let draggedItem = null;
     let placeholder = null;
@@ -23,6 +27,57 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let originalRect;
     let dragOffsetY;
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            if (searchModalBackground) {
+                searchModalBackground.style.display = 'flex';
+                if (searchInput) searchInput.focus();
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        if (searchTerm.length > 0) {
+            fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({search_term: searchTerm})
+            })
+            .then(response => response.json())
+            .then(data => {
+                searchResults.innerHTML = '';
+                data.categories.forEach(category => {
+                    const categoryElement = document.createElement('div');
+                    categoryElement.textContent = `카테고리: ${category.name}`;
+                    categoryElement.addEventListener('click', function() {
+                        window.location.href = `/category/${category.id}`;
+                    });
+                    searchResults.appendChild(categoryElement);
+                });
+                data.todos.forEach(todo => {
+                    const todoElement = document.createElement('div');
+                    todoElement.textContent = `할 일: ${todo.title}`;
+                    todoElement.addEventListener('click', function() {
+                        if (todo.category_id) {
+                            window.location.href = `/category/${todo.category_id}?highlight=${todo.id}`;
+                        } else {
+                            window.location.href = `/?highlight=${todo.id}`;
+                        }
+                    });
+                    searchResults.appendChild(todoElement);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        } else {
+            searchResults.innerHTML = '';
+        }
+    });
 
     modalBackgrounds.forEach(background => {
         background.addEventListener('click', function(event) {

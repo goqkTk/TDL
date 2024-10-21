@@ -1,3 +1,4 @@
+window.addEventListener('load', checkForHighlight);
 document.addEventListener('DOMContentLoaded', function() {
     const favoriteBtns = document.querySelectorAll('.favorite-btn');
     const actionBtns = document.querySelectorAll('#success, #delete');
@@ -20,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
-    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background, .add-category-modal-background');
+    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background, .add-category-modal-background, .search-modal-background');
     const loginRequiredModal = document.querySelector('.login-required-modal-background');
     const goToLoginBtn = document.getElementById('go-to-login');
     const addCategoryBtn = document.getElementById('add-category');
@@ -40,54 +41,55 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let dragOffsetY;
 
-    searchBtn.addEventListener('click', function() {
-        searchModalBackground.style.display = 'flex';
-    });
-
-    searchModalBackground.addEventListener('click', function(event) {
-        if (event.target === this) {
-            this.style.display = 'none';
-        }
-    });
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            if (searchModalBackground) {
+                searchModalBackground.style.display = 'flex';
+                if (searchInput) searchInput.focus();
+            }
+        });
+    }
 
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
-        fetch('/search', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({search_term: searchTerm})
-        })
-        .then(response => response.json())
-        .then(data => {
+        if (searchTerm.length > 0) {
+            fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({search_term: searchTerm})
+            })
+            .then(response => response.json())
+            .then(data => {
+                searchResults.innerHTML = '';
+                data.categories.forEach(category => {
+                    const categoryElement = document.createElement('div');
+                    categoryElement.textContent = `카테고리: ${category.name}`;
+                    categoryElement.addEventListener('click', function() {
+                        window.location.href = `/category/${category.id}`;
+                    });
+                    searchResults.appendChild(categoryElement);
+                });
+                data.todos.forEach(todo => {
+                    const todoElement = document.createElement('div');
+                    todoElement.textContent = `할 일: ${todo.title}`;
+                    todoElement.addEventListener('click', function() {
+                        if (todo.category_id) {
+                            window.location.href = `/category/${todo.category_id}?highlight=${todo.id}`;
+                        } else {
+                            window.location.href = `/?highlight=${todo.id}`;
+                        }
+                    });
+                    searchResults.appendChild(todoElement);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        } else {
             searchResults.innerHTML = '';
-            
-            data.categories.forEach(category => {
-                const categoryElement = document.createElement('div');
-                categoryElement.textContent = `카테고리: ${category.name}`;
-                categoryElement.addEventListener('click', function() {
-                    window.location.href = `/category/${category.id}`;
-                });
-                searchResults.appendChild(categoryElement);
-            });
-            
-            data.todos.forEach(todo => {
-                const todoElement = document.createElement('div');
-                todoElement.textContent = `할 일: ${todo.title}`;
-                todoElement.addEventListener('click', function() {
-                    if (todo.category_id) {
-                        window.location.href = `/category/${todo.category_id}`;
-                    } else {
-                        window.location.href = '/';
-                    }
-                });
-                searchResults.appendChild(todoElement);
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        }
     });
 
     const todoContainer = document.querySelector('.contents');
@@ -397,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const starIcon = btn.querySelector('i');
         const todoDiv = btn.closest('.todo-item');
         updateFavoriteUI(starIcon, todoDiv);
-
+    
         btn.addEventListener('click', function() {
             const todoId = this.getAttribute('data-id');
             const isFavorite = starIcon.classList.contains('fa-solid');
@@ -882,6 +884,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateTodoOrder();
 });
 
+function checkForHighlight() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    
+    if (highlightId) {
+        const todoElement = document.querySelector(`.todo-item[todo-id="${highlightId}"]`);
+        if (todoElement) {
+            todoElement.classList.add('highlight-shake');
+            todoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            todoElement.addEventListener('animationend', function() {
+                this.classList.remove('highlight-shake');
+            });
+        }
+    }
+}
+
 function updateFixItemUI(item, isFixed) {
     item.classList.toggle('fixed', isFixed);
     item.setAttribute('fixed', isFixed);
@@ -1029,12 +1047,12 @@ function updateFavoriteUI(starIcon, todoDiv, isFavorite = null) {
     }
     
     if (isFavorite) {
-        starIcon.classList.replace('fa-regular', 'fa-solid');
+        starIcon.className = 'fa-solid fa-star';
         starIcon.style.color = '#FFD43B';
         todoDiv.classList.add('active');
         todoDiv.style.backgroundColor = '#fff9db';
     } else {
-        starIcon.classList.replace('fa-solid', 'fa-regular');
+        starIcon.className = 'fa-regular fa-star';
         starIcon.style.color = '';
         todoDiv.classList.remove('active');
         todoDiv.style.backgroundColor = '';

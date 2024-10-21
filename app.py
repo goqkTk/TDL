@@ -139,8 +139,10 @@ def search():
     if not user_id:
         return jsonify({'categories': [], 'todos': []})
     
-    categories = get_todos_by_search(user_id, search_term)
+    categories = get_categories_by_search(user_id, search_term)
     todos = get_todos_by_search(user_id, search_term)
+    categories = [{'id': cat['id'], 'name': cat['name']} for cat in categories]
+    
     return jsonify({'categories': categories, 'todos': todos})
 
 @app.route('/add_category', methods=['POST'])

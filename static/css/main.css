@@ -439,30 +439,50 @@ body.dragging .sidebar #add-category:hover {
     z-index: 9999;
 }
 
-.search-modal h2 {
+.search-modal h3 {
     color: #333;
     font-size: 24px;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
     text-align: center;
 }
 
-#category-search-input {
+.search-modal #group {
+    position: relative;
+    margin-bottom: 30px;
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    margin-bottom: 15px;
 }
 
-#category-search-input:focus {
-    border-color: #03A9F4;
+.search-modal #group input {
+    width: 70%;
+    padding: 10px 0;
+    font-size: 16px;
+    border: none;
+    border-bottom: 1px solid gray;
+    background: transparent;
     outline: none;
+}
+
+.search-modal #group label {
+    position: absolute;
+    top: 10px;
+    left: 60px;
+    font-size: 16px;
+    color: #999;
+    pointer-events: none;
+    transition: 0.2s ease all;
+}
+
+.search-modal #group input:focus ~ label,
+.search-modal #group input:not(:placeholder-shown) ~ label {
+    top: -10px;
+    font-size: 14px;
+    color: #03A9F4;
 }
 
 #category-search-results {
     max-height: 200px;
     overflow-y: auto;
+    margin-top: 20px;
 }
 
 #category-search-results div {
@@ -472,12 +492,15 @@ body.dragging .sidebar #add-category:hover {
     transition: background-color 0.3s;
 }
 
-#category-search-results div:last-child {
-    border-bottom: none;
-}
+.search-modal #group input:focus { border-color: #03A9F4; }
+#category-search-results div:last-child { border-bottom: none; }
+#category-search-results div:hover { background-color: #f0f0f0; }
+.highlight-shake { animation: highlight-shake 1.1s ease-in-out; }
 
-#category-search-results div:hover {
-    background-color: #f0f0f0;
+@keyframes highlight-shake {
+    0%, 100% { transform: translateX(0); }
+    12.5%, 37.5%, 62.5%, 87.5% { transform: translateX(-5px); }
+    25%, 50%, 75% { transform: translateX(5px); }
 }
 
 .add-category-modal,

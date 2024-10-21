@@ -19,6 +19,20 @@ def get_todos_by_search(user_id, search_term):
     finally:
         db.close()
 
+def get_categories_by_search(user_id, search_term):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor(pymysql.cursors.DictCursor)
+    try:
+        sql = "SELECT id, name FROM categories WHERE user_id = %s AND name LIKE %s"
+        cursor.execute(sql, (user_id, f"%{search_term}%"))
+        categories = cursor.fetchall()
+        return categories
+    except Exception as e:
+        print(f"카테고리 검색 오류: {str(e)}")
+        return []
+    finally:
+        db.close()
+
 def add_category_db(user_id, category_name):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()

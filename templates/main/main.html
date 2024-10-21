@@ -180,6 +180,13 @@
             <button id="confirm-category">확인</button>
         </div>
     </div>
+    <div class="search-modal-background" style="display: none;">
+        <div class="search-modal">
+            <h2>카테고리 검색</h2>
+            <input type="text" id="category-search-input" placeholder="카테고리 이름을 입력하세요">
+            <div id="category-search-results"></div>
+        </div>
+    </div>
 </body>
 <script src="{{ url_for('static', filename='js/main/main.js') }}"></script>
 </html>

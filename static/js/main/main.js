@@ -27,6 +27,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const addCategoryBackground = document.querySelector('.add-category-modal-background');
     const addCategoryInput = document.getElementById('add-category-input');
     const confirmCategoryBtn = document.getElementById('confirm-category');
+    const searchBtn = document.querySelector('.search');
+    const searchModalBackground = document.querySelector('.search-modal-background');
+    const searchInput = document.getElementById('category-search-input');
+    const searchResults = document.getElementById('category-search-results');
 
     let todoToRemove = null;
 
@@ -35,6 +39,56 @@ document.addEventListener('DOMContentLoaded', function() {
     let isDragging = false;
     let startScrollY;
     let dragOffsetY;
+
+    searchBtn.addEventListener('click', function() {
+        searchModalBackground.style.display = 'flex';
+    });
+
+    searchModalBackground.addEventListener('click', function(event) {
+        if (event.target === this) {
+            this.style.display = 'none';
+        }
+    });
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        fetch('/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({search_term: searchTerm})
+        })
+        .then(response => response.json())
+        .then(data => {
+            searchResults.innerHTML = '';
+            
+            data.categories.forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.textContent = `카테고리: ${category.name}`;
+                categoryElement.addEventListener('click', function() {
+                    window.location.href = `/category/${category.id}`;
+                });
+                searchResults.appendChild(categoryElement);
+            });
+            
+            data.todos.forEach(todo => {
+                const todoElement = document.createElement('div');
+                todoElement.textContent = `할 일: ${todo.title}`;
+                todoElement.addEventListener('click', function() {
+                    if (todo.category_id) {
+                        window.location.href = `/category/${todo.category_id}`;
+                    } else {
+                        window.location.href = '/';
+                    }
+                });
+                searchResults.appendChild(todoElement);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
 
     const todoContainer = document.querySelector('.contents');
     let isCurrentlyEmpty = todoContainer.querySelector('.todo-item') === null;
@@ -126,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     addCategoryBackground.style.display = 'none';
                     addCategoryInput.value = '';
                     clearErrorMessage(addCategoryInput);
-                    // 페이지 새로고침
                     window.location.reload();
                 } else {
                     setupErrorMessage(addCategoryInput, data.message);

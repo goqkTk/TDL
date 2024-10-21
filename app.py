@@ -130,6 +130,19 @@ def main():
 def check_login():
     return jsonify({'logged_in': 'user_id' in session})
 
+@app.route('/search', methods=['POST'])
+def search():
+    data = request.json
+    search_term = data.get('search_term', '')
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        return jsonify({'categories': [], 'todos': []})
+    
+    categories = get_todos_by_search(user_id, search_term)
+    todos = get_todos_by_search(user_id, search_term)
+    return jsonify({'categories': categories, 'todos': todos})
+
 @app.route('/add_category', methods=['POST'])
 def add_category():
     user_id = session.get('user_id')

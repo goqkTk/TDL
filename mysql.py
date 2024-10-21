@@ -1,6 +1,24 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+def get_todos_by_search(user_id, search_term):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor(pymysql.cursors.DictCursor)
+    try:
+        sql = """
+        SELECT id, title, detail, category_id 
+        FROM todo 
+        WHERE user_id = %s AND (title LIKE %s OR detail LIKE %s)
+        """
+        cursor.execute(sql, (user_id, f"%{search_term}%", f"%{search_term}%"))
+        todos = cursor.fetchall()
+        return todos
+    except Exception as e:
+        print(f"할 일 검색 오류: {str(e)}")
+        return []
+    finally:
+        db.close()
+
 def add_category_db(user_id, category_name):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
@@ -65,7 +83,7 @@ def get_todo_without_category(user_id, completed=False):
     sql = f"""
     SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
     FROM todo 
-    WHERE user_id = %s AND success = %s AND (category_id IS NULL OR category_id = 1 OR favorite = 1 OR is_fixed = 1)
+    WHERE user_id = %s AND success = %s AND (category_id IS NULL OR category_id = 1 AND favorite = 1 AND is_fixed = 1)
     ORDER BY 
         is_fixed DESC,
         CASE 

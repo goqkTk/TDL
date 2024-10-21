@@ -425,7 +425,8 @@ body.dragging .sidebar #add-category:hover {
 .edit-modal-background,
 .confirm-modal-background,
 .donate-modal-background,
-.add-category-modal-background {
+.add-category-modal-background,
+.search-modal-background {
     background-color: rgba(0,0,0,0.4);
     width: 100%;
     height: 100%;
@@ -438,7 +439,49 @@ body.dragging .sidebar #add-category:hover {
     z-index: 9999;
 }
 
-.add-category-modal {
+.search-modal h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+#category-search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+#category-search-input:focus {
+    border-color: #03A9F4;
+    outline: none;
+}
+
+#category-search-results {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#category-search-results div {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#category-search-results div:last-child {
+    border-bottom: none;
+}
+
+#category-search-results div:hover {
+    background-color: #f0f0f0;
+}
+
+.add-category-modal,
+.search-modal {
     background-color: #ffffff;
     border-radius: 8px;
     padding: 20px;

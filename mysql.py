@@ -1,6 +1,38 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+def delete_category_db(user_id, category_id):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    try:
+        sql = "UPDATE todo SET category_id = NULL WHERE category_id = %s AND user_id = %s"
+        cursor.execute(sql, (category_id, user_id))
+        sql = "DELETE FROM categories WHERE id = %s AND user_id = %s"
+        cursor.execute(sql, (category_id, user_id))
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"카테고리 삭제 오류: {str(e)}")
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
+def update_category_db(user_id, category_id, new_name):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    try:
+        sql = "UPDATE categories SET name = %s WHERE id = %s AND user_id = %s"
+        cursor.execute(sql, (new_name, category_id, user_id))
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"카테고리 수정 오류: {str(e)}")
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
 def get_todos_by_search(user_id, search_term):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor(pymysql.cursors.DictCursor)

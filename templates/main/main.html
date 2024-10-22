@@ -43,19 +43,11 @@
             <hr>
             <div class="other_categories">
                 {% for category in categories %}
-                <div class="category-container">
+                <div class="category-container" data-category-id="{{ category[0] }}">
                     <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
                         <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
                     </a>
                     <button id="edit-delete"><i class="fa-solid fa-ellipsis"></i></button>
-                </div>
-                <div class="edit-delete-container" style="display: none;">
-                    <div class="edit" id="edit-delete-group">
-                        <i class="fa-solid fa-pen"></i>수정
-                    </div>
-                    <div class="delete" id="edit-delete-group">
-                        <i class="fa-regular fa-trash-can"></i>삭제
-                    </div>
                 </div>
                 {% endfor %}
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
@@ -189,6 +181,18 @@
                 <span class="error-message" style="display: none;"></span>
             </div>
             <button id="confirm-category">확인</button>
+        </div>
+    </div>
+    <div class="edit-delete-modal-background" style="display: none;">
+        <div class="edit-category-modal">
+            <h2>카테고리 수정</h2>
+            <p>더 멋진 이름이 생각났나요?</p>
+            <div class="input-group">
+                <input type="text" name="edit-category-input" id="edit-category-input" autocomplete="off">
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <button id="confirm-edit-category">확인</button>
+            <button id="delete-category">카테고리 삭제</button>
         </div>
     </div>
     <div class="search-modal-background" style="display: none;">

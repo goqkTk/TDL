@@ -126,6 +126,40 @@ def main():
     is_todo_empty = len(todo) == 0
     return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, categories=categories, datetime=datetime, is_todo_empty=is_todo_empty)
 
+@app.route('/delete_category', methods=['POST'])
+def delete_category():
+    data = request.json
+    category_id = data.get('category_id')
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+
+    success = delete_category_db(user_id, category_id)
+    if success:
+        return jsonify({'success': True, 'message': '카테고리가 삭제되었습니다.'})
+    else:
+        return jsonify({'success': False, 'message': '카테고리 삭제에 실패했습니다.'})
+
+@app.route('/update_category', methods=['POST'])
+def update_category():
+    data = request.json
+    new_name = data.get('category_name')
+    category_id = data.get('category_id')
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+
+    if not new_name:
+        return jsonify({'success': False, 'message': '카테고리 이름을 입력해주세요.'})
+
+    success = update_category_db(user_id, category_id, new_name)
+    if success:
+        return jsonify({'success': True, 'message': '카테고리가 수정되었습니다.'})
+    else:
+        return jsonify({'success': False, 'message': '카테고리 수정에 실패했습니다.'})
+
 @app.route('/check_login')
 def check_login():
     return jsonify({'logged_in': 'user_id' in session})

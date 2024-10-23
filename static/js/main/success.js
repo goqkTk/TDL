@@ -14,12 +14,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
-    const modalBackgrounds = document.querySelectorAll('.confirm-modal-background, .donate-modal-background, .search-modal-background');
+    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background, .add-category-modal-background, .search-modal-background, .edit-delete-modal-background');
     const searchBtn = document.querySelector('.search');
     const searchModalBackground = document.querySelector('.search-modal-background');
     const searchInput = document.getElementById('category-search-input');
     const searchResults = document.getElementById('category-search-results');
     const searchLabel = document.getElementById('search-label');
+    const addCategoryBtn = document.getElementById('add-category');
+    const addCategoryBackground = document.querySelector('.add-category-modal-background');
+    const addCategoryInput = document.getElementById('add-category-input');
+    const editCategoryInput = document.getElementById('edit-category-input');
+    const confirmCategoryBtn = document.getElementById('confirm-category');
+    const confirmEditCategoryBtn = document.getElementById('confirm-edit-category');
+    const editDeleteButtons = document.querySelectorAll('#edit-delete');
+    const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
 
     let draggedItem = null;
     let placeholder = null;
@@ -27,6 +35,182 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let dragOffsetY;
     let originalRect;
+
+    if (addCategoryInput) {
+        addCategoryInput.addEventListener('focus', function() {
+            clearErrorMessage(this);
+        });
+    }
+
+    if (confirmCategoryBtn) {
+        confirmCategoryBtn.addEventListener('click', function() {
+            const categoryName = addCategoryInput ? addCategoryInput.value : '';
+            
+            if (!categoryName.trim()) {
+                setupErrorMessage(addCategoryInput, '카테고리 이름을 입력해주세요');
+                return;
+            }
+    
+            fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({category_name: categoryName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addCategoryBackground.style.display = 'none';
+                    addCategoryInput.value = '';
+                    clearErrorMessage(addCategoryInput);
+                    window.location.reload();
+                } else {
+                    setupErrorMessage(addCategoryInput, data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                setupErrorMessage(addCategoryInput, '카테고리 추가 중 오류가 발생했습니다.');
+            });
+        });
+    }
+
+    if (editCategoryInput) {
+        editCategoryInput.addEventListener('focus', function() {
+            clearErrorMessage(this);
+        });
+    }
+
+    if (confirmEditCategoryBtn) {
+        confirmEditCategoryBtn.addEventListener('click', function() {
+            const categoryName = editCategoryInput ? editCategoryInput.value : '';
+    
+            if (!categoryName.trim()) {
+                setupErrorMessage(editCategoryInput, '카테고리 이름을 입력해주세요');
+                return;
+            }
+    
+            fetch('/update_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    category_name: newName,
+                    category_id: categoryId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    categoryContainer.querySelector('#category_btn').textContent = newName;
+                    document.querySelector('.edit-delete-modal-background').style.display = 'none';
+                } else {
+                    const errorMessage = editModal.querySelector('.error-message');
+                    errorMessage.textContent = data.message || '카테고리 수정에 실패했습니다.';
+                    errorMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorMessage = editModal.querySelector('.error-message');
+                errorMessage.textContent = '오류가 발생했습니다.';
+                errorMessage.style.display = 'block';
+            });
+        });
+    }
+
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', function() {
+            fetch('/check_login')
+                .then(response => response.json())
+                .then(data => {
+                    if(data.logged_in) {
+                        addCategoryBackground.style.display = 'flex';
+                        if (addCategoryInput) addCategoryInput.value = '';
+                    } else {
+                        if(addCategoryBackground) addCategoryBackground.style.display = 'none';
+                        loginRequiredModal.style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
+
+    editDeleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const categoryContainer = this.closest('.category-container');
+            const categoryId = categoryContainer.getAttribute('data-category-id');
+            const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
+            const editCategoryInput = document.getElementById('edit-category-input');
+            
+            editCategoryInput.value = categoryName;
+            editCategoryInput.setAttribute('data-category-id', categoryId);
+            editDeleteBackground.style.display = 'flex';
+            
+            editCategoryInput.focus();
+            editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
+        });
+    });
+
+    document.getElementById('delete-category').addEventListener('click', function() {
+        const editCategoryInput = document.getElementById('edit-category-input');
+        const categoryId = editCategoryInput.getAttribute('data-category-id');
+        const categoryContainer = document.querySelector(`.category-container[data-category-id="${categoryId}"]`);
+        const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
+    
+        const originalModalTitle = document.querySelector('.confirm-modal h3').textContent;
+        document.querySelector('.confirm-modal h3').textContent = `정말 "${categoryName}" 카테고리를\n삭제하시겠습니까?`;
+        document.querySelector('.edit-delete-modal-background').style.display = 'none';
+        document.querySelector('.confirm-modal-background').style.display = 'flex';
+    
+        const yesBtn = document.getElementById('yes');
+        const noBtn = document.getElementById('no');
+        const oldYesClick = yesBtn.onclick;
+        const oldNoClick = noBtn.onclick;
+        
+        yesBtn.onclick = function() {
+            fetch('/delete_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    category_id: categoryId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || '카테고리 삭제에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('카테고리 삭제 중 오류가 발생했습니다.');
+            })
+            .finally(() => {
+                document.querySelector('.confirm-modal-background').style.display = 'none';
+                document.querySelector('.confirm-modal h3').textContent = originalModalTitle;
+    
+                yesBtn.onclick = oldYesClick;
+                noBtn.onclick = oldNoClick;
+            });
+        };
+    
+        noBtn.onclick = function() {
+            document.querySelector('.confirm-modal-background').style.display = 'none';
+            document.querySelector('.confirm-modal h3').textContent = originalModalTitle;
+    
+            yesBtn.onclick = oldYesClick;
+            noBtn.onclick = oldNoClick;
+        };
+    });
 
     if (searchBtn) {
         searchBtn.addEventListener('click', function() {

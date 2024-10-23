@@ -42,10 +42,13 @@
             </div>
             <hr>
             <div class="other_categories">
-                {% for cat in categories %}
-                <a href="{{ url_for('category_page', category_id=cat[0]) }}" class="category-link">
-                    <button id="category_btn" data-category-id="{{ cat[0] }}" {% if cat[0] == category[0] %}class="selected"{% endif %}>{{ cat[1] }}</button>
-                </a>
+                {% for category in categories %}
+                <div class="category-container{% if request.path.endswith('/category/' + category[0]|string) %} selected{% endif %}" data-category-id="{{ category[0] }}">
+                    <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
+                        <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
+                    </a>
+                    <button id="edit-delete"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
                 {% endfor %}
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
             </div>
@@ -187,7 +190,23 @@
                 <input type="text" name="add-category-input" id="add-category-input" autocomplete="off">
                 <span class="error-message" style="display: none;"></span>
             </div>
-            <button id="confirm-category">확인</button>
+            <div class="button-container">
+                <button id="confirm-category">확인</button>
+            </div>
+        </div>
+    </div>
+    <div class="edit-delete-modal-background" style="display: none;">
+        <div class="edit-category-modal">
+            <h2>카테고리 수정</h2>
+            <p>더 멋진 이름이 생각났나요?</p>
+            <div class="input-group">
+                <input type="text" name="edit-category-input" id="edit-category-input" autocomplete="off">
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <div class="button-container">
+                <button id="delete-category">카테고리 삭제</button>
+                <button id="confirm-edit-category">확인</button>
+            </div>
         </div>
     </div>
     <div class="search-modal-background" style="display: none;">

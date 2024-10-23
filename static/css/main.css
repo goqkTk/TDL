@@ -1127,6 +1127,7 @@ body.dragging .sidebar #add-category:hover {
     transition: background-color 0.3s;
 }
 
+.category-container:not(.selected):hover #category_btn { background-color: rgba(255, 255, 255, 0.1); }
 .category-container:hover #category_btn {
     background-color: rgba(255, 255, 255, 0.1);
     transform: translateX(5px);
@@ -1144,6 +1145,18 @@ body.dragging .sidebar #add-category:hover {
     padding: 5px;
 }
 
+.category-container.selected #category_btn {
+    background-color: rgba(134, 134, 134, 0.779) !important;
+    cursor: default;
+}
+
+.category-container.selected:hover #category_btn {
+    background-color: rgba(134, 134, 134, 0.779) !important;
+}
+
+.category-container.selected { transform: translateX(5px); }
+.category-container.selected:hover { transform: translateX(5px); }
+.category-container:not(.selected):hover { transform: translateX(5px); }
 .category-container:hover { transform: translateX(5px); }
 .category-container:hover #edit-delete { opacity: 1; }
 #edit-delete i { font-size: 16px; }

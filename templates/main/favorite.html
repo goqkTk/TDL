@@ -43,9 +43,12 @@
             <hr>
             <div class="other_categories">
                 {% for category in categories %}
-                <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
-                    <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
-                </a>
+                <div class="category-container" data-category-id="{{ category[0] }}">
+                    <a href="{{ url_for('category_page', category_id=category[0]) }}" class="category-link">
+                        <button id="category_btn" data-category-id="{{ category[0] }}">{{ category[1] }}</button>
+                    </a>
+                    <button id="edit-delete"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
                 {% endfor %}
                 <button id="add-category"><i class="fa-solid fa-plus"></i></button>
             </div>
@@ -143,6 +146,41 @@
             <div class="qr-overlay" style="display: none;">
                 <img src="" alt="QR Code" class="qr-image">
                 <button class="back-button"><i class="fa-solid fa-arrow-left"></i></button>
+            </div>
+        </div>
+    </div>
+    <div class="login-required-modal-background" style="display: none;">
+        <div class="login-required-modal">
+            <h2>앗! 로그인이 필요해요</h2>
+            <p>멋진 아이디어를 기록하고 싶으신가봐요!<br>
+               잠깐 로그인하고 오시면 바로 시작할 수 있어요</p>
+            <button id="go-to-login">로그인하러 가볼까요?</button>
+        </div>
+    </div>
+    <div class="add-category-modal-background" style="display: none;">
+        <div class="add-category-modal">
+            <h2>새 카테고리 추가</h2>
+            <p>새로운 카테고리에게 멋진 이름을 지어주세요</p>
+            <div class="input-group">
+                <input type="text" name="add-category-input" id="add-category-input" autocomplete="off">
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <div class="button-container">
+                <button id="confirm-category">확인</button>
+            </div>
+        </div>
+    </div>
+    <div class="edit-delete-modal-background" style="display: none;">
+        <div class="edit-category-modal">
+            <h2>카테고리 수정</h2>
+            <p>더 멋진 이름이 생각났나요?</p>
+            <div class="input-group">
+                <input type="text" name="edit-category-input" id="edit-category-input" autocomplete="off">
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <div class="button-container">
+                <button id="delete-category">카테고리 삭제</button>
+                <button id="confirm-edit-category">확인</button>
             </div>
         </div>
     </div>

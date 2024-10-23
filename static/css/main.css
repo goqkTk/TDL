@@ -718,7 +718,7 @@ body.dragging .sidebar #add-category:hover {
 }
 
 #confirm-category:hover, #confirm-edit-category:hover { background-color: #45a049; }
-#add-category-input.error { border-color: red; }
+#add-category-input.error, #edit-category-input.error { border-color: red; }
 
 @keyframes modalFadeIn {
     from { opacity: 0; transform: translateY(-20px); }

@@ -21,7 +21,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
-    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background, .add-category-modal-background, .search-modal-background, .edit-delete-modal-background');
+    const modalBackgrounds = document.querySelectorAll(`
+        .add-modal-background,
+        .edit-modal-background,
+        .confirm-modal-background,
+        .donate-modal-background,
+        .add-category-modal-background,
+        .search-modal-background,
+        .edit-delete-modal-background,
+        .setting-modal-background
+    `);
     const loginRequiredModal = document.querySelector('.login-required-modal-background');
     const goToLoginBtn = document.getElementById('go-to-login');
     const addCategoryBtn = document.getElementById('add-category');
@@ -37,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchLabel = document.getElementById('search-label');
     const editDeleteButtons = document.querySelectorAll('#edit-delete');
     const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
+    const settingBtn = document.querySelector('.setting');
 
     let todoToRemove = null;
 
@@ -45,6 +55,24 @@ document.addEventListener('DOMContentLoaded', function() {
     let isDragging = false;
     let startScrollY;
     let dragOffsetY;
+
+    if (settingBtn) {
+        settingBtn.addEventListener('click', function() {
+            fetch('/check_login')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.logged_in) {
+                        
+                    } else {
+                        if (searchModalBackground) searchModalBackground.style.display = 'none';
+                        loginRequiredModal.style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+    }
 
     document.getElementById('delete-category').addEventListener('click', function() {
         const editCategoryInput = document.getElementById('edit-category-input');

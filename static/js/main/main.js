@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalModalTitle = document.querySelector('.confirm-modal h3').textContent;
     
         // 카테고리 삭제용 모달 텍스트로 변경
-        document.querySelector('.confirm-modal h3').textContent = `정말 "${categoryName}" 카테고리를 삭제하시겠습니까?`;
+        document.querySelector('.confirm-modal h3').textContent = `정말 "${categoryName}" 카테고리를\n삭제하시겠습니까?`;
     
         // edit-delete 모달 닫기
         document.querySelector('.edit-delete-modal-background').style.display = 'none';

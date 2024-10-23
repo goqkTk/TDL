@@ -429,6 +429,7 @@ body.dragging .sidebar #add-category:hover {
 .search-modal-background,
 .edit-delete-modal-background {
     background-color: rgba(0,0,0,0.4);
+    backdrop-filter: blur(2px);
     width: 100%;
     height: 100%;
     position: fixed;
@@ -608,21 +609,18 @@ body.dragging .sidebar #add-category:hover {
     25%, 50%, 75% { transform: translateX(5px); }
 }
 
+#delete-category:hover { text-decoration: underline; }
 #delete-category {
     background: none;
     border: none;
     color: #F44336;
     cursor: pointer;
-    margin-top: 20px;
     font-size: 14px;
     transition: color 0.2s ease;
+    padding: 10px 5px;
 }
 
-#delete-category:hover { text-decoration: underline; }
-
-.add-category-modal,
-.search-modal,
-.edit-category-modal {
+.search-modal {
     background-color: #ffffff;
     border-radius: 8px;
     padding: 20px;
@@ -636,16 +634,56 @@ body.dragging .sidebar #add-category:hover {
     align-items: center;
 }
 
-.add-category-modal h2 {
+.add-category-modal,
+.edit-category-modal {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    animation: modalFadeIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.add-category-modal h2,
+.edit-category-modal h2 {
     color: #333;
     font-size: 24px;
     margin-bottom: 15px;
+    width: 100%;
+    text-align: center;
 }
 
-.add-category-modal p {
+.add-category-modal p,
+.edit-category-modal p {
     color: #666;
     font-size: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
+    align-self: flex-start;
+}
+
+#add-category-input,
+#edit-category-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    align-self: center;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+    margin-top: -10px;
 }
 
 #add-category-input,
@@ -669,12 +707,12 @@ body.dragging .sidebar #add-category:hover {
     background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 10px 5px;
     border-radius: 4px;
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s;
-    width: 40%;
+    width: 30%;
     margin-bottom: 0px;
     box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
 }
@@ -713,6 +751,14 @@ body.dragging .sidebar #add-category:hover {
     position: relative;
     z-index: 10000;
     animation: modalFadeIn 0.3s ease-out;
+}
+
+.confirm-modal h3 {
+    white-space: pre-line;
+    text-align: center;
+    font-size: 19px;
+    color: #333;
+    line-height: 1.4;
 }
 
 #yes {
@@ -814,7 +860,7 @@ body.dragging .sidebar #add-category:hover {
 
 .input-group {
     position: relative;
-    width: 95%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     margin-bottom: 15px;

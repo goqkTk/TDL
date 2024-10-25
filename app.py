@@ -239,14 +239,23 @@ def add_todo_route():
 
 @app.route('/update_todo_order', methods=['POST'])
 def update_todo_order():
-    data = request.json
-    new_order = data['order']
-    user_id = session.get('user_id')
-    success = update_todos_order(user_id, new_order)
-    if success:
-        return jsonify({'success': True, 'message': '할 일 순서가 업데이트되었습니다.'})
-    else:
-        return jsonify({'success': False, 'message': '할 일 순서 업데이트에 실패했습니다.'})
+    try:
+        data = request.json
+        new_order = data['order']
+        category_id = data.get('category_id')
+        user_id = session.get('user_id')
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+            
+        success = update_todos_order(user_id, new_order, category_id)
+        if success:
+            return jsonify({'success': True, 'message': '할 일 순서가 업데이트되었습니다.'})
+        else:
+            return jsonify({'success': False, 'message': '할 일 순서 업데이트에 실패했습니다.'})
+    except Exception as e:
+        print(f"Error in update_todo_order: {str(e)}")
+        return jsonify({'success': False, 'message': '서버 오류가 발생했습니다.'})
 
 @app.route('/update_favorite_order', methods=['POST'])
 def update_favorite_order():
@@ -304,12 +313,14 @@ def update_fix():
     is_fixed = data.get('is_fixed')
     user_id = session.get('user_id')
 
+    print(f"Received request - todo_id: {todo_id}, is_fixed: {is_fixed}, user_id: {user_id}")  # 디버깅용
+
     if todo_id is None or is_fixed is None or user_id is None:
         return jsonify({"success": False, "message": "Invalid data"}), 400
 
-    success, original_order = update_todo_fix(user_id, todo_id, is_fixed)
+    success = update_todo_fix(user_id, todo_id, is_fixed)
     if success:
-        return jsonify({"success": True, "message": "Todo fix status updated successfully", "original_order": original_order}), 200
+        return jsonify({"success": True, "message": "Todo fix status updated successfully"}), 200
     else:
         return jsonify({"success": False, "message": "Failed to update todo fix status"}), 500
 

@@ -112,10 +112,21 @@ def get_todos_by_category(user_id, category_id):
     cursor = db.cursor()
     try:
         sql = """
-        SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
+        SELECT id, user_id, title, detail, favorite, day, success, 
+               `order`,
+               order_favorite, is_fixed, edit_day, category_id
         FROM todo 
-        WHERE user_id = %s AND category_id = %s AND success = 0
-        ORDER BY is_fixed DESC, `order` ASC, favorite DESC, day DESC
+        WHERE user_id = %s 
+        AND category_id = %s 
+        AND success = 0
+        ORDER BY 
+            is_fixed DESC,
+            CASE 
+                WHEN is_fixed = 1 THEN 0
+                ELSE 1
+            END,
+            `order` ASC,
+            day DESC
         """
         cursor.execute(sql, (user_id, category_id))
         todos = cursor.fetchall()
@@ -126,21 +137,21 @@ def get_todos_by_category(user_id, category_id):
 def get_todo_without_category(user_id, completed=False):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
-    sql = f"""
-    SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, category_id
+    sql = """
+    SELECT id, user_id, title, detail, favorite, day, success, 
+           `order`,
+           order_favorite, is_fixed, edit_day, category_id
     FROM todo 
-    WHERE user_id = %s AND success = %s AND (category_id IS NULL OR category_id = 1 AND favorite = 1 AND is_fixed = 1)
+    WHERE user_id = %s 
+    AND success = %s 
+    AND category_id IS NULL
     ORDER BY 
         is_fixed DESC,
         CASE 
-            WHEN is_fixed = 1 THEN `order`
-            ELSE 9999
-        END ASC,
-        CASE 
-            WHEN is_fixed = 0 THEN `order`
-            ELSE 9999
-        END ASC,
-        favorite DESC,
+            WHEN is_fixed = 1 THEN 0
+            ELSE 1
+        END,
+        `order` ASC,
         day DESC
     """
     cursor.execute(sql, (user_id, 1 if completed else 0))
@@ -168,50 +179,51 @@ def update_todo_fix(user_id, todo_id, is_fixed):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     try:
-        cursor.execute("SELECT `order` FROM todo WHERE id = %s AND user_id = %s", (todo_id, user_id))
-        result = cursor.fetchone()
-        original_order = result[0] if result else None
-
-        if is_fixed:
-            sql = "UPDATE todo SET `order` = NULL, is_fixed = TRUE WHERE id = %s AND user_id = %s"
-            cursor.execute(sql, (todo_id, user_id))
-        else:
-            sql = """
-            UPDATE todo 
-            SET `order` = (
-                SELECT min_order - 1
-                FROM (
-                    SELECT COALESCE(MIN(`order`), 0) as min_order 
-                    FROM todo 
-                    WHERE user_id = %s AND `order` IS NOT NULL AND is_fixed = FALSE
-                ) AS subquery
-            ),
-            is_fixed = FALSE
+        cursor.execute("""
+            SELECT id 
+            FROM todo 
             WHERE id = %s AND user_id = %s
-            """
-            cursor.execute(sql, (user_id, todo_id, user_id))
-        
+        """, (todo_id, user_id))
+        if not cursor.fetchone():
+            return False
+        sql = "UPDATE todo SET is_fixed = %s WHERE id = %s AND user_id = %s"
+        cursor.execute(sql, (is_fixed, todo_id, user_id))
         db.commit()
-        return True, original_order
+        return True
     except Exception as e:
         print(f"할 일 고정 상태 업데이트 오류: {str(e)}")
         db.rollback()
-        return False, None
+        return False
     finally:
         db.close()
 
-def update_todos_order(user_id, new_order):
+def update_todos_order(user_id, new_order, category_id=None):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     try:
-        for index, todo in enumerate(new_order):
+        if category_id is None:
+            cursor.execute("""
+                UPDATE todo 
+                SET `order` = 99999 
+                WHERE user_id = %s AND category_id IS NULL
+            """, (user_id,))
+        else:
+            cursor.execute("""
+                UPDATE todo 
+                SET `order` = 99999 
+                WHERE user_id = %s AND category_id = %s
+            """, (user_id, category_id))
+        for todo in new_order:
             todo_id = todo['id']
-            new_order = todo['order']
-            if new_order is None:
+            order = todo['order']
+            
+            if order is None:
                 sql = "UPDATE todo SET `order` = NULL WHERE id = %s AND user_id = %s"
+                cursor.execute(sql, (todo_id, user_id))
             else:
                 sql = "UPDATE todo SET `order` = %s WHERE id = %s AND user_id = %s"
-            cursor.execute(sql, (new_order, todo_id, user_id) if new_order is not None else (todo_id, user_id))
+                cursor.execute(sql, (order, todo_id, user_id))
+        
         db.commit()
         return True
     except Exception as e:
@@ -243,14 +255,33 @@ def add_todo(user_id, title, detail, category_id=None):
     cursor = db.cursor()
     try:
         current_time = datetime.now()
-        sql = "INSERT INTO todo (user_id, title, detail, day, edit_day, category_id) VALUES (%s, %s, %s, %s, NULL, %s)"
-        cursor.execute(sql, (user_id, title, detail, current_time, category_id))
+        if category_id is None:
+            cursor.execute("""
+                SELECT COALESCE(MAX(`order`), -1) 
+                FROM todo 
+                WHERE user_id = %s AND category_id IS NULL AND is_fixed = 0
+            """, (user_id,))
+        else:
+            cursor.execute("""
+                SELECT COALESCE(MAX(`order`), -1) 
+                FROM todo 
+                WHERE user_id = %s AND category_id = %s AND is_fixed = 0
+            """, (user_id, category_id))
+        
+        max_order = cursor.fetchone()[0]
+        new_order = max_order + 1 if max_order is not None else 0
+        sql = """
+            INSERT INTO todo 
+            (user_id, title, detail, day, edit_day, category_id, `order`) 
+            VALUES (%s, %s, %s, %s, NULL, %s, %s)
+        """
+        cursor.execute(sql, (user_id, title, detail, current_time, category_id, new_order))
         todo_id = cursor.lastrowid
         db.commit()
-        
         sql = "SELECT * FROM todo WHERE id = %s"
         cursor.execute(sql, (todo_id,))
         new_todo = cursor.fetchone()
+        
         return {
             'id': new_todo[0],
             'user_id': new_todo[1],
@@ -259,12 +290,13 @@ def add_todo(user_id, title, detail, category_id=None):
             'favorite': new_todo[5],
             'day': new_todo[4],
             'success': new_todo[6],
-            'order': new_todo[7],
+            'order': new_order,
             'order_favorite': new_todo[8],
             'is_fixed': new_todo[10],
             'edit_day': new_todo[9],
             'category_id': new_todo[12]
         }
+        
     except Exception as e:
         print(f"할 일 추가 오류: {str(e)}")
         db.rollback()

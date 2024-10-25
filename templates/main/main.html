@@ -64,7 +64,7 @@
             </div>
             {% endif %}
             {% for todo in todo %}
-            <div id="todo" class="todo-item{% if todo[4] == 1 %} active{% endif %}{% if todo[9] == 1 %} fixed{% endif %}" data-is-empty="{{ 'true' if is_todo_empty else 'false' }}" todo-id="{{ todo[0] }}" data-fixed="{{ 'true' if todo[9] == 1 else 'false' }}" data-order="{{ todo[7] }}">
+            <div id="todo" class="todo-item todo-id="{{ todo[0] }}" fixed="{{ 'true' if todo[9] == 1 else 'false' }}" order="{{ todo[7] }}">
                 <button id="grip"><i class="fa-solid fa-grip-vertical"></i></button>
                 <h3 class="title">{{ todo[2] }}</h3>
                 <p class="detail">{{ todo[3] }}</p>
@@ -210,7 +210,7 @@
             <div id="category-search-results" class="search-result"></div>
         </div>
     </div>
-    <div class="setting-modal-background">
+    <div class="setting-modal-background" style="display: none;">
         <div class="setting-modal">
             <h3>설정</h3>
             <hr>

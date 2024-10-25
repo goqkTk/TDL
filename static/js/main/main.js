@@ -56,6 +56,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let dragOffsetY;
 
+    checkForHighlight();
+
     if (settingBtn) {
         settingBtn.addEventListener('click', function() {
             fetch('/check_login')
@@ -484,10 +486,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (todoItem.classList.contains('fixed')) {
             e.preventDefault();
-            todoItem.classList.add('shake');
-            setTimeout(() => {
-                todoItem.classList.remove('shake');
-            }, 500);
             return;
         }
 
@@ -809,6 +807,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
     function addTodoToDOM(todo) {
+        const todoContainer = document.querySelector('.contents');
         const todoDiv = document.createElement('div');
         todoDiv.id = 'todo';
         todoDiv.className = `todo-item${todo.favorite ? ' active' : ''}${todo.is_fixed ? ' fixed' : ''}`;
@@ -831,21 +830,52 @@ document.addEventListener('DOMContentLoaded', function() {
             <button id="other"><i class="fa-solid fa-ellipsis-vertical"></i></button>
             <button id="success" data-id="${todo.id}"><i class="fa-regular fa-circle-check"></i></button>
             <div class="other-container" style="display: none;">
-                    <div class="edit-group" id="other-group">
-                        <i class="fa-solid fa-pen"></i>수정
-                    </div>
-                    <div class="remove-group" id="other-group">
-                        <i class="fa-regular fa-trash-can"></i>삭제
-                    </div>
-                    <div class="detail-group" id="other-group">
-                        <i class="fa-solid fa-circle-info"></i>상세 정보
-                    </div>
+                <div class="edit-group" id="other-group">
+                    <i class="fa-solid fa-pen"></i>수정
                 </div>
+                <div class="remove-group" id="other-group">
+                    <i class="fa-regular fa-trash-can"></i>삭제
+                </div>
+                <div class="detail-group" id="other-group">
+                    <i class="fa-solid fa-circle-info"></i>상세 정보
+                </div>
+            </div>
             <div class="info-container" style="display: none;">
                 <p>생성일: ${createdDate.toLocaleString()}</p>
                 <p>수정일: ${editedDate ? editedDate.toLocaleString() : '수정되지 않음'}</p>
             </div>
         `;
+    
+        const existingTodos = Array.from(todoContainer.querySelectorAll('.todo-item'));
+        let inserted = false;
+    
+        if (todo.is_fixed) {
+            const fixedTodos = existingTodos.filter(item => item.getAttribute('fixed') === 'true');
+            for (let i = 0; i < fixedTodos.length; i++) {
+                if (i === fixedTodos.length - 1) {
+                    fixedTodos[i].after(todoDiv);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted && fixedTodos.length > 0) {
+                fixedTodos[fixedTodos.length - 1].after(todoDiv);
+                inserted = true;
+            }
+        } else {
+            const unfixedTodos = existingTodos.filter(item => item.getAttribute('fixed') !== 'true');
+            for (let item of unfixedTodos) {
+                const itemOrder = parseInt(item.getAttribute('order'));
+                if (!isNaN(itemOrder) && todo.order < itemOrder) {
+                    item.before(todoDiv);
+                    inserted = true;
+                    break;
+                }
+            }
+        }
+        if (!inserted) {
+            todoContainer.appendChild(todoDiv);
+        }
     
         if (isCurrentlyEmpty) {
             const noMainMessage = todoContainer.querySelector('.no-main-message');
@@ -854,7 +884,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     
-        todoContainer.insertBefore(todoDiv, todoContainer.firstChild);
         setupNewTodoEventListeners(todoDiv);
         isCurrentlyEmpty = false;
     }
@@ -1080,15 +1109,60 @@ document.addEventListener('DOMContentLoaded', function() {
     checkEmptyMain();
 
     document.querySelectorAll('#fix').forEach(btn => {
-        btn.addEventListener('click', function(event) {
-            event.stopPropagation();
+        btn.addEventListener('click', function() {
             const todoItem = this.closest('.todo-item');
+            if (!todoItem) {
+                console.error('Could not find todo item');
+                return;
+            }
+    
             const todoId = todoItem.getAttribute('todo-id');
+            if (!todoId) {
+                console.error('No todo-id found:', todoItem);
+                return;
+            }
+    
             const isFixed = todoItem.classList.contains('fixed');
-            updateFixStatus(todoId, !isFixed);
+            
+            console.log('Sending fix update request:', { todoId, isFixed: !isFixed });  // 디버깅용
+    
+            fetch('/update_fix', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    todo_id: parseInt(todoId, 10),
+                    is_fixed: !isFixed
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const newIsFixed = !isFixed;
+                    todoItem.classList.toggle('fixed', newIsFixed);
+                    todoItem.setAttribute('fixed', newIsFixed ? 'true' : 'false');
+                    
+                    const fixButton = todoItem.querySelector('#fix img');
+                    if (fixButton) {
+                        fixButton.src = `/static/img/pin-${newIsFixed ? 'on' : 'off'}.png`;
+                    }
+                    
+                    updateTodoOrder();
+                } else {
+                    console.error('고정 상태 업데이트 실패:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         });
     });
-    updateTodoOrder();
 });
 
 function checkForHighlight() {
@@ -1099,11 +1173,14 @@ function checkForHighlight() {
         const todoElement = document.querySelector(`.todo-item[todo-id="${highlightId}"]`);
         if (todoElement) {
             todoElement.classList.add('highlight-shake');
-            todoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            todoElement.addEventListener('animationend', function() {
-                this.classList.remove('highlight-shake');
-                removeHighlightParam();
+            todoElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
             });
+            todoElement.addEventListener('animationend', function() {
+                todoElement.classList.remove('highlight-shake');
+                removeHighlightParam();
+            }, { once: true });
         } else {
             removeHighlightParam();
         }
@@ -1111,7 +1188,7 @@ function checkForHighlight() {
 }
 
 function removeHighlightParam() {
-    const url = new URL(window.location.href);
+    const url = new URL(window.location);
     url.searchParams.delete('highlight');
     window.history.replaceState({}, '', url);
 }
@@ -1141,8 +1218,40 @@ function updateFixStatus(todoId, isFixed) {
         if (data.success) {
             const todoItem = document.querySelector(`.todo-item[todo-id="${todoId}"]`);
             if (todoItem) {
-                updateFixItemUI(todoItem, isFixed);
+                todoItem.classList.toggle('fixed', isFixed);
+                todoItem.setAttribute('fixed', isFixed ? 'true' : 'false');
+                
+                const fixButton = todoItem.querySelector('#fix img');
+                if (fixButton) {
+                    fixButton.src = `/static/img/pin-${isFixed ? 'on' : 'off'}.png`;
+                }
+
+                if (!isFixed) {
+                    const unfixedItems = Array.from(todoItem.parentNode.querySelectorAll('.todo-item:not(.fixed)'));
+                    const newOrder = unfixedItems.indexOf(todoItem);
+                    todoItem.setAttribute('order', newOrder);
+                }
+
                 updateTodoOrder();
+
+                const container = todoItem.parentNode;
+                if (isFixed) {
+                    const firstFixed = container.querySelector('.todo-item.fixed');
+                    if (firstFixed && firstFixed !== todoItem) {
+                        container.insertBefore(todoItem, firstFixed);
+                    } else {
+                        container.insertBefore(todoItem, container.firstChild);
+                    }
+                } else {
+                    const unfixedItems = Array.from(container.querySelectorAll('.todo-item:not(.fixed)'));
+                    const newOrder = parseInt(todoItem.getAttribute('order'));
+                    const targetItem = unfixedItems.find(item => parseInt(item.getAttribute('order')) > newOrder);
+                    if (targetItem) {
+                        container.insertBefore(todoItem, targetItem);
+                    } else {
+                        container.appendChild(todoItem);
+                    }
+                }
             }
         } else {
             console.error('고정 상태 업데이트 실패');
@@ -1199,6 +1308,10 @@ function getPlaceholderPosition(container, y) {
 function updateTodoOrder() {
     const todoContainer = document.querySelector('.contents');
     const todoItems = Array.from(todoContainer.querySelectorAll('.todo-item'));
+    const currentCategoryId = document.getElementById('category-id') ? 
+                            document.getElementById('category-id').value : 
+                            null;
+    
     const fixedItems = todoItems.filter(item => item.classList.contains('fixed'));
     const unfixedItems = todoItems.filter(item => !item.classList.contains('fixed'));
 
@@ -1206,25 +1319,35 @@ function updateTodoOrder() {
     fixedItems.forEach(item => todoContainer.appendChild(item));
     unfixedItems.forEach(item => todoContainer.appendChild(item));
 
-    const newOrder = todoItems.map((item, index) => ({
+    const newOrder = unfixedItems.map((item, index) => ({
         id: item.getAttribute('todo-id'),
-        order: item.classList.contains('fixed') ? null : index
+        order: index,
+        category_id: currentCategoryId
     }));
+
+    fixedItems.forEach(item => {
+        newOrder.push({
+            id: item.getAttribute('todo-id'),
+            order: null,
+            category_id: currentCategoryId
+        });
+    });
 
     fetch('/update_todo_order', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({order: newOrder})
+        body: JSON.stringify({
+            order: newOrder,
+            category_id: currentCategoryId
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            todoItems.forEach((item, index) => {
-                if (!item.classList.contains('fixed')) {
-                    item.setAttribute('order', index);
-                }
+            unfixedItems.forEach((item, index) => {
+                item.setAttribute('order', index);
             });
         } else {
             console.error('Failed to update todo order:', data.message);

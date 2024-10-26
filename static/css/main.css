@@ -1018,17 +1018,12 @@ body.dragging .sidebar #menu_btn:hover {
     100% { transform: translateX(0); }
 }
 
-.contents #todo.fixed.shake { 
-    animation: shake 0.4s ease-in-out; 
-}
+.contents #todo.fixed.shake { animation: shake 0.4s ease-in-out; }
+.info-container p span:last-of-type { color: #666; }
 
 .info-container p span:first-of-type { 
     font-weight: bold; 
     font-size: 15px; 
-}
-
-.info-container p span:last-of-type { 
-    color: #666; 
 }
 
 .completion-message {
@@ -1116,7 +1111,6 @@ body.dragging .sidebar #menu_btn:hover {
     transition: all 0.3s ease;
 }
 
-/* selected 상태 스타일 */
 .sidebar #category_btn.selected {
     transform: translateX(5px);
 }
@@ -1127,7 +1121,6 @@ body.dragging .sidebar #menu_btn:hover {
     cursor: default;
 }
 
-/* hover 상태 스타일 */
 .sidebar #category_btn:not(.selected):hover {
     transform: translateX(5px);
 }
@@ -1143,7 +1136,6 @@ body.dragging .sidebar #menu_btn:hover {
     cursor: pointer;
 }
 
-/* 기본 카테고리 버튼 스타일 */
 .sidebar #category_btn {
     width: calc(100% - 10px);
     height: 40px;
@@ -1157,7 +1149,6 @@ body.dragging .sidebar #menu_btn:hover {
     margin-right: 10px;
 }
 
-/* 추가 카테고리 컨테이너 스타일 */
 .other_categories {
     display: flex;
     flex-direction: column;
@@ -1189,7 +1180,7 @@ body.dragging .sidebar #menu_btn:hover {
     text-decoration: none;
     flex-grow: 1;
     display: block;
-    width: calc(100% - 30px);
+    width: calc(100% - 40px);
     height: 40px;
 }
 
@@ -1203,10 +1194,9 @@ body.dragging .sidebar #menu_btn:hover {
     cursor: pointer;
 }
 
-/* 편집 버튼 스타일 */
 #edit-delete {
     position: absolute;
-    right: 20px;
+    right: 25px;
     background: none;
     border: none;
     color: white;
@@ -1214,27 +1204,21 @@ body.dragging .sidebar #menu_btn:hover {
     opacity: 0;
     padding: 5px;
     transition: opacity 0.3s ease;
-    /* 편집 버튼은 transform 효과에서 제외 */
     transform: none !important;
 }
 
-#edit-delete i { 
-    font-size: 16px; 
-}
+#edit-delete i { font-size: 16px; }
 
-/* hover 시 편집 버튼 표시 */
 .category-container:hover #edit-delete,
 #edit-delete:hover {
     opacity: 1;
 }
 
-/* 편집 버튼 hover 시에도 부모의 transform 유지 */
 .category-container:hover,
 .category-container:has(#edit-delete:hover) {
-    transform: translateX(3px);
+    transform: translateX(8px);
 }
 
-/* 카테고리 추가 버튼 스타일 */
 #add-category {
     width: calc(100% - 20px);
     height: 40px;

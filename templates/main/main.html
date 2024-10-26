@@ -64,7 +64,7 @@
             </div>
             {% endif %}
             {% for todo in todo %}
-            <div id="todo" class="todo-item todo-id="{{ todo[0] }}" fixed="{{ 'true' if todo[9] == 1 else 'false' }}" order="{{ todo[7] }}">
+            <div id="todo" class="todo-item{% if todo[6] %} active{% endif %}{% if todo[9] %} fixed{% endif %}" todo-id="{{ todo[0] }}" fixed="{{ 'true' if todo[9] == 1 else 'false' }}" order="{{ todo[7] }}" category-id="{{ todo[12] if todo[12] else '' }}">
                 <button id="grip"><i class="fa-solid fa-grip-vertical"></i></button>
                 <h3 class="title">{{ todo[2] }}</h3>
                 <p class="detail">{{ todo[3] }}</p>

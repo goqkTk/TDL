@@ -480,15 +480,19 @@ document.addEventListener('DOMContentLoaded', function() {
     contents.addEventListener('mousedown', function(e) {
         const gripElement = e.target.closest('#grip');
         if (!gripElement) return;
-
+    
         const todoItem = gripElement.closest('.todo-item');
         if (!todoItem) return;
-
+    
         if (todoItem.classList.contains('fixed')) {
             e.preventDefault();
+            todoItem.classList.add('shake');
+            todoItem.addEventListener('animationend', function() {
+                todoItem.classList.remove('shake');
+            }, { once: true });
             return;
         }
-
+    
         e.preventDefault();
         draggedItem = todoItem;
         const rect = todoItem.getBoundingClientRect();
@@ -1111,36 +1115,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('#fix').forEach(btn => {
         btn.addEventListener('click', function() {
             const todoItem = this.closest('.todo-item');
-            if (!todoItem) {
-                console.error('Could not find todo item');
-                return;
-            }
-    
             const todoId = todoItem.getAttribute('todo-id');
-            if (!todoId) {
-                console.error('No todo-id found:', todoItem);
-                return;
-            }
-    
             const isFixed = todoItem.classList.contains('fixed');
             
-            console.log('Sending fix update request:', { todoId, isFixed: !isFixed });  // 디버깅용
-    
             fetch('/update_fix', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    todo_id: parseInt(todoId, 10),
+                    todo_id: parseInt(todoId),
                     is_fixed: !isFixed
                 })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
             })
             .then(data => {
                 if (data.success) {
@@ -1153,6 +1139,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         fixButton.src = `/static/img/pin-${newIsFixed ? 'on' : 'off'}.png`;
                     }
                     
+                    const container = todoItem.parentNode;
+                    if (newIsFixed) {
+                        container.insertBefore(todoItem, container.firstChild);
+                    } else {
+                        const firstUnfixed = Array.from(container.children)
+                            .find(item => !item.classList.contains('fixed'));
+                        if (firstUnfixed) {
+                            container.insertBefore(todoItem, firstUnfixed);
+                        } else {
+                            container.appendChild(todoItem);
+                        }
+                    }
                     updateTodoOrder();
                 } else {
                     console.error('고정 상태 업데이트 실패:', data.message);
@@ -1160,6 +1158,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
+                alert('할 일 고정 상태 업데이트 중 오류가 발생했습니다.');
             });
         });
     });
@@ -1311,7 +1310,6 @@ function updateTodoOrder() {
     const currentCategoryId = document.getElementById('category-id') ? 
                             document.getElementById('category-id').value : 
                             null;
-    
     const fixedItems = todoItems.filter(item => item.classList.contains('fixed'));
     const unfixedItems = todoItems.filter(item => !item.classList.contains('fixed'));
 

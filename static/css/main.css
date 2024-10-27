@@ -1164,6 +1164,7 @@ body.dragging .sidebar #menu_btn:hover {
     align-items: center;
     z-index: 1;
     padding-right: 10px;
+    transition: transform 0.3s ease;
 }
 
 .category-container #category_btn {
@@ -1203,20 +1204,48 @@ body.dragging .sidebar #menu_btn:hover {
     cursor: pointer;
     opacity: 0;
     padding: 5px;
-    transition: opacity 0.3s ease;
-    transform: none !important;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 #edit-delete i { font-size: 16px; }
 
-.category-container:hover #edit-delete,
-#edit-delete:hover {
+.category-container:hover #edit-delete {
     opacity: 1;
+}
+
+#edit-delete:hover {
+    transform: translateX(0.3px);
+}
+
+.category-container.selected {
+    transform: translateX(6px) !important;
+}
+
+.category-container.selected:hover {
+    transform: translateX(0.7px) !important;
+}
+
+.category-container.selected #edit-delete:hover {
+    transform: translateX(5px) !important;
+}
+
+.category-container:has(#edit-delete:hover) #edit-delete {
+    transform: translateX(0) !important;
+}
+
+.category-container.selected:has(#edit-delete:hover) {
+    transform: translateX(6px) !important;
 }
 
 .category-container:hover,
 .category-container:has(#edit-delete:hover) {
     transform: translateX(8px);
+}
+
+.category-container.selected,
+.category-container.selected:hover,
+.category-container.selected #edit-delete:hover {
+    transform: none;
 }
 
 #add-category {

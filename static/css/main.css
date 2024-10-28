@@ -1109,6 +1109,22 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     transition: transform 0.3s ease;
 }
 
+.category-container-placeholder {
+    border: 2px dashed #666;
+    background-color: #4d4d4d;
+    border-radius: 5px;
+    margin: 5px 0;
+    transition: all 0.2s ease;
+}
+
+.category-container.dragging {
+    opacity: 0.9;
+    background-color: #666;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    pointer-events: none;
+}
+
 .category-container #category_btn {
     width: 95%;
     text-align: left;

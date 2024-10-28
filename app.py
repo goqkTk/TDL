@@ -306,6 +306,20 @@ def update_todo():
     else:
         return jsonify({'success': False, 'message': '할 일 수정에 실패했습니다.'}), 400
 
+@app.route('/update_category_order', methods=['POST'])
+def update_category_order():
+    data = request.json
+    new_order = data['order']
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+    success = update_categories_order(user_id, new_order)
+    if success:
+        return jsonify({'success': True, 'message': '카테고리 순서가 업데이트되었습니다.'})
+    else:
+        return jsonify({'success': False, 'message': '카테고리 순서 업데이트에 실패했습니다.'})
+
 @app.route('/update_fix', methods=['POST'])
 def update_fix():
     data = request.json

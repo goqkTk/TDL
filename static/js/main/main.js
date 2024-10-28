@@ -56,7 +56,54 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let dragOffsetY;
 
+    let draggedCategory = null;
+    let categoryPlaceholder = null;
+    let isDraggingCategory = false;
+
     checkForHighlight();
+
+    document.querySelector('.other_categories').addEventListener('mousedown', function(e) {
+        const editDeleteBtn = e.target.closest('#edit-delete');
+        if (!editDeleteBtn) return;
+    
+        const categoryItem = editDeleteBtn.closest('.category-container');
+        if (!categoryItem) return;
+    
+        e.preventDefault();
+        draggedCategory = categoryItem;
+        const rect = categoryItem.getBoundingClientRect();
+        categoryDragOffsetY = e.clientY - rect.top;
+        categoryStartY = e.clientY;
+        isDraggingCategory = true;
+        document.body.classList.add('dragging');
+
+        categoryPlaceholder = document.createElement('div');
+        categoryPlaceholder.className = 'category-container-placeholder';
+        categoryPlaceholder.style.height = `${rect.height}px`;
+        categoryPlaceholder.style.marginBottom = window.getComputedStyle(categoryItem).marginBottom;
+        categoryPlaceholder.style.border = '2px dashed #ccc';
+        categoryPlaceholder.style.backgroundColor = '#666';
+        categoryPlaceholder.style.borderRadius = '5px';
+        categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem.nextSibling);
+
+        const computedStyle = window.getComputedStyle(categoryItem);
+        Object.assign(categoryItem.style, {
+            position: 'fixed',
+            zIndex: '1000',
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
+            left: `${rect.left}px`,
+            top: `${rect.top}px`,
+            backgroundColor: computedStyle.backgroundColor,
+            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+            transition: 'none',
+            opacity: '0.9',
+            padding: computedStyle.padding,
+            boxSizing: 'border-box'
+        });
+
+        document.body.appendChild(categoryItem);
+    });
 
     if (settingBtn) {
         settingBtn.addEventListener('click', function() {
@@ -133,18 +180,117 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     editDeleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const categoryContainer = this.closest('.category-container');
-            const categoryId = categoryContainer.getAttribute('data-category-id');
-            const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
-            const editCategoryInput = document.getElementById('edit-category-input');
-            
-            editCategoryInput.value = categoryName;
-            editCategoryInput.setAttribute('data-category-id', categoryId);
-            editDeleteBackground.style.display = 'flex';
-            
-            editCategoryInput.focus();
-            editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
+        button.addEventListener('mousedown', function(e) {
+            // 클릭 시작 위치 저장
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const categoryItem = this.closest('.category-container');
+            if (!categoryItem) return;
+    
+            const handleMouseMove = (moveEvent) => {
+                // 5픽셀 이상 움직였을 때만 드래그 시작
+                if (Math.abs(moveEvent.clientY - startY) > 5) {
+                    // 드래그 시작
+                    isDraggingCategory = true;
+                    e.preventDefault();
+                    
+                    // 원본 요소 스타일 설정
+                    const rect = categoryItem.getBoundingClientRect();
+                    draggedCategory = categoryItem;
+    
+                    // 플레이스홀더 생성 및 삽입
+                    categoryPlaceholder = document.createElement('div');
+                    categoryPlaceholder.className = 'category-container-placeholder';
+                    categoryPlaceholder.style.height = `${rect.height}px`;
+                    categoryPlaceholder.style.backgroundColor = '#4d4d4d';
+                    categoryPlaceholder.style.borderRadius = '5px';
+                    categoryPlaceholder.style.margin = '5px 0';
+                    categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
+    
+                    // 드래그되는 요소 스타일 설정
+                    Object.assign(draggedCategory.style, {
+                        position: 'fixed',
+                        width: `${rect.width}px`,
+                        height: `${rect.height}px`,
+                        left: `${rect.left}px`,
+                        top: `${rect.top}px`,
+                        backgroundColor: '#4d4d4d',
+                        zIndex: '1000',
+                        pointerEvents: 'none'
+                    });
+    
+                    // mousemove 이벤트 제거하고 document에 새로운 mousemove 이벤트 추가
+                    button.removeEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mousemove', handleDrag);
+                }
+            };
+    
+            const handleDrag = (dragEvent) => {
+                if (!isDraggingCategory) return;
+                dragEvent.preventDefault();
+    
+                // 드래그 요소 위치 업데이트
+                draggedCategory.style.top = `${dragEvent.pageY - draggedCategory.offsetHeight / 2}px`;
+    
+                // 플레이스홀더 위치 업데이트
+                const categories = Array.from(document.querySelectorAll('.category-container:not([style*="position: fixed"])'));
+                for (const category of categories) {
+                    const rect = category.getBoundingClientRect();
+                    if (dragEvent.clientY < rect.top + rect.height / 2) {
+                        if (category.previousElementSibling !== categoryPlaceholder) {
+                            category.parentNode.insertBefore(categoryPlaceholder, category);
+                        }
+                        return;
+                    }
+                }
+                // 마지막 위치로 이동
+                const lastCategory = categories[categories.length - 1];
+                if (lastCategory && lastCategory.nextElementSibling !== categoryPlaceholder) {
+                    lastCategory.parentNode.appendChild(categoryPlaceholder);
+                }
+            };
+    
+            const handleMouseUp = () => {
+                if (isDraggingCategory) {
+                    // 드래그 종료 처리
+                    isDraggingCategory = false;
+                    
+                    // 플레이스홀더 위치에 카테고리 배치
+                    if (categoryPlaceholder && draggedCategory) {
+                        draggedCategory.removeAttribute('style');
+                        categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
+                        categoryPlaceholder.remove();
+                        
+                        // 순서 업데이트
+                        updateCategoryOrder();
+                    }
+                    
+                    // 변수 초기화
+                    draggedCategory = null;
+                    categoryPlaceholder = null;
+    
+                    // 이벤트 리스너 제거
+                    document.removeEventListener('mousemove', handleDrag);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                } else {
+                    // 드래그가 아닌 일반 클릭일 경우 모달 표시
+                    const categoryContainer = button.closest('.category-container');
+                    const categoryId = categoryContainer.getAttribute('category-id');
+                    const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
+                    const editCategoryInput = document.getElementById('edit-category-input');
+                    
+                    editCategoryInput.value = categoryName;
+                    editCategoryInput.setAttribute('data-category-id', categoryId);
+                    editDeleteBackground.style.display = 'flex';
+                    
+                    editCategoryInput.focus();
+                    editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
+                }
+            };
+    
+            // 초기 이벤트 리스너 설정
+            button.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp, { once: true });
         });
     });
 
@@ -531,19 +677,42 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.addEventListener('mousemove', function(e) {
-        if (!isDragging) return;
+        if (!isDraggingCategory) return;
         e.preventDefault();
 
         const scrollDiff = window.scrollY - startScrollY;
-        const draggedTop = e.clientY - dragOffsetY + scrollDiff;
-        draggedItem.style.top = `${draggedTop}px`;
+        const draggedTop = e.clientY - categoryDragOffsetY + scrollDiff;
+        draggedCategory.style.top = `${draggedTop}px`;
 
-        const currentPosition = getPlaceholderPosition(contents, e.clientY);
-        if (currentPosition.element && currentPosition.element !== placeholder) {
+        const currentPosition = getCategoryPlaceholderPosition(categoryContainer, e.clientY);
+        if (currentPosition.element && currentPosition.element !== categoryPlaceholder) {
             if (currentPosition.beforeElement) {
-                contents.insertBefore(placeholder, currentPosition.element);
+                categoryContainer.insertBefore(categoryPlaceholder, currentPosition.element);
             } else {
-                contents.insertBefore(placeholder, currentPosition.element.nextElementSibling);
+                categoryContainer.insertBefore(categoryPlaceholder, currentPosition.element.nextElementSibling);
+            }
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isDraggingCategory) return;
+        e.preventDefault();
+    
+        const dragElement = document.getElementById('dragging-category');
+        if (dragElement) {
+            const scrollDiff = window.scrollY - startScrollY;
+            const draggedTop = e.clientY - categoryDragOffsetY + scrollDiff;
+            dragElement.style.top = `${draggedTop}px`;
+    
+            const currentPosition = getCategoryPlaceholderPosition(draggedCategory.parentNode, e.clientY);
+            if (currentPosition.element && currentPosition.element !== categoryPlaceholder) {
+                if (currentPosition.beforeElement) {
+                    currentPosition.element.parentNode.insertBefore(draggedCategory, currentPosition.element);
+                    currentPosition.element.parentNode.insertBefore(categoryPlaceholder, currentPosition.element);
+                } else {
+                    currentPosition.element.parentNode.insertBefore(draggedCategory, currentPosition.element.nextSibling);
+                    currentPosition.element.parentNode.insertBefore(categoryPlaceholder, currentPosition.element.nextSibling);
+                }
             }
         }
     });
@@ -559,6 +728,19 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTodoOrder();
         draggedItem = null;
         placeholder = null;
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (!isDraggingCategory) return;
+        isDraggingCategory = false;
+        document.body.classList.remove('dragging');
+
+        categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
+        categoryPlaceholder.parentNode.removeChild(categoryPlaceholder);
+        draggedCategory.removeAttribute('style');
+        updateCategoryOrder();
+        draggedCategory = null;
+        categoryPlaceholder = null;
     });
 
     fixButtons.forEach(btn => {
@@ -1163,6 +1345,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function getCategoryPlaceholderPosition(container, y) {
+    const draggableElements = [...container.querySelectorAll('.category-container, .category-container-placeholder')];
+    
+    for (let i = 0; i < draggableElements.length; i++) {
+        const box = draggableElements[i].getBoundingClientRect();
+        const boxCenter = box.top + box.height / 2;
+        
+        if (y < boxCenter) {
+            return { element: draggableElements[i], beforeElement: true };
+        }
+    }
+    
+    if (draggableElements.length > 0) {
+        return { element: draggableElements[draggableElements.length - 1], beforeElement: false };
+    }
+    
+    return { element: null, beforeElement: false };
+}
+
+function updateCategoryOrder() {
+    const categoryContainer = document.querySelector('.other_categories');
+    const categories = Array.from(categoryContainer.querySelectorAll('.category-container'));
+    const newOrder = categories.map((category, index) => ({
+        id: category.getAttribute('category-id'),
+        order: index
+    }));
+
+    fetch('/update_category_order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order: newOrder })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            categories.forEach((category, index) => {
+                category.setAttribute('data-order', index);
+            });
+        } else {
+            console.error('Failed to update category order:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 function checkForHighlight() {
     const urlParams = new URLSearchParams(window.location.search);

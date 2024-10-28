@@ -63,9 +63,7 @@ html, body {
     transition: background-color 0.3s ease;
 }
 
-.sidebar #menu_btn:hover { 
-    background: #a5a5a532; 
-}
+.sidebar #menu_btn:hover { background: #a5a5a532; }
 
 .sidebar hr { 
     border: 1px solid rgb(190, 190, 190); 
@@ -115,9 +113,7 @@ body.dragging * {
     user-select: none !important;
 }
 
-body.dragging .sidebar #menu_btn:hover { 
-    background: none; 
-}
+body.dragging .sidebar #menu_btn:hover { background: none; }
 
 .contents { 
     flex-grow: 1;
@@ -154,9 +150,7 @@ body.dragging .sidebar #menu_btn:hover {
     box-shadow: 0 4px 8px rgba(255, 165, 0, 0.2);
 }
 
-.contents #todo.fixed #grip { 
-    cursor: not-allowed; 
-}
+.contents #todo.fixed #grip { cursor: not-allowed; }
 
 .contents #todo .title {
     font-size: 18px;
@@ -200,9 +194,7 @@ body.dragging .sidebar #menu_btn:hover {
     z-index: 9998;
 }
 
-#add-content:hover { 
-    background: #a8c462; 
-}
+#add-content:hover { background: #a8c462; }
 
 #grip,
 #other,
@@ -239,9 +231,7 @@ body.dragging .sidebar #menu_btn:hover {
     right: 42.5px;
 }
 
-#todo.active, .contents #todo.active { 
-    background: #fffbe6; 
-}
+#todo.active, .contents #todo.active { background: #fffbe6; }
 
 .no-favorites-message,
 .no-success-message,
@@ -287,21 +277,10 @@ body.dragging .sidebar #menu_btn:hover {
     color: #58ce5c;
 }
 
-#success i, #delete i { 
-    transition: 0.3s ease; 
-}
-
-#success:hover { 
-    color: #4CAF50; 
-}
-
-#delete { 
-    color: #ff4d4d !important; 
-}
-
-#delete:hover { 
-    color: #ff0000; 
-}
+#success i, #delete i { transition: 0.3s ease; }
+#success:hover { color: #4CAF50; }
+#delete { color: #ff4d4d !important; }
+#delete:hover { color: #ff0000; }
 
 .qr-overlay {
     position: absolute;
@@ -676,7 +655,6 @@ body.dragging .sidebar #menu_btn:hover {
     align-items: flex-start;
 }
 
-/* 모달 제목 */
 .add-category-modal h2,
 .edit-category-modal h2 {
     color: #333;
@@ -686,7 +664,6 @@ body.dragging .sidebar #menu_btn:hover {
     text-align: center;
 }
 
-/* 모달 설명 텍스트 */
 .add-category-modal p,
 .edit-category-modal p {
     color: #666;
@@ -695,7 +672,6 @@ body.dragging .sidebar #menu_btn:hover {
     align-self: flex-start;
 }
 
-/* 카테고리 입력 필드 */
 #add-category-input,
 #edit-category-input {
     width: 95%;
@@ -706,14 +682,12 @@ body.dragging .sidebar #menu_btn:hover {
     margin-bottom: 15px;
 }
 
-/* 입력 필드 포커스 효과 */
 #add-category-input:focus,
 #edit-category-input:focus {
     border-color: #03A9F4;
     outline: none;
 }
 
-/* 버튼 컨테이너 */
 .button-container {
     display: flex;
     justify-content: flex-end;
@@ -723,7 +697,6 @@ body.dragging .sidebar #menu_btn:hover {
     margin-top: -10px;
 }
 
-/* 확인 버튼 */
 #confirm-category,
 #confirm-edit-category {
     background-color: #4CAF50;
@@ -744,7 +717,6 @@ body.dragging .sidebar #menu_btn:hover {
     background-color: #45a049;
 }
 
-/* 카테고리 삭제 버튼 */
 #delete-category {
     background: none;
     border: none;
@@ -755,11 +727,8 @@ body.dragging .sidebar #menu_btn:hover {
     padding: 10px 5px;
 }
 
-#delete-category:hover {
-    text-decoration: underline;
-}
+#delete-category:hover { text-decoration: underline; }
 
-/* 에러 상태 */
 #add-category-input.error,
 #edit-category-input.error {
     border-color: red;
@@ -779,9 +748,7 @@ body.dragging .sidebar #menu_btn:hover {
     animation: modalFadeIn 0.3s ease-out;
 }
 
-.add-modal h2, .edit-modal h2 { 
-    margin-bottom: 10px; 
-}
+.add-modal h2, .edit-modal h2 { margin-bottom: 10px; }
 
 .add-modal input,
 .add-modal button,
@@ -823,9 +790,7 @@ body.dragging .sidebar #menu_btn:hover {
     margin-bottom: 10px;
 }
 
-#add:hover, #edit:hover { 
-    background-color: #45a049; 
-}
+#add:hover, #edit:hover { background-color: #45a049; }
 
 .add-modal hr,
 .edit-modal hr {
@@ -850,17 +815,9 @@ body.dragging .sidebar #menu_btn:hover {
     color: #666;
 }
 
-#add-close:hover, #edit-close:hover, #donate-close {
-    color: #000; 
-}
-
-#title.error { 
-    border-color: red; 
-}
-
-#title, #detail { 
-    width: 95%; 
-}
+#add-close:hover, #edit-close:hover, #donate-close { color: #000; }
+#title.error { border-color: red; }
+#title, #detail { width: 95%; }
 
 .input-group {
     position: relative;
@@ -929,13 +886,8 @@ body.dragging .sidebar #menu_btn:hover {
     border-bottom: 1px solid #eee;
 }
 
-#other-group:last-child { 
-    border-bottom: none; 
-}
-
-#other-group:hover { 
-    background-color: #f0f0f0; 
-}
+#other-group:last-child {  border-bottom: none; }
+#other-group:hover { background-color: #f0f0f0; }
 
 #other-group i {
     margin-right: 10px;
@@ -954,9 +906,7 @@ body.dragging .sidebar #menu_btn:hover {
     z-index: 1000;
 }
 
-#other, #favorite, #success, #fix, #delete { 
-    position: absolute; 
-}
+#other, #favorite, #success, #fix, #delete { position: absolute; }
 
 #other { 
     top: 7.5px; 
@@ -1111,23 +1061,15 @@ body.dragging .sidebar #menu_btn:hover {
     transition: all 0.3s ease;
 }
 
-.sidebar #category_btn.selected {
-    transform: translateX(5px);
-}
-
 .sidebar #category_btn.selected,
 .category-container.selected #category_btn {
     background-color: rgba(134, 134, 134, 0.779) !important;
     cursor: default;
 }
 
-.sidebar #category_btn:not(.selected):hover {
-    transform: translateX(5px);
-}
-
-.category-container:not(.selected):hover {
-    transform: translateX(3px);
-}
+.sidebar #category_btn.selected { transform: translateX(5px); }
+.sidebar #category_btn:not(.selected):hover { transform: translateX(5px); }
+.category-container:not(.selected):hover { transform: translateX(3px); }
 
 .sidebar #category_btn:hover,
 .category-container #category_btn:hover,
@@ -1209,33 +1151,13 @@ body.dragging .sidebar #menu_btn:hover {
 
 #edit-delete i { font-size: 16px; }
 
-.category-container:hover #edit-delete {
-    opacity: 1;
-}
-
-#edit-delete:hover {
-    transform: translateX(0.3px);
-}
-
-.category-container.selected {
-    transform: translateX(6px) !important;
-}
-
-.category-container.selected:hover {
-    transform: translateX(0.7px) !important;
-}
-
-.category-container.selected #edit-delete:hover {
-    transform: translateX(5px) !important;
-}
-
-.category-container:has(#edit-delete:hover) #edit-delete {
-    transform: translateX(0) !important;
-}
-
-.category-container.selected:has(#edit-delete:hover) {
-    transform: translateX(6px) !important;
-}
+.category-container:hover #edit-delete { opacity: 1; }
+#edit-delete:hover { transform: translateX(0.3px); }
+.category-container.selected { transform: translateX(6px) !important; }
+.category-container.selected:hover { transform: translateX(0.7px) !important; }
+.category-container.selected #edit-delete:hover { transform: translateX(5px) !important; }
+.category-container:has(#edit-delete:hover) #edit-delete { transform: translateX(0) !important; }
+.category-container.selected:has(#edit-delete:hover) { transform: translateX(6px) !important; }
 
 .category-container:hover,
 .category-container:has(#edit-delete:hover) {

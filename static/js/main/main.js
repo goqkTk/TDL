@@ -180,34 +180,42 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     editDeleteButtons.forEach(button => {
+        let isDragging = false;
+        let startY;
+        let draggedCategory = null;
+        let categoryPlaceholder = null;
+    
         button.addEventListener('mousedown', function(e) {
-            // 클릭 시작 위치 저장
-            const startX = e.clientX;
-            const startY = e.clientY;
+            startY = e.clientY;
             const categoryItem = this.closest('.category-container');
             if (!categoryItem) return;
     
             const handleMouseMove = (moveEvent) => {
-                // 5픽셀 이상 움직였을 때만 드래그 시작
-                if (Math.abs(moveEvent.clientY - startY) > 5) {
-                    // 드래그 시작
-                    isDraggingCategory = true;
+                if (!isDragging && Math.abs(moveEvent.clientY - startY) > 5) {
+                    isDragging = true;
                     e.preventDefault();
-                    
-                    // 원본 요소 스타일 설정
-                    const rect = categoryItem.getBoundingClientRect();
-                    draggedCategory = categoryItem;
     
-                    // 플레이스홀더 생성 및 삽입
+                    const rect = categoryItem.getBoundingClientRect();
+                    const offsetY = e.clientY - rect.top;
+    
+                    // 기존 플레이스홀더 제거
+                    const existingPlaceholder = document.querySelector('.category-container-placeholder');
+                    if (existingPlaceholder) {
+                        existingPlaceholder.remove();
+                    }
+    
+                    // 새 플레이스홀더 생성 - 스타일만 수정
                     categoryPlaceholder = document.createElement('div');
                     categoryPlaceholder.className = 'category-container-placeholder';
                     categoryPlaceholder.style.height = `${rect.height}px`;
-                    categoryPlaceholder.style.backgroundColor = '#4d4d4d';
+                    categoryPlaceholder.style.backgroundColor = '#666666';
+                    categoryPlaceholder.style.border = '2px dashed #888888';
                     categoryPlaceholder.style.borderRadius = '5px';
-                    categoryPlaceholder.style.margin = '5px 0';
+                    categoryPlaceholder.style.opacity = '0.7';
                     categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
     
-                    // 드래그되는 요소 스타일 설정
+                    // 원래 코드 유지
+                    draggedCategory = categoryItem;
                     Object.assign(draggedCategory.style, {
                         position: 'fixed',
                         width: `${rect.width}px`,
@@ -216,81 +224,105 @@ document.addEventListener('DOMContentLoaded', function() {
                         top: `${rect.top}px`,
                         backgroundColor: '#4d4d4d',
                         zIndex: '1000',
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
+                        transition: 'none'
                     });
     
-                    // mousemove 이벤트 제거하고 document에 새로운 mousemove 이벤트 추가
-                    button.removeEventListener('mousemove', handleMouseMove);
+                    document.body.appendChild(draggedCategory);
+                    document.removeEventListener('mousemove', handleMouseMove);
                     document.addEventListener('mousemove', handleDrag);
                 }
             };
     
-            const handleDrag = (dragEvent) => {
-                if (!isDraggingCategory) return;
-                dragEvent.preventDefault();
+            const handleDrag = (moveEvent) => {
+                if (!isDragging || !draggedCategory) return;
+                moveEvent.preventDefault();
     
-                // 드래그 요소 위치 업데이트
-                draggedCategory.style.top = `${dragEvent.pageY - draggedCategory.offsetHeight / 2}px`;
+                const y = moveEvent.clientY - (e.clientY - startY);
+                draggedCategory.style.top = `${y}px`;
     
-                // 플레이스홀더 위치 업데이트
-                const categories = Array.from(document.querySelectorAll('.category-container:not([style*="position: fixed"])'));
+                // add-category 버튼과 현재 카테고리들 가져오기
+                const addCategoryBtn = document.querySelector('#add-category');
+                const otherCategories = document.querySelector('.other_categories');
+                const addCategoryRect = addCategoryBtn.getBoundingClientRect();
+                const categories = Array.from(otherCategories.querySelectorAll('.category-container:not([style*="position: fixed"])'));
+                const placeholder = document.querySelector('.category-container-placeholder');
+    
+                // add-category 버튼보다 아래로는 이동 불가
+                if (moveEvent.clientY >= addCategoryRect.top) {
+                    if (categories.length > 0) {
+                        const lastCategory = categories[categories.length - 1];
+                        if (placeholder && lastCategory && lastCategory !== placeholder) {
+                            lastCategory.after(placeholder);
+                        }
+                    }
+                    return;
+                }
+    
+                // 카테고리들 사이에서의 위치 계산
+                let inserted = false;
                 for (const category of categories) {
                     const rect = category.getBoundingClientRect();
-                    if (dragEvent.clientY < rect.top + rect.height / 2) {
-                        if (category.previousElementSibling !== categoryPlaceholder) {
-                            category.parentNode.insertBefore(categoryPlaceholder, category);
+                    const centerY = rect.top + (rect.height / 2);
+    
+                    if (moveEvent.clientY < centerY) {
+                        if (placeholder && 
+                            category !== placeholder && 
+                            category.previousElementSibling !== placeholder) {
+                            category.parentNode.insertBefore(placeholder, category);
+                            inserted = true;
+                            break;
                         }
-                        return;
                     }
                 }
-                // 마지막 위치로 이동
-                const lastCategory = categories[categories.length - 1];
-                if (lastCategory && lastCategory.nextElementSibling !== categoryPlaceholder) {
-                    lastCategory.parentNode.appendChild(categoryPlaceholder);
+    
+                if (!inserted && categories.length > 0) {
+                    const lastCategory = categories[categories.length - 1];
+                    const lastRect = lastCategory.getBoundingClientRect();
+                    
+                    if (placeholder && 
+                        lastCategory !== placeholder && 
+                        lastCategory.nextElementSibling !== placeholder &&
+                        moveEvent.clientY >= lastRect.top + (lastRect.height / 2) &&
+                        moveEvent.clientY < addCategoryRect.top) {
+                        lastCategory.after(placeholder);
+                    }
                 }
             };
     
             const handleMouseUp = () => {
-                if (isDraggingCategory) {
-                    // 드래그 종료 처리
-                    isDraggingCategory = false;
-                    
-                    // 플레이스홀더 위치에 카테고리 배치
-                    if (categoryPlaceholder && draggedCategory) {
+                if (isDragging) {
+                    if (draggedCategory && categoryPlaceholder) {
                         draggedCategory.removeAttribute('style');
                         categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
                         categoryPlaceholder.remove();
-                        
-                        // 순서 업데이트
                         updateCategoryOrder();
                     }
-                    
-                    // 변수 초기화
-                    draggedCategory = null;
-                    categoryPlaceholder = null;
-    
-                    // 이벤트 리스너 제거
-                    document.removeEventListener('mousemove', handleDrag);
-                    document.removeEventListener('mouseup', handleMouseUp);
                 } else {
-                    // 드래그가 아닌 일반 클릭일 경우 모달 표시
+                    // 일반 클릭 처리
                     const categoryContainer = button.closest('.category-container');
                     const categoryId = categoryContainer.getAttribute('category-id');
                     const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
                     const editCategoryInput = document.getElementById('edit-category-input');
-                    
+    
                     editCategoryInput.value = categoryName;
                     editCategoryInput.setAttribute('data-category-id', categoryId);
                     editDeleteBackground.style.display = 'flex';
-                    
                     editCategoryInput.focus();
                     editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
                 }
+    
+                isDragging = false;
+                draggedCategory = null;
+                categoryPlaceholder = null;
+    
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', handleMouseUp);
             };
     
-            // 초기 이벤트 리스너 설정
-            button.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp, { once: true });
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
         });
     });
 

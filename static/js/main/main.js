@@ -196,36 +196,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.preventDefault();
     
                     const rect = categoryItem.getBoundingClientRect();
-                    const offsetY = e.clientY - rect.top;
     
-                    // 기존 플레이스홀더 제거
                     const existingPlaceholder = document.querySelector('.category-container-placeholder');
                     if (existingPlaceholder) {
                         existingPlaceholder.remove();
                     }
     
-                    // 새 플레이스홀더 생성 - 스타일만 수정
                     categoryPlaceholder = document.createElement('div');
                     categoryPlaceholder.className = 'category-container-placeholder';
                     categoryPlaceholder.style.height = `${rect.height}px`;
                     categoryPlaceholder.style.backgroundColor = '#666666';
                     categoryPlaceholder.style.border = '2px dashed #888888';
                     categoryPlaceholder.style.borderRadius = '5px';
+                    categoryPlaceholder.style.marginRight = '15px';
                     categoryPlaceholder.style.opacity = '0.7';
                     categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
     
-                    // 원래 코드 유지
                     draggedCategory = categoryItem;
                     Object.assign(draggedCategory.style, {
                         position: 'fixed',
-                        width: `${rect.width}px`,
+                        width: `${rect.width - 20}px`,
                         height: `${rect.height}px`,
-                        left: `${rect.left}px`,
+                        left: `0`,
                         top: `${rect.top}px`,
                         backgroundColor: '#4d4d4d',
                         zIndex: '1000',
                         pointerEvents: 'none',
-                        transition: 'none'
+                        transition: 'none',
+                        marginLeft: '8px'
                     });
     
                     document.body.appendChild(draggedCategory);
@@ -241,14 +239,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const y = moveEvent.clientY - (e.clientY - startY);
                 draggedCategory.style.top = `${y}px`;
     
-                // add-category 버튼과 현재 카테고리들 가져오기
                 const addCategoryBtn = document.querySelector('#add-category');
                 const otherCategories = document.querySelector('.other_categories');
                 const addCategoryRect = addCategoryBtn.getBoundingClientRect();
                 const categories = Array.from(otherCategories.querySelectorAll('.category-container:not([style*="position: fixed"])'));
                 const placeholder = document.querySelector('.category-container-placeholder');
     
-                // add-category 버튼보다 아래로는 이동 불가
                 if (moveEvent.clientY >= addCategoryRect.top) {
                     if (categories.length > 0) {
                         const lastCategory = categories[categories.length - 1];
@@ -259,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
     
-                // 카테고리들 사이에서의 위치 계산
                 let inserted = false;
                 for (const category of categories) {
                     const rect = category.getBoundingClientRect();
@@ -299,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         updateCategoryOrder();
                     }
                 } else {
-                    // 일반 클릭 처리
                     const categoryContainer = button.closest('.category-container');
                     const categoryId = categoryContainer.getAttribute('category-id');
                     const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();

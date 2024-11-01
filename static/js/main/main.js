@@ -1394,8 +1394,9 @@ function getCategoryPlaceholderPosition(container, y) {
 function updateCategoryOrder() {
     const categoryContainer = document.querySelector('.other_categories');
     const categories = Array.from(categoryContainer.querySelectorAll('.category-container'));
+    
     const newOrder = categories.map((category, index) => ({
-        id: category.getAttribute('category-id'),
+        id: category.getAttribute('data-category-id'),
         order: index
     }));
 

@@ -7,12 +7,16 @@ def update_categories_order(user_id, new_order):
     try:
         cursor.execute("""
             UPDATE categories 
-            SET `order` = 99999 
+            SET `order` = 9999
             WHERE user_id = %s
         """, (user_id,))
+
         for category in new_order:
+            if category.get('id') is None or category.get('order') is None:
+                print(f"Skipping invalid category data: {category}")
+                continue
             sql = "UPDATE categories SET `order` = %s WHERE id = %s AND user_id = %s"
-            cursor.execute(sql, (category['order'], category['id'], user_id))
+            cursor.execute(sql, (int(category['order']), int(category['id']), user_id))
         db.commit()
         return True
     except Exception as e:
@@ -108,7 +112,7 @@ def get_categories(user_id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     try:
-        sql = "SELECT id, name FROM categories WHERE user_id = %s ORDER BY id"
+        sql = "SELECT id, name FROM categories WHERE user_id = %s ORDER BY `order` ASC"
         cursor.execute(sql, (user_id,))
         categories = cursor.fetchall()
         return categories

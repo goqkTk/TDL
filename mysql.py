@@ -94,7 +94,7 @@ def add_category_db(user_id, category_name):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     try:
-        sql = "INSERT INTO categories (user_id, name) VALUES (%s, %s)"
+        sql = "INSERT INTO categories (user_id, name, `order`) VALUES (%s, %s, 9999)"
         cursor.execute(sql, (user_id, category_name))
         category_id = cursor.lastrowid
         db.commit()

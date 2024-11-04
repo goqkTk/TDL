@@ -4,6 +4,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submit');
     const autoLoginCheckbox = document.getElementById('autologin');
 
+    function handleCapsLock(e) {
+        const capsLockOn = e.getModifierState('CapsLock');
+        if (capsLockOn && document.activeElement === pwInput) {
+            setErrorStyle(pwInput, 'CapsLock이 켜져있습니다');
+        } else {
+            clearErrorStyle(pwInput);
+        }
+    }
+    pwInput.addEventListener('keyup', handleCapsLock);
+    
+    pwInput.addEventListener('blur', function() {
+        clearErrorStyle(this);
+    });
+
     function togglePasswordVisibility(fieldId, btnId) {
         const field = document.getElementById(fieldId);
         const btn = document.getElementById(btnId);

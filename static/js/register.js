@@ -9,6 +9,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submit');
     const verifyButton = document.getElementById('verify');
 
+    function handleCapsLock(e, inputField) {
+        const capsLockOn = e.getModifierState('CapsLock');
+        if (capsLockOn && document.activeElement === inputField) {
+            setupErrorMessage(inputField.id, 'CapsLock이 켜져있습니다');
+            inputField.style.borderBottom = '1px solid red';
+        } else {
+            if (inputField === passwordInputField) {
+                checkPassword();
+            } else {
+                checkPasswordMatch();
+            }
+        }
+    }
+    passwordInputField.addEventListener('keyup', (e) => handleCapsLock(e, passwordInputField));
+    passwordCheckField.addEventListener('keyup', (e) => handleCapsLock(e, passwordCheckField));
+    
+    passwordInputField.addEventListener('blur', function() {
+        if (this.value.trim() === '') {
+            this.style.borderBottom = '1px solid gray';
+        }
+        checkPassword();
+    });
+
+    passwordCheckField.addEventListener('blur', function() {
+        if (this.value.trim() === '') {
+            this.style.borderBottom = '1px solid gray';
+        }
+        checkPasswordMatch();
+    });
+
     verifyButton.addEventListener('click', function() {
         const emailName = document.getElementById('email-name').value;
         const emailDomain = document.getElementById('email-domain').value;

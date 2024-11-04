@@ -60,122 +60,23 @@ document.addEventListener('DOMContentLoaded', function() {
     let isDragging = false;
     let startY;
     let dragOffsetY;
+    let dragStartTime = 0;
+    let moveDistance = 0;
+    const DRAG_THRESHOLD = 200;
 
     checkForHighlight();
-
-    contents.addEventListener('mousedown', function(e) {
-        const gripElement = e.target.closest('#grip');
-        if (!gripElement) return;
-    
-        const todoItem = gripElement.closest('.todo-item');
-        if (!todoItem) return;
-    
-        if (todoItem.classList.contains('fixed')) {
-            e.preventDefault();
-            todoItem.classList.add('shake');
-            todoItem.addEventListener('animationend', function() {
-                todoItem.classList.remove('shake');
-            }, { once: true });
-            return;
-        }
-    
-        e.preventDefault();
-        draggedItem = todoItem;
-        const rect = todoItem.getBoundingClientRect();
-        dragOffsetY = e.clientY - rect.top;
-        startY = e.clientY;
-        startScrollY = window.scrollY;
-        isDragging = true;
-        document.body.classList.add('dragging');
-    
-        placeholder = document.createElement('div');
-        placeholder.className = 'todo-item-placeholder';
-        placeholder.style.height = `${rect.height}px`;
-        placeholder.style.marginBottom = window.getComputedStyle(todoItem).marginBottom;
-        placeholder.style.border = '2px dashed #ccc';
-        placeholder.style.backgroundColor = '#f0f0f0';
-        todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);
-    
-        const computedStyle = window.getComputedStyle(todoItem);
-    
-        Object.assign(todoItem.style, {
-            position: 'fixed',
-            zIndex: '1000',
-            width: `${rect.width}px`,
-            height: `${rect.height}px`,
-            left: `${rect.left}px`,
-            top: `${rect.top}px`,
-            backgroundColor: computedStyle.backgroundColor,
-            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
-            transition: 'none',
-            opacity: '0.9',
-            padding: computedStyle.padding,
-            boxSizing: 'border-box'
-        });
-    
-        document.body.appendChild(todoItem);
-    });
-    
-    document.addEventListener('mousemove', function(e) {
-        if (!isDragging || !draggedItem) return;
-        e.preventDefault();
-    
-        const scrollDiff = window.scrollY - startScrollY;
-        const draggedTop = e.clientY - dragOffsetY + scrollDiff;
-        draggedItem.style.top = `${draggedTop}px`;
-    
-        const currentPosition = getPlaceholderPosition(contents, e.clientY);
-        if (currentPosition.element && currentPosition.element !== placeholder) {
-            if (currentPosition.beforeElement) {
-                contents.insertBefore(placeholder, currentPosition.element);
-            } else {
-                contents.insertBefore(placeholder, currentPosition.element.nextSibling);
-            }
-        }
-    });
-    
-    document.addEventListener('mouseup', function() {
-        if (!isDragging) return;
-        isDragging = false;
-        document.body.classList.remove('dragging');
-    
-        if (draggedItem && placeholder) {
-            placeholder.parentNode.insertBefore(draggedItem, placeholder);
-            placeholder.parentNode.removeChild(placeholder);
-            draggedItem.removeAttribute('style');
-            updateTodoOrder();
-        }
-    
-        draggedItem = null;
-        placeholder = null;
-    });
-
-    document.querySelector('.other_categories').addEventListener('click', function(e) {
-        const editDeleteBtn = e.target.closest('#edit-delete');
-        if (!editDeleteBtn) return;
-    
-        if (!isDraggingCategory) {
-            const categoryContainer = editDeleteBtn.closest('.category-container');
-            const categoryId = categoryContainer.getAttribute('category-id');
-            const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
-            const editCategoryInput = document.getElementById('edit-category-input');
-    
-            editCategoryInput.value = categoryName;
-            editCategoryInput.setAttribute('data-category-id', categoryId);
-            editDeleteBackground.style.display = 'flex';
-            editCategoryInput.focus();
-            editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
-        }
-    });
 
     document.querySelector('.other_categories').addEventListener('mousedown', function(e) {
         const editDeleteBtn = e.target.closest('#edit-delete');
         if (!editDeleteBtn) return;
-
+        if (e.button !== 0) return;
+    
         const categoryItem = editDeleteBtn.closest('.category-container');
         if (!categoryItem) return;
-
+    
         e.preventDefault();
+        dragStartTime = Date.now();
+        moveDistance = 0;
         isDraggingCategory = true;
         draggedCategory = categoryItem;
         draggedCategory.classList.add('dragging');
@@ -183,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
         categoryDragOffsetY = e.clientY - rect.top;
         categoryStartY = e.clientY;
         startScrollY = window.scrollY;
-
+    
         categoryPlaceholder = document.createElement('div');
         categoryPlaceholder.className = 'category-container-placeholder';
         categoryPlaceholder.style.height = `${rect.height}px`;
@@ -216,13 +117,16 @@ document.addEventListener('DOMContentLoaded', function() {
             boxSizing: 'border-box',
             transition: 'none'
         });
-
+    
         categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
         document.body.appendChild(categoryItem);
     });
 
     document.addEventListener('mousemove', function(e) {
         if (!isDraggingCategory || !draggedCategory) return;
+        
+        // 마우스 이동 거리 계산
+        moveDistance += Math.abs(e.movementY);
         e.preventDefault();
     
         const scrollDiff = window.scrollY - startScrollY;
@@ -256,19 +160,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('mouseup', function() {
         if (!isDraggingCategory) return;
+        
+        const wasDragged = moveDistance > 5;
+
+        if (!wasDragged) {
+            // 클릭으로 처리
+            if (draggedCategory) {
+                const categoryId = draggedCategory.getAttribute('category-id');
+                const categoryName = draggedCategory.querySelector('#category_btn').textContent.trim();
+                const editCategoryInput = document.getElementById('edit-category-input');
+
+                editCategoryInput.value = categoryName;
+                editCategoryInput.setAttribute('data-category-id', categoryId);
+                document.querySelector('.edit-delete-modal-background').style.display = 'flex';
+                editCategoryInput.focus();
+                editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
+            }
+        }
+
+        // 드래그 상태 초기화
         isDraggingCategory = false;
         document.body.classList.remove('dragging');
-
+        
         if (draggedCategory && categoryPlaceholder) {
             draggedCategory.classList.remove('dragging');
             draggedCategory.removeAttribute('style');
             categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
             categoryPlaceholder.remove();
-            updateCategoryOrder();
+            if (wasDragged) {
+                updateCategoryOrder();
+            }
         }
 
         draggedCategory = null;
         categoryPlaceholder = null;
+        moveDistance = 0;
     });
 
     if (settingBtn) {
@@ -292,18 +218,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('delete-category').addEventListener('click', function() {
         const editCategoryInput = document.getElementById('edit-category-input');
         const categoryId = editCategoryInput.getAttribute('data-category-id');
-        const categoryContainer = document.querySelector(`.category-container[data-category-id="${categoryId}"]`);
+        const categoryContainer = document.querySelector(`.category-container[category-id="${categoryId}"]`);
         const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
     
-        const originalModalTitle = document.querySelector('.confirm-modal h3').textContent;
         document.querySelector('.confirm-modal h3').textContent = `정말 "${categoryName}" 카테고리를\n삭제하시겠습니까?`;
         document.querySelector('.edit-delete-modal-background').style.display = 'none';
         document.querySelector('.confirm-modal-background').style.display = 'flex';
     
         const yesBtn = document.getElementById('yes');
         const noBtn = document.getElementById('no');
-        const oldYesClick = yesBtn.onclick;
-        const oldNoClick = noBtn.onclick;
         
         yesBtn.onclick = function() {
             fetch('/delete_category', {
@@ -312,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    category_id: categoryId
+                    category_id: parseInt(categoryId)
                 })
             })
             .then(response => response.json())
@@ -326,20 +249,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 alert('카테고리 삭제 중 오류가 발생했습니다.');
-            })
-            .finally(() => {
-                document.querySelector('.confirm-modal-background').style.display = 'none';
-                document.querySelector('.confirm-modal h3').textContent = originalModalTitle;
-                yesBtn.onclick = oldYesClick;
-                noBtn.onclick = oldNoClick;
             });
         };
     
         noBtn.onclick = function() {
             document.querySelector('.confirm-modal-background').style.display = 'none';
-            document.querySelector('.confirm-modal h3').textContent = originalModalTitle;
-            yesBtn.onclick = oldYesClick;
-            noBtn.onclick = oldNoClick;
         };
     });
 
@@ -533,39 +447,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (confirmEditCategoryBtn) {
         confirmEditCategoryBtn.addEventListener('click', function() {
-            const categoryName = editCategoryInput ? editCategoryInput.value : '';
-
-            if (!categoryName.trim()) {
+            const editCategoryInput = document.getElementById('edit-category-input');
+            const categoryName = editCategoryInput.value.trim();
+            const categoryId = editCategoryInput.getAttribute('data-category-id');
+    
+            if (!categoryName) {
                 setupErrorMessage(editCategoryInput, '카테고리 이름을 입력해주세요');
                 return;
             }
-
+    
             fetch('/update_category', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    category_name: newName,
-                    category_id: categoryId
+                    category_name: categoryName,
+                    category_id: parseInt(categoryId)
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('서버 응답 오류');
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    categoryContainer.querySelector('#category_btn').textContent = newName;
+                    const categoryContainer = document.querySelector(`.category-container[category-id="${categoryId}"]`);
+                    const categoryBtn = categoryContainer.querySelector('#category_btn');
+                    categoryBtn.textContent = categoryName;
                     document.querySelector('.edit-delete-modal-background').style.display = 'none';
                 } else {
-                    const errorMessage = editModal.querySelector('.error-message');
-                    errorMessage.textContent = data.message || '카테고리 수정에 실패했습니다.';
-                    errorMessage.style.display = 'block';
+                    throw new Error(data.message || '카테고리 수정에 실패했습니다.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                const errorMessage = editModal.querySelector('.error-message');
-                errorMessage.textContent = '오류가 발생했습니다.';
-                errorMessage.style.display = 'block';
+                setupErrorMessage(editCategoryInput, error.message || '오류가 발생했습니다.');
             });
         });
     }

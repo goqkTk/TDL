@@ -47,7 +47,11 @@ def update_category_db(user_id, category_id, new_name):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
     try:
-        sql = "UPDATE categories SET name = %s WHERE id = %s AND user_id = %s"
+        sql = """
+        UPDATE categories 
+        SET name = %s 
+        WHERE id = %s AND user_id = %s
+        """
         cursor.execute(sql, (new_name, category_id, user_id))
         db.commit()
         return True

@@ -47,47 +47,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const editDeleteButtons = document.querySelectorAll('#edit-delete');
     const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
     const settingBtn = document.querySelector('.setting');
+    const categoryContainer = document.querySelector('.other_categories');
 
     let todoToRemove = null;
-
-    let draggedItem = null;
-    let placeholder = null;
-    let isDragging = false;
     let startScrollY;
-    let dragOffsetY;
-
     let draggedCategory = null;
     let categoryPlaceholder = null;
     let isDraggingCategory = false;
+    let categoryDragOffsetY = 0;
+    let draggedItem = null;
+    let placeholder = null;
+    let isDragging = false;
+    let startY;
+    let dragOffsetY;
 
     checkForHighlight();
 
-    document.querySelector('.other_categories').addEventListener('mousedown', function(e) {
-        const editDeleteBtn = e.target.closest('#edit-delete');
-        if (!editDeleteBtn) return;
+    contents.addEventListener('mousedown', function(e) {
+        const gripElement = e.target.closest('#grip');
+        if (!gripElement) return;
     
-        const categoryItem = editDeleteBtn.closest('.category-container');
-        if (!categoryItem) return;
+        const todoItem = gripElement.closest('.todo-item');
+        if (!todoItem) return;
+    
+        if (todoItem.classList.contains('fixed')) {
+            e.preventDefault();
+            todoItem.classList.add('shake');
+            todoItem.addEventListener('animationend', function() {
+                todoItem.classList.remove('shake');
+            }, { once: true });
+            return;
+        }
     
         e.preventDefault();
-        draggedCategory = categoryItem;
-        const rect = categoryItem.getBoundingClientRect();
-        categoryDragOffsetY = e.clientY - rect.top;
-        categoryStartY = e.clientY;
-        isDraggingCategory = true;
+        draggedItem = todoItem;
+        const rect = todoItem.getBoundingClientRect();
+        dragOffsetY = e.clientY - rect.top;
+        startY = e.clientY;
+        startScrollY = window.scrollY;
+        isDragging = true;
         document.body.classList.add('dragging');
-
-        categoryPlaceholder = document.createElement('div');
-        categoryPlaceholder.className = 'category-container-placeholder';
-        categoryPlaceholder.style.height = `${rect.height}px`;
-        categoryPlaceholder.style.marginBottom = window.getComputedStyle(categoryItem).marginBottom;
-        categoryPlaceholder.style.border = '2px dashed #ccc';
-        categoryPlaceholder.style.backgroundColor = '#666';
-        categoryPlaceholder.style.borderRadius = '5px';
-        categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem.nextSibling);
-
-        const computedStyle = window.getComputedStyle(categoryItem);
-        Object.assign(categoryItem.style, {
+    
+        placeholder = document.createElement('div');
+        placeholder.className = 'todo-item-placeholder';
+        placeholder.style.height = `${rect.height}px`;
+        placeholder.style.marginBottom = window.getComputedStyle(todoItem).marginBottom;
+        placeholder.style.border = '2px dashed #ccc';
+        placeholder.style.backgroundColor = '#f0f0f0';
+        todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);
+    
+        const computedStyle = window.getComputedStyle(todoItem);
+    
+        Object.assign(todoItem.style, {
             position: 'fixed',
             zIndex: '1000',
             width: `${rect.width}px`,
@@ -101,8 +112,163 @@ document.addEventListener('DOMContentLoaded', function() {
             padding: computedStyle.padding,
             boxSizing: 'border-box'
         });
+    
+        document.body.appendChild(todoItem);
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging || !draggedItem) return;
+        e.preventDefault();
+    
+        const scrollDiff = window.scrollY - startScrollY;
+        const draggedTop = e.clientY - dragOffsetY + scrollDiff;
+        draggedItem.style.top = `${draggedTop}px`;
+    
+        const currentPosition = getPlaceholderPosition(contents, e.clientY);
+        if (currentPosition.element && currentPosition.element !== placeholder) {
+            if (currentPosition.beforeElement) {
+                contents.insertBefore(placeholder, currentPosition.element);
+            } else {
+                contents.insertBefore(placeholder, currentPosition.element.nextSibling);
+            }
+        }
+    });
+    
+    document.addEventListener('mouseup', function() {
+        if (!isDragging) return;
+        isDragging = false;
+        document.body.classList.remove('dragging');
+    
+        if (draggedItem && placeholder) {
+            placeholder.parentNode.insertBefore(draggedItem, placeholder);
+            placeholder.parentNode.removeChild(placeholder);
+            draggedItem.removeAttribute('style');
+            updateTodoOrder();
+        }
+    
+        draggedItem = null;
+        placeholder = null;
+    });
 
+    document.querySelector('.other_categories').addEventListener('click', function(e) {
+        const editDeleteBtn = e.target.closest('#edit-delete');
+        if (!editDeleteBtn) return;
+    
+        if (!isDraggingCategory) {
+            const categoryContainer = editDeleteBtn.closest('.category-container');
+            const categoryId = categoryContainer.getAttribute('category-id');
+            const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
+            const editCategoryInput = document.getElementById('edit-category-input');
+    
+            editCategoryInput.value = categoryName;
+            editCategoryInput.setAttribute('data-category-id', categoryId);
+            editDeleteBackground.style.display = 'flex';
+            editCategoryInput.focus();
+            editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
+        }
+    });
+
+    document.querySelector('.other_categories').addEventListener('mousedown', function(e) {
+        const editDeleteBtn = e.target.closest('#edit-delete');
+        if (!editDeleteBtn) return;
+
+        const categoryItem = editDeleteBtn.closest('.category-container');
+        if (!categoryItem) return;
+
+        e.preventDefault();
+        isDraggingCategory = true;
+        draggedCategory = categoryItem;
+        draggedCategory.classList.add('dragging');
+        const rect = categoryItem.getBoundingClientRect();
+        categoryDragOffsetY = e.clientY - rect.top;
+        categoryStartY = e.clientY;
+        startScrollY = window.scrollY;
+
+        categoryPlaceholder = document.createElement('div');
+        categoryPlaceholder.className = 'category-container-placeholder';
+        categoryPlaceholder.style.height = `${rect.height}px`;
+        categoryPlaceholder.style.marginBottom = window.getComputedStyle(categoryItem).marginBottom;
+        categoryPlaceholder.style.border = '2px dashed #ccc';
+        categoryPlaceholder.style.backgroundColor = 'rgba(102, 102, 102, 0.3)';
+        categoryPlaceholder.style.borderRadius = '5px';
+        const sharedStyles = {
+            height: `${rect.height}px`,
+            borderRadius: '8px',
+            backgroundColor: 'rgba(102, 102, 102, 0.3)',
+            marginRight: '12px',
+            marginLeft: '6px'
+        };
+        
+        const computedStyle = window.getComputedStyle(categoryItem);
+        Object.assign(categoryPlaceholder.style, {
+            ...sharedStyles,
+            border: '2px dashed #ccc'
+        });
+        
+        Object.assign(categoryItem.style, {
+            ...sharedStyles,
+            position: 'fixed',
+            zIndex: '1000',
+            width: `${rect.width - 16}px`,
+            left: `${rect.left - 8}px`,
+            top: `${rect.top}px`,
+            padding: computedStyle.padding,
+            boxSizing: 'border-box',
+            transition: 'none'
+        });
+
+        categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
         document.body.appendChild(categoryItem);
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isDraggingCategory || !draggedCategory) return;
+        e.preventDefault();
+    
+        const scrollDiff = window.scrollY - startScrollY;
+        const draggedTop = e.clientY - categoryDragOffsetY + scrollDiff;
+        draggedCategory.style.top = `${draggedTop}px`;
+    
+        const categories = [...categoryContainer.querySelectorAll('.category-container:not([style*="position: fixed"])')];
+        let newPosition = null;
+    
+        for (const category of categories) {
+            const rect = category.getBoundingClientRect();
+            const centerY = rect.top + rect.height / 2;
+    
+            if (e.clientY < centerY) {
+                newPosition = category;
+                break;
+            }
+        }
+    
+        if (newPosition) {
+            if (categoryPlaceholder.nextSibling !== newPosition) {
+                categoryContainer.insertBefore(categoryPlaceholder, newPosition);
+            }
+        } else if (categories.length > 0) {
+            const lastCategory = categories[categories.length - 1];
+            if (categoryPlaceholder.previousSibling !== lastCategory) {
+                categoryContainer.insertBefore(categoryPlaceholder, lastCategory.nextSibling);
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (!isDraggingCategory) return;
+        isDraggingCategory = false;
+        document.body.classList.remove('dragging');
+
+        if (draggedCategory && categoryPlaceholder) {
+            draggedCategory.classList.remove('dragging');
+            draggedCategory.removeAttribute('style');
+            categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
+            categoryPlaceholder.remove();
+            updateCategoryOrder();
+        }
+
+        draggedCategory = null;
+        categoryPlaceholder = null;
     });
 
     if (settingBtn) {
@@ -164,7 +330,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .finally(() => {
                 document.querySelector('.confirm-modal-background').style.display = 'none';
                 document.querySelector('.confirm-modal h3').textContent = originalModalTitle;
-
                 yesBtn.onclick = oldYesClick;
                 noBtn.onclick = oldNoClick;
             });
@@ -173,150 +338,25 @@ document.addEventListener('DOMContentLoaded', function() {
         noBtn.onclick = function() {
             document.querySelector('.confirm-modal-background').style.display = 'none';
             document.querySelector('.confirm-modal h3').textContent = originalModalTitle;
-
             yesBtn.onclick = oldYesClick;
             noBtn.onclick = oldNoClick;
         };
     });
 
     editDeleteButtons.forEach(button => {
-        let isDragging = false;
-        let startY;
-        let draggedCategory = null;
-        let categoryPlaceholder = null;
-    
-        button.addEventListener('mousedown', function(e) {
-            startY = e.clientY;
-            const categoryItem = this.closest('.category-container');
-            if (!categoryItem) return;
-    
-            const handleMouseMove = (moveEvent) => {
-                if (!isDragging && Math.abs(moveEvent.clientY - startY) > 5) {
-                    isDragging = true;
-                    e.preventDefault();
-    
-                    const rect = categoryItem.getBoundingClientRect();
-    
-                    const existingPlaceholder = document.querySelector('.category-container-placeholder');
-                    if (existingPlaceholder) {
-                        existingPlaceholder.remove();
-                    }
-    
-                    categoryPlaceholder = document.createElement('div');
-                    categoryPlaceholder.className = 'category-container-placeholder';
-                    categoryPlaceholder.style.height = `${rect.height}px`;
-                    categoryPlaceholder.style.backgroundColor = '#666666';
-                    categoryPlaceholder.style.border = '2px dashed #888888';
-                    categoryPlaceholder.style.borderRadius = '5px';
-                    categoryPlaceholder.style.marginRight = '15px';
-                    categoryPlaceholder.style.opacity = '0.7';
-                    categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
-    
-                    draggedCategory = categoryItem;
-                    Object.assign(draggedCategory.style, {
-                        position: 'fixed',
-                        width: `${rect.width - 20}px`,
-                        height: `${rect.height}px`,
-                        left: `0`,
-                        top: `${rect.top}px`,
-                        backgroundColor: '#4d4d4d',
-                        zIndex: '1000',
-                        pointerEvents: 'none',
-                        transition: 'none',
-                        marginLeft: '8px'
-                    });
-    
-                    document.body.appendChild(draggedCategory);
-                    document.removeEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mousemove', handleDrag);
-                }
-            };
-    
-            const handleDrag = (moveEvent) => {
-                if (!isDragging || !draggedCategory) return;
-                moveEvent.preventDefault();
-    
-                const y = moveEvent.clientY - (e.clientY - startY);
-                draggedCategory.style.top = `${y}px`;
-    
-                const addCategoryBtn = document.querySelector('#add-category');
-                const otherCategories = document.querySelector('.other_categories');
-                const addCategoryRect = addCategoryBtn.getBoundingClientRect();
-                const categories = Array.from(otherCategories.querySelectorAll('.category-container:not([style*="position: fixed"])'));
-                const placeholder = document.querySelector('.category-container-placeholder');
-    
-                if (moveEvent.clientY >= addCategoryRect.top) {
-                    if (categories.length > 0) {
-                        const lastCategory = categories[categories.length - 1];
-                        if (placeholder && lastCategory && lastCategory !== placeholder) {
-                            lastCategory.after(placeholder);
-                        }
-                    }
-                    return;
-                }
-    
-                let inserted = false;
-                for (const category of categories) {
-                    const rect = category.getBoundingClientRect();
-                    const centerY = rect.top + (rect.height / 2);
-    
-                    if (moveEvent.clientY < centerY) {
-                        if (placeholder && 
-                            category !== placeholder && 
-                            category.previousElementSibling !== placeholder) {
-                            category.parentNode.insertBefore(placeholder, category);
-                            inserted = true;
-                            break;
-                        }
-                    }
-                }
-    
-                if (!inserted && categories.length > 0) {
-                    const lastCategory = categories[categories.length - 1];
-                    const lastRect = lastCategory.getBoundingClientRect();
-                    
-                    if (placeholder && 
-                        lastCategory !== placeholder && 
-                        lastCategory.nextElementSibling !== placeholder &&
-                        moveEvent.clientY >= lastRect.top + (lastRect.height / 2) &&
-                        moveEvent.clientY < addCategoryRect.top) {
-                        lastCategory.after(placeholder);
-                    }
-                }
-            };
-    
-            const handleMouseUp = () => {
-                if (isDragging) {
-                    if (draggedCategory && categoryPlaceholder) {
-                        draggedCategory.removeAttribute('style');
-                        categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
-                        categoryPlaceholder.remove();
-                        updateCategoryOrder();
-                    }
-                } else {
-                    const categoryContainer = button.closest('.category-container');
-                    const categoryId = categoryContainer.getAttribute('category-id');
-                    const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
-                    const editCategoryInput = document.getElementById('edit-category-input');
-    
-                    editCategoryInput.value = categoryName;
-                    editCategoryInput.setAttribute('data-category-id', categoryId);
-                    editDeleteBackground.style.display = 'flex';
-                    editCategoryInput.focus();
-                    editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
-                }
-    
-                isDragging = false;
-                draggedCategory = null;
-                categoryPlaceholder = null;
-    
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mousemove', handleDrag);
-                document.removeEventListener('mouseup', handleMouseUp);
-            };
-    
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
+        button.addEventListener('click', function(e) {
+            if (isDraggingCategory) return;
+            
+            const categoryContainer = this.closest('.category-container');
+            const categoryId = categoryContainer.getAttribute('category-id');
+            const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
+            const editCategoryInput = document.getElementById('edit-category-input');
+
+            editCategoryInput.value = categoryName;
+            editCategoryInput.setAttribute('data-category-id', categoryId);
+            editDeleteBackground.style.display = 'flex';
+            editCategoryInput.focus();
+            editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
         });
     });
 
@@ -647,126 +687,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.other-container, .info-container').forEach(container => {
             container.style.display = 'none';
         });
-    });
-
-    contents.addEventListener('mousedown', function(e) {
-        const gripElement = e.target.closest('#grip');
-        if (!gripElement) return;
-    
-        const todoItem = gripElement.closest('.todo-item');
-        if (!todoItem) return;
-    
-        if (todoItem.classList.contains('fixed')) {
-            e.preventDefault();
-            todoItem.classList.add('shake');
-            todoItem.addEventListener('animationend', function() {
-                todoItem.classList.remove('shake');
-            }, { once: true });
-            return;
-        }
-    
-        e.preventDefault();
-        draggedItem = todoItem;
-        const rect = todoItem.getBoundingClientRect();
-        dragOffsetY = e.clientY - rect.top;
-        startY = e.clientY;
-        startScrollY = window.scrollY;
-        isDragging = true;
-        document.body.classList.add('dragging');
-
-        placeholder = document.createElement('div');
-        placeholder.className = 'todo-item-placeholder';
-        placeholder.style.height = `${rect.height}px`;
-        placeholder.style.marginBottom = window.getComputedStyle(todoItem).marginBottom;
-        placeholder.style.border = '2px dashed #ccc';
-        placeholder.style.backgroundColor = '#f0f0f0';
-        todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);
-
-        const computedStyle = window.getComputedStyle(todoItem);
-
-        Object.assign(todoItem.style, {
-            position: 'fixed',
-            zIndex: '1000',
-            width: `${rect.width}px`,
-            height: `${rect.height}px`,
-            left: `${rect.left}px`,
-            top: `${rect.top}px`,
-            backgroundColor: computedStyle.backgroundColor,
-            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
-            transition: 'none',
-            opacity: '0.9',
-            padding: computedStyle.padding,
-            boxSizing: 'border-box'
-        });
-
-        document.body.appendChild(todoItem);
-    });
-
-    document.addEventListener('mousemove', function(e) {
-        if (!isDraggingCategory) return;
-        e.preventDefault();
-
-        const scrollDiff = window.scrollY - startScrollY;
-        const draggedTop = e.clientY - categoryDragOffsetY + scrollDiff;
-        draggedCategory.style.top = `${draggedTop}px`;
-
-        const currentPosition = getCategoryPlaceholderPosition(categoryContainer, e.clientY);
-        if (currentPosition.element && currentPosition.element !== categoryPlaceholder) {
-            if (currentPosition.beforeElement) {
-                categoryContainer.insertBefore(categoryPlaceholder, currentPosition.element);
-            } else {
-                categoryContainer.insertBefore(categoryPlaceholder, currentPosition.element.nextElementSibling);
-            }
-        }
-    });
-
-    document.addEventListener('mousemove', function(e) {
-        if (!isDraggingCategory) return;
-        e.preventDefault();
-    
-        const dragElement = document.getElementById('dragging-category');
-        if (dragElement) {
-            const scrollDiff = window.scrollY - startScrollY;
-            const draggedTop = e.clientY - categoryDragOffsetY + scrollDiff;
-            dragElement.style.top = `${draggedTop}px`;
-    
-            const currentPosition = getCategoryPlaceholderPosition(draggedCategory.parentNode, e.clientY);
-            if (currentPosition.element && currentPosition.element !== categoryPlaceholder) {
-                if (currentPosition.beforeElement) {
-                    currentPosition.element.parentNode.insertBefore(draggedCategory, currentPosition.element);
-                    currentPosition.element.parentNode.insertBefore(categoryPlaceholder, currentPosition.element);
-                } else {
-                    currentPosition.element.parentNode.insertBefore(draggedCategory, currentPosition.element.nextSibling);
-                    currentPosition.element.parentNode.insertBefore(categoryPlaceholder, currentPosition.element.nextSibling);
-                }
-            }
-        }
-    });
-
-    document.addEventListener('mouseup', function() {
-        if (!isDragging) return;
-        isDragging = false;
-        document.body.classList.remove('dragging');
-
-        placeholder.parentNode.insertBefore(draggedItem, placeholder);
-        placeholder.parentNode.removeChild(placeholder);
-        draggedItem.removeAttribute('style');
-        updateTodoOrder();
-        draggedItem = null;
-        placeholder = null;
-    });
-
-    document.addEventListener('mouseup', function() {
-        if (!isDraggingCategory) return;
-        isDraggingCategory = false;
-        document.body.classList.remove('dragging');
-
-        categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
-        categoryPlaceholder.parentNode.removeChild(categoryPlaceholder);
-        draggedCategory.removeAttribute('style');
-        updateCategoryOrder();
-        draggedCategory = null;
-        categoryPlaceholder = null;
     });
 
     fixButtons.forEach(btn => {

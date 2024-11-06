@@ -120,7 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('mousemove', function(e) {
         if (!isDraggingCategory || !draggedCategory) return;
         
-        // 마우스 이동 거리 계산
         moveDistance += Math.abs(e.movementY);
         e.preventDefault();
     
@@ -159,7 +158,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const wasDragged = moveDistance > 5;
 
         if (!wasDragged) {
-            // 클릭으로 처리
             if (draggedCategory) {
                 const categoryId = draggedCategory.getAttribute('category-id');
                 const categoryName = draggedCategory.querySelector('#category_btn').textContent.trim();
@@ -172,8 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
             }
         }
-
-        // 드래그 상태 초기화
+        
         isDraggingCategory = false;
         document.body.classList.remove('dragging');
         
@@ -235,7 +232,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
     
-        // 취소 버튼 클릭시
         document.getElementById('no').onclick = function() {
             confirmModal.style.display = 'none';
         };
@@ -247,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const categoryContainer = this.closest('.category-container');
             const categoryId = categoryContainer.getAttribute('category-id');
-            console.log("설정된 카테고리 ID:", categoryId); // 디버깅
+            console.log("설정된 카테고리 ID:", categoryId);
             
             const editCategoryInput = document.getElementById('edit-category-input');
             editCategoryInput.value = categoryContainer.textContent.trim();

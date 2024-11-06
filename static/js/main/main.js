@@ -48,21 +48,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
     const settingBtn = document.querySelector('.setting');
     const categoryContainer = document.querySelector('.other_categories');
-
+    
     let todoToRemove = null;
     let startScrollY;
     let draggedCategory = null;
     let categoryPlaceholder = null;
     let isDraggingCategory = false;
     let categoryDragOffsetY = 0;
-    let draggedItem = null;
-    let placeholder = null;
-    let isDragging = false;
-    let startY;
-    let dragOffsetY;
     let dragStartTime = 0;
     let moveDistance = 0;
-    const DRAG_THRESHOLD = 200;
+    let categoryToDelete = null;
 
     checkForHighlight();
 
@@ -214,46 +209,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     }
-
-    document.getElementById('delete-category').addEventListener('click', function() {
+    
+    document.querySelector('#delete-category').addEventListener('click', function() {
         const editCategoryInput = document.getElementById('edit-category-input');
         const categoryId = editCategoryInput.getAttribute('data-category-id');
-        const categoryContainer = document.querySelector(`.category-container[category-id="${categoryId}"]`);
-        const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
-    
-        document.querySelector('.confirm-modal h3').textContent = `정말 "${categoryName}" 카테고리를\n삭제하시겠습니까?`;
+        console.log("삭제하려는 카테고리 ID:", categoryId);
+        
+        const categoryName = editCategoryInput.value;
+        
         document.querySelector('.edit-delete-modal-background').style.display = 'none';
         document.querySelector('.confirm-modal-background').style.display = 'flex';
+        document.querySelector('.confirm-modal h3').textContent = `정말 "${categoryName}" 카테고리를\n삭제하시겠습니까?`;
     
-        const yesBtn = document.getElementById('yes');
-        const noBtn = document.getElementById('no');
-        
-        yesBtn.onclick = function() {
+        document.getElementById('yes').onclick = function() {
             fetch('/delete_category', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    category_id: parseInt(categoryId)
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category_id: parseInt(categoryId) })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert(data.message || '카테고리 삭제에 실패했습니다.');
+                    location.reload();
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('카테고리 삭제 중 오류가 발생했습니다.');
             });
         };
     
-        noBtn.onclick = function() {
-            document.querySelector('.confirm-modal-background').style.display = 'none';
+        // 취소 버튼 클릭시
+        document.getElementById('no').onclick = function() {
+            confirmModal.style.display = 'none';
         };
     });
 
@@ -263,14 +247,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const categoryContainer = this.closest('.category-container');
             const categoryId = categoryContainer.getAttribute('category-id');
-            const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
+            console.log("설정된 카테고리 ID:", categoryId); // 디버깅
+            
             const editCategoryInput = document.getElementById('edit-category-input');
-
-            editCategoryInput.value = categoryName;
+            editCategoryInput.value = categoryContainer.textContent.trim();
             editCategoryInput.setAttribute('data-category-id', categoryId);
+            
             editDeleteBackground.style.display = 'flex';
             editCategoryInput.focus();
-            editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
         });
     });
 

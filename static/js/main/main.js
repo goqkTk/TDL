@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!wasDragged) {
             if (draggedCategory) {
-                const categoryId = draggedCategory.getAttribute('category-id');
+                const categoryId = draggedCategory.getAttribute('data-category-id');
                 const categoryName = draggedCategory.querySelector('#category_btn').textContent.trim();
                 const editCategoryInput = document.getElementById('edit-category-input');
 
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
             }
         }
-        
+
         isDraggingCategory = false;
         document.body.classList.remove('dragging');
         
@@ -210,9 +210,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#delete-category').addEventListener('click', function() {
         const editCategoryInput = document.getElementById('edit-category-input');
         const categoryId = editCategoryInput.getAttribute('data-category-id');
-        console.log("삭제하려는 카테고리 ID:", categoryId);
-        
-        const categoryName = editCategoryInput.value;
+        const categoryContainer = document.querySelector(`.category-container[data-category-id="${categoryId}"]`);
+        const categoryName = categoryContainer.querySelector('#category_btn').textContent.trim();
         
         document.querySelector('.edit-delete-modal-background').style.display = 'none';
         document.querySelector('.confirm-modal-background').style.display = 'flex';
@@ -233,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     
         document.getElementById('no').onclick = function() {
-            confirmModal.style.display = 'none';
+            document.querySelector('.confirm-modal-background').style.display = 'none';
         };
     });
 
@@ -242,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (isDraggingCategory) return;
             
             const categoryContainer = this.closest('.category-container');
-            const categoryId = categoryContainer.getAttribute('category-id');
+            const categoryId = categoryContainer.getAttribute('data-category-id');
             console.log("설정된 카테고리 ID:", categoryId);
             
             const editCategoryInput = document.getElementById('edit-category-input');
@@ -452,9 +451,13 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 if (data.success) {
-                    const categoryContainer = document.querySelector(`.category-container[category-id="${categoryId}"]`);
-                    const categoryBtn = categoryContainer.querySelector('#category_btn');
-                    categoryBtn.textContent = categoryName;
+                    const categoryContainer = document.querySelector(`.category-container[data-category-id="${categoryId}"]`);
+                    if (categoryContainer) {
+                        const categoryBtn = categoryContainer.querySelector('#category_btn');
+                        if (categoryBtn) {
+                            categoryBtn.textContent = categoryName;
+                        }
+                    }
                     document.querySelector('.edit-delete-modal-background').style.display = 'none';
                 } else {
                     throw new Error(data.message || '카테고리 수정에 실패했습니다.');

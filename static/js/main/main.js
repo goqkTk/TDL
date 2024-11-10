@@ -413,6 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if(data.logged_in) {
                         addCategoryBackground.style.display = 'flex';
                         if (addCategoryInput) addCategoryInput.value = '';
+                        addCategoryInput.focus();
                     } else {
                         if(addCategoryBackground) addCategoryBackground.style.display = 'none';
                         loginRequiredModal.style.display = 'flex';
@@ -1191,25 +1192,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-function getCategoryPlaceholderPosition(container, y) {
-    const draggableElements = [...container.querySelectorAll('.category-container, .category-container-placeholder')];
-    
-    for (let i = 0; i < draggableElements.length; i++) {
-        const box = draggableElements[i].getBoundingClientRect();
-        const boxCenter = box.top + box.height / 2;
-        
-        if (y < boxCenter) {
-            return { element: draggableElements[i], beforeElement: true };
-        }
-    }
-    
-    if (draggableElements.length > 0) {
-        return { element: draggableElements[draggableElements.length - 1], beforeElement: false };
-    }
-    
-    return { element: null, beforeElement: false };
-}
 
 function updateCategoryOrder() {
     const categoryContainer = document.querySelector('.other_categories');

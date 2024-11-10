@@ -29,13 +29,149 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmEditCategoryBtn = document.getElementById('confirm-edit-category');
     const editDeleteButtons = document.querySelectorAll('#edit-delete');
     const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
+    const categoryContainer = document.querySelector('.other_categories');
 
+    let draggedCategory = null;
+    let categoryPlaceholder = null;
+    let isDraggingCategory = false;
+    let categoryDragOffsetY = 0;
+    let dragStartTime = 0;
+    let moveDistance = 0;
     let draggedItem = null;
     let placeholder = null;
     let isDragging = false;
     let startScrollY;
     let originalRect;
     let dragOffsetY;
+
+    document.querySelector('.other_categories').addEventListener('mousedown', function(e) {
+        const editDeleteBtn = e.target.closest('#edit-delete');
+        if (!editDeleteBtn) return;
+        if (e.button !== 0) return;
+    
+        const categoryItem = editDeleteBtn.closest('.category-container');
+        if (!categoryItem) return;
+    
+        e.preventDefault();
+        dragStartTime = Date.now();
+        moveDistance = 0;
+        isDraggingCategory = true;
+        draggedCategory = categoryItem;
+        draggedCategory.classList.add('dragging');
+        const rect = categoryItem.getBoundingClientRect();
+        categoryDragOffsetY = e.clientY - rect.top;
+        categoryStartY = e.clientY;
+        startScrollY = window.scrollY;
+    
+        categoryPlaceholder = document.createElement('div');
+        categoryPlaceholder.className = 'category-container-placeholder';
+        categoryPlaceholder.style.height = `${rect.height}px`;
+        categoryPlaceholder.style.marginBottom = window.getComputedStyle(categoryItem).marginBottom;
+        categoryPlaceholder.style.border = '2px dashed #ccc';
+        categoryPlaceholder.style.backgroundColor = 'rgba(102, 102, 102, 0.3)';
+        categoryPlaceholder.style.borderRadius = '5px';
+        
+        const sharedStyles = {
+            height: `${rect.height}px`,
+            borderRadius: '8px',
+            backgroundColor: 'rgba(102, 102, 102, 0.3)',
+            marginRight: '12px',
+            marginLeft: '6px'
+        };
+        
+        const computedStyle = window.getComputedStyle(categoryItem);
+        Object.assign(categoryPlaceholder.style, {
+            ...sharedStyles,
+            border: '2px dashed #ccc'
+        });
+        
+        Object.assign(categoryItem.style, {
+            ...sharedStyles,
+            position: 'fixed',
+            zIndex: '1000',
+            width: `${rect.width - 16}px`,
+            left: `${rect.left - 8}px`,
+            top: `${rect.top}px`,
+            padding: computedStyle.padding,
+            boxSizing: 'border-box',
+            transition: 'none'
+        });
+    
+        categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
+        document.body.appendChild(categoryItem);
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (!isDraggingCategory || !draggedCategory) return;
+        
+        moveDistance += Math.abs(e.movementY);
+        e.preventDefault();
+    
+        const scrollDiff = window.scrollY - startScrollY;
+        const draggedTop = e.clientY - categoryDragOffsetY + scrollDiff;
+        draggedCategory.style.top = `${draggedTop}px`;
+    
+        const categories = [...categoryContainer.querySelectorAll('.category-container:not([style*="position: fixed"])')];
+        let newPosition = null;
+    
+        for (const category of categories) {
+            const rect = category.getBoundingClientRect();
+            const centerY = rect.top + rect.height / 2;
+    
+            if (e.clientY < centerY) {
+                newPosition = category;
+                break;
+            }
+        }
+    
+        if (newPosition) {
+            if (categoryPlaceholder.nextSibling !== newPosition) {
+                categoryContainer.insertBefore(categoryPlaceholder, newPosition);
+            }
+        } else if (categories.length > 0) {
+            const lastCategory = categories[categories.length - 1];
+            if (categoryPlaceholder.previousSibling !== lastCategory) {
+                categoryContainer.insertBefore(categoryPlaceholder, lastCategory.nextSibling);
+            }
+        }
+    });
+    
+    document.addEventListener('mouseup', function() {
+        if (!isDraggingCategory) return;
+        
+        const wasDragged = moveDistance > 5;
+    
+        if (!wasDragged) {
+            if (draggedCategory) {
+                const categoryId = draggedCategory.getAttribute('data-category-id');
+                const categoryName = draggedCategory.querySelector('#category_btn').textContent.trim();
+                const editCategoryInput = document.getElementById('edit-category-input');
+    
+                editCategoryInput.value = categoryName;
+                editCategoryInput.setAttribute('data-category-id', categoryId);
+                document.querySelector('.edit-delete-modal-background').style.display = 'flex';
+                editCategoryInput.focus();
+                editCategoryInput.setSelectionRange(categoryName.length, categoryName.length);
+            }
+        }
+    
+        isDraggingCategory = false;
+        document.body.classList.remove('dragging');
+        
+        if (draggedCategory && categoryPlaceholder) {
+            draggedCategory.classList.remove('dragging');
+            draggedCategory.removeAttribute('style');
+            categoryPlaceholder.parentNode.insertBefore(draggedCategory, categoryPlaceholder);
+            categoryPlaceholder.remove();
+            if (wasDragged) {
+                updateCategoryOrder();
+            }
+        }
+    
+        draggedCategory = null;
+        categoryPlaceholder = null;
+        moveDistance = 0;
+    });
 
     if (addCategoryInput) {
         addCategoryInput.addEventListener('focus', function() {
@@ -697,6 +833,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function updateCategoryOrder() {
+    const categoryContainer = document.querySelector('.other_categories');
+    const categories = Array.from(categoryContainer.querySelectorAll('.category-container'));
+    
+    const newOrder = categories.map((category, index) => ({
+        id: category.getAttribute('data-category-id'),
+        order: index
+    }));
+
+    fetch('/update_category_order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order: newOrder })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            categories.forEach((category, index) => {
+                category.setAttribute('data-order', index);
+            });
+        } else {
+            console.error('Failed to update category order:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 function deleteTodo(todoId, todoElement) {
     fetch('/delete_todo', {

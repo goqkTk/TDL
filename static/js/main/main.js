@@ -73,8 +73,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
         const todoItem = gripElement.closest('.todo-item');
         if (!todoItem) return;
-        
-        if (todoItem.classList.contains('fixed')) return;
+
+        if (todoItem.classList.contains('fixed')) {
+            todoItem.classList.add('shake');
+            todoItem.addEventListener('animationend', function() {
+                todoItem.classList.remove('shake');
+            }, { once: true });
+            return;
+        }
     
         e.preventDefault();
         draggedItem = todoItem;

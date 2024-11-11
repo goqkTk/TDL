@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const editDeleteButtons = document.querySelectorAll('#edit-delete');
     const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
     const settingBtn = document.querySelector('.setting');
+    const settingModalBackground = document.querySelector('.setting-modal-background');
     const categoryContainer = document.querySelector('.other_categories');
     const contents = document.querySelector('.contents');
 
@@ -307,19 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (settingBtn) {
         settingBtn.addEventListener('click', function() {
-            fetch('/check_login')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.logged_in) {
-                        
-                    } else {
-                        if (searchModalBackground) searchModalBackground.style.display = 'none';
-                        loginRequiredModal.style.display = 'flex';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+            settingModalBackground.style.display = 'flex';
         });
     }
     
@@ -588,7 +577,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (editCategoryInput) {
+        editCategoryInput.addEventListener('input', function() {
+            const originalName = editCategoryInput.getAttribute('original-value') || editCategoryInput.value;
+            const hint = this.closest('.edit-category-modal').querySelector('p');
+            
+            if (this.value !== originalName && this.value.trim() !== '') {
+                hint.textContent = '멋진 이름인데요?';
+                hint.style.color = '#73d373';
+            } else {
+                hint.textContent = '더 멋진 이름이 생각났나요?';
+                hint.style.color = '';
+            }
+        });
+    
         editCategoryInput.addEventListener('focus', function() {
+            editCategoryInput.setAttribute('original-value', editCategoryInput.value);
             clearErrorMessage(this);
         });
     }

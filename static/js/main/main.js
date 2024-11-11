@@ -49,6 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingModalBackground = document.querySelector('.setting-modal-background');
     const categoryContainer = document.querySelector('.other_categories');
     const contents = document.querySelector('.contents');
+    const themeBtn = document.querySelector('.theme-selector-btn');
+    const themeDropdown = document.querySelector('.theme-dropdown');
+    const dropdownItems = document.querySelectorAll('.theme-dropdown-item');
 
     let draggedItem = null;
     let placeholder = null;
@@ -67,6 +70,75 @@ document.addEventListener('DOMContentLoaded', function() {
     let wasSelected = false;
 
     checkForHighlight();
+
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const savedTheme = localStorage.getItem('theme');
+    const savedThemeMode = localStorage.getItem('themeMode');
+    
+    function initializeTheme() {
+        if (savedThemeMode === 'system') {
+            setThemeBasedOnSystem();
+            updateSelectedTheme('시스템 설정 사용');
+        } else if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateSelectedTheme(savedTheme === 'dark' ? '다크 모드' : '라이트 모드');
+        } else {
+            setThemeBasedOnSystem();
+            updateSelectedTheme('시스템 설정 사용');
+        }
+    }
+
+    function setThemeBasedOnSystem() {
+        const isDarkMode = systemTheme.matches;
+        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        localStorage.setItem('themeMode', 'system');
+    }
+
+    function updateSelectedTheme(themeName) {
+        themeBtn.textContent = themeName;
+        dropdownItems.forEach(item => {
+            item.classList.toggle('selected', item.textContent === themeName);
+        });
+    }
+
+    themeBtn.addEventListener('click', () => {
+        themeBtn.classList.toggle('active');
+        themeDropdown.classList.toggle('show');
+    });
+
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const themeName = item.textContent;
+            
+            if (themeName === '시스템 설정 사용') {
+                setThemeBasedOnSystem();
+            } else {
+                const theme = themeName === '다크 모드' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                localStorage.setItem('themeMode', 'manual');
+            }
+            
+            updateSelectedTheme(themeName);
+            themeBtn.classList.remove('active');
+            themeDropdown.classList.remove('show');
+        });
+    });
+
+    systemTheme.addEventListener('change', (e) => {
+        if (localStorage.getItem('themeMode') === 'system') {
+            const isDarkMode = e.matches;
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.theme-selector')) {
+            themeBtn.classList.remove('active');
+            themeDropdown.classList.remove('show');
+        }
+    });
+    initializeTheme();
 
     contents.addEventListener('mousedown', function(e) {
         const gripElement = e.target.closest('#grip');

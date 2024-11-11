@@ -47,7 +47,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
     const settingBtn = document.querySelector('.setting');
     const categoryContainer = document.querySelector('.other_categories');
-    
+    const contents = document.querySelector('.contents');
+
+    let draggedItem = null;
+    let placeholder = null;
+    let isDragging = false;
+    let originalRect;
+    let dragOffsetY;
     let todoToRemove = null;
     let startScrollY;
     let draggedCategory = null;
@@ -60,6 +66,101 @@ document.addEventListener('DOMContentLoaded', function() {
     let wasSelected = false;
 
     checkForHighlight();
+
+    contents.addEventListener('mousedown', function(e) {
+        const gripElement = e.target.closest('#grip');
+        if (!gripElement) return;
+    
+        const todoItem = gripElement.closest('.todo-item');
+        if (!todoItem) return;
+        
+        if (todoItem.classList.contains('fixed')) return;
+    
+        e.preventDefault();
+        draggedItem = todoItem;
+    
+        e.preventDefault();
+        draggedItem = todoItem;
+        originalRect = todoItem.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(todoItem);
+        dragOffsetY = e.clientY - originalRect.top;
+        startY = e.clientY;
+        startScrollY = window.scrollY;
+        isDragging = true;
+    
+        placeholder = document.createElement('div');
+        placeholder.className = 'todo-item-placeholder';
+        placeholder.style.height = `${originalRect.height}px`;
+        placeholder.style.marginBottom = computedStyle.marginBottom;
+        placeholder.style.border = '2px dashed #ccc';
+        placeholder.style.backgroundColor = '#f0f0f0';
+    
+        const originalStyles = {
+            position: draggedItem.style.position,
+            zIndex: draggedItem.style.zIndex,
+            boxShadow: draggedItem.style.boxShadow,
+            transition: draggedItem.style.transition,
+            background: draggedItem.style.background,
+            opacity: draggedItem.style.opacity
+        };
+    
+        Object.assign(draggedItem.style, {
+            position: 'fixed',
+            zIndex: '1000',
+            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+            transition: 'none',
+            background: computedStyle.background,
+            opacity: '0.9',
+            width: `${originalRect.width}px`,
+            height: `${originalRect.height}px`,
+            left: `${originalRect.left}px`,
+            top: `${originalRect.top}px`,
+            padding: computedStyle.padding,
+            boxSizing: 'border-box'
+        });
+    
+        todoItem.parentNode.insertBefore(placeholder, todoItem.nextSibling);
+        document.body.appendChild(draggedItem);
+        draggedItem.originalStyles = originalStyles;
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+    
+        const scrollDiff = window.scrollY - startScrollY;
+        const draggedTop = e.clientY - dragOffsetY + scrollDiff;
+        draggedItem.style.top = `${draggedTop}px`;
+    
+        const currentPosition = getPlaceholderPosition(contents, e.clientY);
+        if (currentPosition.element && currentPosition.element !== placeholder) {
+            if (currentPosition.beforeElement) {
+                contents.insertBefore(placeholder, currentPosition.element);
+            } else {
+                contents.insertBefore(placeholder, currentPosition.element.nextElementSibling);
+            }
+        }
+    });
+    
+    document.addEventListener('mouseup', function() {
+        if (!isDragging) return;
+        isDragging = false;
+    
+        placeholder.parentNode.insertBefore(draggedItem, placeholder);
+        placeholder.parentNode.removeChild(placeholder);
+    
+        Object.assign(draggedItem.style, draggedItem.originalStyles);
+        draggedItem.style.position = '';
+        draggedItem.style.top = '';
+        draggedItem.style.left = '';
+        draggedItem.style.width = '';
+        draggedItem.style.height = '';
+    
+        delete draggedItem.originalStyles;
+        updateTodoOrder();
+        draggedItem = null;
+        placeholder = null;
+    });
 
     document.querySelector('.other_categories').addEventListener('mousedown', function(e) {
         const editDeleteBtn = e.target.closest('#edit-delete');

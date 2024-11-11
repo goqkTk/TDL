@@ -35,6 +35,15 @@ html, body {
     color: var(--text-primary);
 }
 
+.container[data-sidebar="right"] {
+    flex-direction: row-reverse;
+}
+
+.container[data-sidebar="right"] .contents {
+    padding-right: 20px;
+    padding-left: 20px;
+}
+
 .container {
     width: 100%;
     height: 100%;
@@ -462,47 +471,78 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 
 .setting-modal {
     width: 600px;
-    height: 600px;
+    max-height: 80vh;
     padding: 30px;
-    background-color: var(--todo-bg);
-    color: var(--text-primary);
+    background: var(--bg-primary);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 20px var(--shadow-color);
     display: flex;
     flex-direction: column;
     position: relative;
     overflow-y: auto;
+    animation: modalFadeIn 0.3s ease-out;
 }
 
+/* 모달 헤더 */
 .setting-modal h3 {
     font-size: 24px;
-    color: #333;
+    color: var(--text-primary);
     margin: 0 0 20px 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
 }
 
+/* 설정 섹션 */
+.settings-section {
+    margin-bottom: 30px;
+}
+
+.settings-section h4 {
+    font-size: 18px;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 설정 항목 */
 .setting-item {
     padding: 15px 0;
-    border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.setting-item:last-child {
-    border-bottom: none;
+.setting-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 설정 정보 영역 */
+.setting-info {
+    flex: 1;
 }
 
 .setting-label {
     font-size: 16px;
-    color: #333;
+    color: var(--text-primary);
+    margin-bottom: 4px;
 }
 
 .setting-description {
     font-size: 14px;
-    color: #666;
-    margin-top: 4px;
+    color: var(--text-secondary);
 }
 
+/* 설정 컨트롤 영역 */
+.setting-control {
+    min-width: 200px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 테마 선택 드롭다운 */
 .theme-selector {
     position: relative;
     width: 200px;
@@ -511,11 +551,11 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-selector-btn {
     width: 100%;
     padding: 10px 15px;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
+    background: var(--todo-bg);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 14px;
-    color: #333;
+    color: var(--text-primary);
     text-align: left;
     cursor: pointer;
     display: flex;
@@ -524,14 +564,16 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     transition: all 0.2s ease;
 }
 
-.theme-selector-btn:hover { background: #f0f0f0; }
+.theme-selector-btn:hover {
+    background: var(--todo-hover);
+}
 
 .theme-selector-btn:after {
     content: '';
     width: 8px;
     height: 8px;
-    border-right: 2px solid #666;
-    border-bottom: 2px solid #666;
+    border-right: 2px solid var(--text-secondary);
+    border-bottom: 2px solid var(--text-secondary);
     transform: rotate(45deg);
     transition: transform 0.2s ease;
 }
@@ -540,22 +582,23 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     transform: rotate(-135deg);
 }
 
+/* 드롭다운 메뉴 */
 .theme-dropdown {
     position: absolute;
     top: calc(100% + 5px);
     left: 0;
     width: 100%;
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px var(--shadow-color);
     display: none;
     z-index: 1000;
 }
 
 .theme-dropdown.show {
     display: block;
-    animation: modalFadeIn 0.2s ease-out;
+    animation: dropdownFadeIn 0.2s ease-out;
 }
 
 .theme-dropdown-item {
@@ -563,13 +606,14 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     cursor: pointer;
     transition: all 0.2s ease;
     color: var(--text-primary);
-    background: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.theme-dropdown-item:hover { background: var(--todo-hover); }
+.theme-dropdown-item:hover {
+    background: var(--todo-hover);
+}
 
 .theme-dropdown-item.selected {
     color: #BDD971;
@@ -580,6 +624,78 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     content: '✓';
     color: #BDD971;
     font-weight: bold;
+}
+
+/* 토글 스위치 */
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #BDD971;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.setting-item.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.setting-item.disabled .setting-description {
+    color: var(--text-secondary);
+}
+
+.setting-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.setting-modal::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.setting-modal::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.setting-modal::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 .confirm-modal {

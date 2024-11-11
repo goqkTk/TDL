@@ -8,8 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const editmodalBackground = document.querySelector('.edit-modal-background');
     const addContentBtn = document.getElementById('add-content');
     const editContentBtn = document.querySelector('.edit-group');
-    const otherBtns = document.querySelectorAll('#other');
-    const contents = document.querySelector('.contents');
+    const otherBtns = document.querySelectorAll('#other')
     const confirmModalBackground = document.querySelector('.confirm-modal-background');
     const donateBtn = document.querySelector('.donate');
     const donateModalBackground = document.querySelector('.donate-modal-background');
@@ -58,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let dragStartTime = 0;
     let moveDistance = 0;
     let categoryToDelete = null;
+    let wasSelected = false;
 
     checkForHighlight();
 
@@ -100,6 +100,11 @@ document.addEventListener('DOMContentLoaded', function() {
             ...sharedStyles,
             border: '2px dashed #ccc'
         });
+
+        if (categoryItem.classList.contains('selected')) {
+            wasSelected = true;
+            categoryItem.classList.remove('selected');
+        }
         
         Object.assign(categoryItem.style, {
             ...sharedStyles,
@@ -110,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             top: `${rect.top}px`,
             padding: computedStyle.padding,
             boxSizing: 'border-box',
-            transition: 'none'
+            transition: 'none',
         });
     
         categoryItem.parentNode.insertBefore(categoryPlaceholder, categoryItem);
@@ -154,6 +159,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('mouseup', function() {
         if (!isDraggingCategory) return;
+        if (draggedCategory && wasSelected) {
+            draggedCategory.classList.add('selected');
+        }
+        wasSelected = false;
         
         const wasDragged = moveDistance > 5;
 

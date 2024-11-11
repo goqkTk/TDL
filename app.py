@@ -364,7 +364,10 @@ def update_success():
 @app.route('/calendar', methods=['GET', 'POST'])
 def calendar():
     user_id = session.get('user_id')
-    return render_template('calendar.html', user_id=user_id)
+    print("Current user_id:", user_id)
+    if user_id == 'Admin':
+        return render_template('calendar.html', user_id=user_id)
+    return render_template('comingsoon.html', user_id=user_id)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 

@@ -14,7 +14,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
-    const modalBackgrounds = document.querySelectorAll('.add-modal-background, .edit-modal-background, .confirm-modal-background, .donate-modal-background, .add-category-modal-background, .search-modal-background, .edit-delete-modal-background');
+    const modalBackgrounds = document.querySelectorAll(`
+        .add-modal-background,
+        .edit-modal-background,
+        .confirm-modal-background,
+        .donate-modal-background,
+        .add-category-modal-background,
+        .search-modal-background,
+        .edit-delete-modal-background,
+        .setting-modal-background
+    `);
     const searchBtn = document.querySelector('.search');
     const searchModalBackground = document.querySelector('.search-modal-background');
     const searchInput = document.getElementById('category-search-input');
@@ -29,6 +38,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const editDeleteButtons = document.querySelectorAll('#edit-delete');
     const editDeleteBackground = document.querySelector('.edit-delete-modal-background');
     const categoryContainer = document.querySelector('.other_categories');
+    const settingBtn = document.querySelector('.setting');
+    const settingModalBackground = document.querySelector('.setting-modal-background');
+    const themeBtn = document.querySelector('.theme-selector-btn');
+    const themeDropdown = document.querySelector('.theme-dropdown');
+    const themedropdownItems = document.querySelectorAll('.theme-dropdown-item');
+    const container = document.querySelector('.container');
+    const sizeBtn = document.querySelector('.size-selector-btn');
+    const sizeDropdown = document.querySelector('.size-dropdown');
+    const sizeDropdownItems = document.querySelectorAll('.size-dropdown-item');
+    const positionBtn = document.querySelector('.position-selector-btn');
+    const positionDropdown = document.querySelector('.position-dropdown');
+    const positionDropdownItems = document.querySelectorAll('.position-dropdown-item');
 
     let draggedCategory = null;
     let categoryPlaceholder = null;
@@ -42,6 +63,201 @@ document.addEventListener('DOMContentLoaded', function() {
     let startScrollY;
     let originalRect;
     let dragOffsetY;
+
+    if (settingBtn) {
+        settingBtn.addEventListener('click', function() {
+            settingModalBackground.style.display = 'flex';
+        });
+    }
+    
+    // Modal background click events (includes setting modal)
+    modalBackgrounds.forEach(background => {
+        background.addEventListener('click', function(event) {
+            if (event.target === this) {
+                this.style.display = 'none';
+                // ... other modal cleanup code ...
+            }
+        });
+    });
+    
+    // Size related functions
+    function initializeTextSize() {
+        const savedSize = localStorage.getItem('textSize') || 'small';
+        updateTextSize(savedSize);
+        updateSelectedSize(getSizeDisplayName(savedSize));
+    }
+    
+    function getSizeDisplayName(size) {
+        const sizeMap = {
+            'small': '작게',
+            'medium': '보통',
+            'large': '크게'
+        };
+        return sizeMap[size];
+    }
+    
+    function getSizeValue(displayName) {
+        const reverseMap = {
+            '작게': 'small',
+            '보통': 'medium',
+            '크게': 'large'
+        };
+        return reverseMap[displayName];
+    }
+    
+    function updateSelectedSize(sizeName) {
+        sizeBtn.textContent = sizeName;
+        sizeDropdownItems.forEach(item => {
+            item.classList.toggle('selected', item.textContent === sizeName);
+        });
+    }
+    
+    function updateTextSize(size) {
+        container.classList.remove('text-small', 'text-medium', 'text-large');
+        container.classList.add(`text-${size}`);
+        localStorage.setItem('textSize', size);
+    }
+    
+    // Size button event listeners
+    sizeBtn.addEventListener('click', () => {
+        sizeBtn.classList.toggle('active');
+        sizeDropdown.classList.toggle('show');
+    });
+    
+    sizeDropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const displayName = item.textContent;
+            const size = getSizeValue(displayName);
+            
+            updateTextSize(size);
+            updateSelectedSize(displayName);
+            sizeBtn.classList.remove('active');
+            sizeDropdown.classList.remove('show');
+        });
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.size-selector')) {
+            sizeBtn.classList.remove('active');
+            sizeDropdown.classList.remove('show');
+        }
+    });
+    
+    // Position related functions
+    function initializeSidebarPosition() {
+        const savedPosition = localStorage.getItem('sidebarPosition') || 'left';
+        container.setAttribute('data-sidebar', savedPosition);
+        updateSelectedPosition(savedPosition === 'left' ? '왼쪽' : '오른쪽');
+    }
+    
+    function updateSelectedPosition(positionName) {
+        positionBtn.textContent = positionName;
+        positionDropdownItems.forEach(item => {
+            item.classList.toggle('selected', item.textContent === positionName);
+        });
+    }
+    
+    // Position button event listeners
+    positionBtn.addEventListener('click', () => {
+        positionBtn.classList.toggle('active');
+        positionDropdown.classList.toggle('show');
+    });
+    
+    positionDropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const positionName = item.textContent;
+            const position = positionName === '왼쪽' ? 'left' : 'right';
+            
+            container.setAttribute('data-sidebar', position);
+            localStorage.setItem('sidebarPosition', position);
+            
+            updateSelectedPosition(positionName);
+            positionBtn.classList.remove('active');
+            positionDropdown.classList.remove('show');
+        });
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.position-selector')) {
+            positionBtn.classList.remove('active');
+            positionDropdown.classList.remove('show');
+        }
+    });
+    
+    // Theme related code
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const savedTheme = localStorage.getItem('theme');
+    const savedThemeMode = localStorage.getItem('themeMode');
+    
+    function initializeTheme() {
+        if (savedThemeMode === 'system') {
+            setThemeBasedOnSystem();
+            updateSelectedTheme('시스템 설정 사용');
+        } else if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateSelectedTheme(savedTheme === 'dark' ? '다크 모드' : '라이트 모드');
+        } else {
+            setThemeBasedOnSystem();
+            updateSelectedTheme('시스템 설정 사용');
+        }
+    }
+    
+    function setThemeBasedOnSystem() {
+        const isDarkMode = systemTheme.matches;
+        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        localStorage.setItem('themeMode', 'system');
+    }
+    
+    function updateSelectedTheme(themeName) {
+        themeBtn.textContent = themeName;
+        themedropdownItems.forEach(item => {
+            item.classList.toggle('selected', item.textContent === themeName);
+        });
+    }
+    
+    // Theme button event listeners
+    themeBtn.addEventListener('click', () => {
+        themeBtn.classList.toggle('active');
+        themeDropdown.classList.toggle('show');
+    });
+    
+    themedropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const themeName = item.textContent;
+            
+            if (themeName === '시스템 설정 사용') {
+                setThemeBasedOnSystem();
+            } else {
+                const theme = themeName === '다크 모드' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                localStorage.setItem('themeMode', 'manual');
+            }
+            
+            updateSelectedTheme(themeName);
+            themeBtn.classList.remove('active');
+            themeDropdown.classList.remove('show');
+        });
+    });
+    
+    systemTheme.addEventListener('change', (e) => {
+        if (localStorage.getItem('themeMode') === 'system') {
+            const isDarkMode = e.matches;
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        }
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.theme-selector')) {
+            themeBtn.classList.remove('active');
+            themeDropdown.classList.remove('show');
+        }
+    });
+    
+    // Initialize functions
+    initializeTextSize();
+    initializeSidebarPosition();
+    initializeTheme();
 
     document.querySelector('.other_categories').addEventListener('mousedown', function(e) {
         const editDeleteBtn = e.target.closest('#edit-delete');

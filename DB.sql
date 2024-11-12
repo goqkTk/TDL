@@ -54,8 +54,9 @@ CREATE TABLE `categories` (
   `name` varchar(50) NOT NULL,
   `is_default` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `order` int DEFAULT '9999',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -64,7 +65,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (1,'admin','할 일',1,'2024-10-18 00:02:43'),(2,'admin','완료',1,'2024-10-18 00:02:43'),(3,'admin','즐겨찾기',1,'2024-10-18 00:02:43'),(14,'test','test',0,'2024-10-18 08:21:42'),(21,'test','test1',0,'2024-10-23 10:29:47');
+INSERT INTO `categories` VALUES (14,'test','test',0,'2024-10-18 08:21:42',0),(21,'test','test1',0,'2024-10-23 10:29:47',1),(32,'test','test2',0,'2024-11-10 12:59:32',2),(34,'Admin','test',0,'2024-11-11 05:59:23',3),(35,'Admin','test1',0,'2024-11-11 05:59:52',9999),(36,'Admin','test2',0,'2024-11-11 05:59:57',9999);
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -118,7 +119,7 @@ CREATE TABLE `todo` (
   PRIMARY KEY (`id`),
   KEY `fk_category` (`category_id`),
   CONSTRAINT `fk_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -127,7 +128,7 @@ CREATE TABLE `todo` (
 
 LOCK TABLES `todo` WRITE;
 /*!40000 ALTER TABLE `todo` DISABLE KEYS */;
-INSERT INTO `todo` VALUES (27,'test','test 카테고리 1','','2024-10-21 13:49:06',0,1,0,1,NULL,0,NULL,14),(28,'test','test 카테고리 2','22222','2024-10-21 13:49:14',0,0,1,9999,NULL,0,NULL,14),(41,'test','메인 카테고리 1','','2024-10-25 23:53:18',0,1,NULL,0,NULL,1,NULL,NULL),(42,'test','메인 카테고리 2','22222','2024-10-25 23:53:27',0,0,0,9999,NULL,0,NULL,NULL);
+INSERT INTO `todo` VALUES (27,'test','test 카테고리 1','','2024-10-21 13:49:06',0,1,0,1,NULL,0,NULL,14),(28,'test','test 카테고리 2','22222','2024-10-21 13:49:14',0,0,1,9999,NULL,0,NULL,14),(41,'test','메인 카테고리 1','','2024-10-25 23:53:18',0,1,NULL,0,NULL,1,NULL,NULL),(42,'test','메인 카테고리 2','22222','2024-10-25 23:53:27',0,0,0,9999,NULL,0,NULL,NULL),(54,'Admin','test 카테고리 1','test1','2024-11-11 15:00:17',0,1,0,NULL,NULL,0,NULL,34),(55,'Admin','test 카테고리 2','test2','2024-11-11 15:00:26',0,0,1,9999,NULL,0,NULL,34),(56,'Admin','메인 카테고리 1','','2024-11-11 15:00:40',0,1,NULL,0,NULL,1,NULL,NULL),(57,'Admin','메인 카테고리 2','','2024-11-11 15:00:50',1,0,0,9999,NULL,0,'2024-11-12 22:15:28',NULL);
 /*!40000 ALTER TABLE `todo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -175,4 +176,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-10-27 23:45:40
+-- Dump completed on 2024-11-12 23:10:27

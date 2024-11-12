@@ -71,6 +71,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     checkForHighlight();
 
+    const container = document.querySelector('.container');
+    const positionBtn = document.querySelector('.position-selector-btn');
+    const positionDropdown = document.querySelector('.position-dropdown');
+    const positionDropdownItems = document.querySelectorAll('.position-dropdown-item');
+    
+    function initializeSidebarPosition() {
+        const savedPosition = localStorage.getItem('sidebarPosition') || 'left';
+        container.setAttribute('data-sidebar', savedPosition);
+        updateSelectedPosition(savedPosition === 'left' ? '왼쪽' : '오른쪽');
+    }
+
+    function updateSelectedPosition(positionName) {
+        positionBtn.textContent = positionName;
+        positionDropdownItems.forEach(item => {
+            item.classList.toggle('selected', item.textContent === positionName);
+        });
+    }
+
+    positionBtn.addEventListener('click', () => {
+        positionBtn.classList.toggle('active');
+        positionDropdown.classList.toggle('show');
+    });
+
+    positionDropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const positionName = item.textContent;
+            const position = positionName === '왼쪽' ? 'left' : 'right';
+            
+            container.setAttribute('data-sidebar', position);
+            localStorage.setItem('sidebarPosition', position);
+            
+            updateSelectedPosition(positionName);
+            positionBtn.classList.remove('active');
+            positionDropdown.classList.remove('show');
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.position-selector')) {
+            positionBtn.classList.remove('active');
+            positionDropdown.classList.remove('show');
+        }
+    });
+    initializeSidebarPosition();
+
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
     const savedTheme = localStorage.getItem('theme');
     const savedThemeMode = localStorage.getItem('themeMode');

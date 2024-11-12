@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const themeBtn = document.querySelector('.theme-selector-btn');
     const themeDropdown = document.querySelector('.theme-dropdown');
     const themedropdownItems = document.querySelectorAll('.theme-dropdown-item');
+    const container = document.querySelector('.container');
 
     let draggedItem = null;
     let placeholder = null;
@@ -71,7 +72,72 @@ document.addEventListener('DOMContentLoaded', function() {
 
     checkForHighlight();
 
-    const container = document.querySelector('.container');
+    const sizeBtn = document.querySelector('.size-selector-btn');
+    const sizeDropdown = document.querySelector('.size-dropdown');
+    const sizeDropdownItems = document.querySelectorAll('.size-dropdown-item');
+    
+    function initializeTextSize() {
+        const savedSize = localStorage.getItem('textSize') || 'small';
+        updateTextSize(savedSize);
+        updateSelectedSize(getSizeDisplayName(savedSize));
+    }
+
+    function getSizeDisplayName(size) {
+        const sizeMap = {
+            'small': '작게',
+            'medium': '보통',
+            'large': '크게'
+        };
+        return sizeMap[size];
+    }
+
+    function getSizeValue(displayName) {
+        const reverseMap = {
+            '작게': 'small',
+            '보통': 'medium',
+            '크게': 'large'
+        };
+        return reverseMap[displayName];
+    }
+
+    function updateSelectedSize(sizeName) {
+        sizeBtn.textContent = sizeName;
+        sizeDropdownItems.forEach(item => {
+            item.classList.toggle('selected', item.textContent === sizeName);
+        });
+    }
+
+    function updateTextSize(size) {
+        container.classList.remove('text-small', 'text-medium', 'text-large');
+        container.classList.add(`text-${size}`);
+        localStorage.setItem('textSize', size);
+    }
+
+    sizeBtn.addEventListener('click', () => {
+        sizeBtn.classList.toggle('active');
+        sizeDropdown.classList.toggle('show');
+    });
+
+    sizeDropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const displayName = item.textContent;
+            const size = getSizeValue(displayName);
+            
+            updateTextSize(size);
+            updateSelectedSize(displayName);
+            sizeBtn.classList.remove('active');
+            sizeDropdown.classList.remove('show');
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.size-selector')) {
+            sizeBtn.classList.remove('active');
+            sizeDropdown.classList.remove('show');
+        }
+    });
+    initializeTextSize();
+
     const positionBtn = document.querySelector('.position-selector-btn');
     const positionDropdown = document.querySelector('.position-dropdown');
     const positionDropdownItems = document.querySelectorAll('.position-dropdown-item');

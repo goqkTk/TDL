@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const contents = document.querySelector('.contents');
     const themeBtn = document.querySelector('.theme-selector-btn');
     const themeDropdown = document.querySelector('.theme-dropdown');
-    const dropdownItems = document.querySelectorAll('.theme-dropdown-item');
+    const themedropdownItems = document.querySelectorAll('.theme-dropdown-item');
 
     let draggedItem = null;
     let placeholder = null;
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateSelectedTheme(themeName) {
         themeBtn.textContent = themeName;
-        dropdownItems.forEach(item => {
+        themedropdownItems.forEach(item => {
             item.classList.toggle('selected', item.textContent === themeName);
         });
     }
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
         themeDropdown.classList.toggle('show');
     });
 
-    dropdownItems.forEach(item => {
+    themedropdownItems.forEach(item => {
         item.addEventListener('click', () => {
             const themeName = item.textContent;
             

@@ -483,7 +483,6 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     animation: modalFadeIn 0.3s ease-out;
 }
 
-/* 모달 헤더 */
 .setting-modal h3 {
     font-size: 24px;
     color: var(--text-primary);
@@ -492,11 +491,7 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     border-bottom: 1px solid var(--border-color);
 }
 
-/* 설정 섹션 */
-.settings-section {
-    margin-bottom: 30px;
-}
-
+.settings-section { margin-bottom: 30px; }
 .settings-section h4 {
     font-size: 18px;
     color: var(--text-primary);
@@ -505,7 +500,6 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     border-bottom: 1px solid var(--border-color);
 }
 
-/* 설정 항목 */
 .setting-item {
     padding: 15px 0;
     display: flex;
@@ -513,14 +507,8 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     align-items: center;
 }
 
-.setting-item:not(:last-child) {
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* 설정 정보 영역 */
-.setting-info {
-    flex: 1;
-}
+.setting-item:not(:last-child) { border-bottom: 1px solid var(--border-color); }
+.setting-info { flex: 1; }
 
 .setting-label {
     font-size: 16px;
@@ -533,7 +521,6 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     color: var(--text-secondary);
 }
 
-/* 설정 컨트롤 영역 */
 .setting-control {
     min-width: 200px;
     display: flex;
@@ -542,13 +529,18 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     gap: 10px;
 }
 
-/* 테마 선택 드롭다운 */
-.theme-selector {
+.theme-selector,
+.position-selector,
+.size-selector,
+.array-selector {
     position: relative;
     width: 200px;
 }
 
-.theme-selector-btn {
+.theme-selector-btn,
+.position-selector-btn,
+.size-selector-btn,
+.array-selector-btn {
     width: 100%;
     padding: 10px 15px;
     background: var(--todo-bg);
@@ -564,11 +556,17 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     transition: all 0.2s ease;
 }
 
-.theme-selector-btn:hover {
+.theme-selector-btn:hover,
+.position-selector-btn:hover,
+.size-selector-btn:hover,
+.array-selector-btn:hover {
     background: var(--todo-hover);
 }
 
-.theme-selector-btn:after {
+.theme-selector-btn:after,
+.position-selector-btn:after,
+.size-selector-btn:after,
+.array-selector-btn:after {
     content: '';
     width: 8px;
     height: 8px;
@@ -578,12 +576,17 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     transition: transform 0.2s ease;
 }
 
-.theme-selector-btn.active:after {
+.theme-selector-btn.active:after,
+.position-selector-btn.active:after,
+.size-selector-btn.active:after,
+.array-selector-btn.active:after {
     transform: rotate(-135deg);
 }
 
-/* 드롭다운 메뉴 */
-.theme-dropdown {
+.theme-dropdown,
+.position-dropdown,
+.size-dropdown,
+.array-dropdown {
     position: absolute;
     top: calc(100% + 5px);
     left: 0;
@@ -596,12 +599,18 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     z-index: 1000;
 }
 
-.theme-dropdown.show {
+.theme-dropdown.show,
+.position-dropdown.show,
+.size-dropdown.show,
+.array-dropdown.show {
     display: block;
-    animation: dropdownFadeIn 0.2s ease-out;
+    animation: modalFadeIn 0.2s ease-out;
 }
 
-.theme-dropdown-item {
+.theme-dropdown-item,
+.position-dropdown-item,
+.size-dropdown-item,
+.array-dropdown-item {
     padding: 10px 15px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -611,22 +620,30 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     justify-content: space-between;
 }
 
-.theme-dropdown-item:hover {
+.theme-dropdown-item:hover,
+.position-dropdown-item:hover,
+.size-dropdown-item:hover,
+.array-dropdown-item:hover {
     background: var(--todo-hover);
 }
 
-.theme-dropdown-item.selected {
+.theme-dropdown-item.selected,
+.position-dropdown-item.selected,
+.size-dropdown-item.selected,
+.array-dropdown-item.selected {
     color: #BDD971;
     background: #f1ffe2;
 }
 
-.theme-dropdown-item.selected:after {
+.theme-dropdown-item.selected:after,
+.position-dropdown-item.selected:after,
+.size-dropdown-item.selected:after,
+.array-dropdown-item.selected:after {
     content: '✓';
     color: #BDD971;
     font-weight: bold;
 }
 
-/* 토글 스위치 */
 .toggle-switch {
     position: relative;
     width: 44px;

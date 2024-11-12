@@ -65,6 +65,29 @@ document.addEventListener('DOMContentLoaded', function() {
     let originalRect;
     let dragOffsetY;
 
+    const autoHideToggle = document.querySelector('.toggle-switch input[type="checkbox"]');
+    
+    if (autoHideToggle) {
+        const isAutoHideEnabled = localStorage.getItem('autoHideCompleted') === 'true';
+        autoHideToggle.checked = isAutoHideEnabled;
+        
+        autoHideToggle.addEventListener('change', function() {
+            localStorage.setItem('autoHideCompleted', this.checked);
+            
+            if (this.checked) {
+                handleAutoHideSuccess();
+            } else {
+                localStorage.setItem('settingModalOpen', 'true');
+                window.location.reload();
+            }
+        });
+
+        if (localStorage.getItem('settingModalOpen') === 'true') {
+            document.querySelector('.setting-modal-background').style.display = 'flex';
+            localStorage.removeItem('settingModalOpen');
+        }
+    }
+
     if (settingBtn) {
         settingBtn.addEventListener('click', function() {
             settingModalBackground.style.display = 'flex';

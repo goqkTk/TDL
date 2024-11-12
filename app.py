@@ -361,6 +361,37 @@ def update_success():
     success = update_todo_success(todo_id, is_success)
     return jsonify({'success': success})
 
+@app.route('/get_completed_todos')
+def get_completed_todos_route():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.', 'todos': []})
+    
+    todos = get_completed_todos(user_id)
+    todos_list = []
+    
+    for todo in todos:
+        todo_dict = {
+            'id': todo[0],
+            'user_id': todo[1],
+            'title': todo[2],
+            'detail': todo[3],
+            'favorite': todo[4],
+            'day': todo[5].isoformat() if todo[5] else None,
+            'success': todo[6],
+            'order': todo[7],
+            'order_favorite': todo[8],
+            'is_fixed': todo[9],
+            'edit_day': todo[10].isoformat() if todo[10] else None,
+            'success_day': todo[11].isoformat() if todo[11] else None
+        }
+        todos_list.append(todo_dict)
+    
+    return jsonify({
+        'success': True,
+        'todos': todos_list
+    })
+
 @app.route('/calendar', methods=['GET', 'POST'])
 def calendar():
     user_id = session.get('user_id')

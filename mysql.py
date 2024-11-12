@@ -451,11 +451,22 @@ def update_todo_success(todo_id, is_success):
 def get_completed_todos(user_id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()
-    sql = "SELECT id, user_id, title, detail, favorite, day, success, `order`, order_favorite, is_fixed, edit_day, success_day FROM todo WHERE user_id = %s AND success = 1"
-    cursor.execute(sql, (user_id,))
-    result = cursor.fetchall()
-    db.close()
-    return result
+    try:
+        sql = """
+        SELECT id, user_id, title, detail, favorite, day, success, 
+               `order`, order_favorite, is_fixed, edit_day, success_day 
+        FROM todo 
+        WHERE user_id = %s AND success = 1 
+        ORDER BY success_day DESC, day DESC
+        """
+        cursor.execute(sql, (user_id,))
+        result = cursor.fetchall()
+        return result
+    except Exception as e:
+        print(f"완료된 할 일 조회 오류: {str(e)}")
+        return []
+    finally:
+        db.close()
 
 def duplicate_check(id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')

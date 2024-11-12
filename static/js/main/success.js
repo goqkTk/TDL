@@ -64,6 +64,88 @@ document.addEventListener('DOMContentLoaded', function() {
     let originalRect;
     let dragOffsetY;
 
+    const autoHideToggle = document.querySelector('.toggle-switch input[type="checkbox"]');
+
+    if (autoHideToggle) {
+        const isAutoHideEnabled = localStorage.getItem('autoHideCompleted') === 'true';
+        autoHideToggle.checked = isAutoHideEnabled;
+        
+        autoHideToggle.addEventListener('change', function() {
+            localStorage.setItem('autoHideCompleted', this.checked);
+            
+            if (this.checked) {
+                handleAutoHideSuccess();
+            } else {
+                localStorage.setItem('settingModalOpen', 'true');
+                window.location.reload();
+            }
+        });
+        if (localStorage.getItem('settingModalOpen') === 'true') {
+            settingModalBackground.style.display = 'flex';
+            localStorage.removeItem('settingModalOpen');
+        }
+    }
+
+    function handleAutoHideSuccess() {
+        const todoContainer = document.querySelector('.contents');
+        const isAutoHideEnabled = localStorage.getItem('autoHideCompleted') === 'true';
+        const todos = todoContainer.querySelectorAll('.todo-item');
+        const hasCompletedTodos = todos.length > 0;
+        const existingMessage = todoContainer.querySelector('.no-success-message, .auto-hide-message');
+    
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+    
+        if (isAutoHideEnabled) {
+            // 자동 숨김이 켜져 있을 때는 항상 자동 숨김 메시지 표시
+            const autoHideMessage = document.createElement('div');
+            autoHideMessage.className = 'auto-hide-message';
+            autoHideMessage.innerHTML = `
+                <p>완료된 할 일 자동 숨김이 켜져 있습니다</p>
+                <p>설정에서 자동 숨김을 끄면 완료된 할 일을 볼 수 있습니다</p>
+            `;
+            todoContainer.innerHTML = '';
+            todoContainer.appendChild(autoHideMessage);
+        } else if (!hasCompletedTodos) {
+            // 자동 숨김이 꺼져 있고 할 일이 없을 때만 표시
+            const noSuccessMessage = document.createElement('div');
+            noSuccessMessage.className = 'no-success-message';
+            noSuccessMessage.innerHTML = `
+                <p>완료된 항목이 없습니다</p>
+                <p>메인 페이지에서 체크 아이콘을 클릭하여 항목을 완료 처리할 수 있습니다</p>
+            `;
+            todoContainer.appendChild(noSuccessMessage);
+        }
+    }
+
+    // checkEmptySuccess 함수 수정
+    function checkEmptySuccess() {
+        const todoContainer = document.querySelector('.contents');
+        const isAutoHideEnabled = localStorage.getItem('autoHideCompleted') === 'true';
+        
+        // 자동 숨김이 켜져 있을 때만 handleAutoHideSuccess 실행
+        if (isAutoHideEnabled) {
+            handleAutoHideSuccess();
+            return;
+        }
+
+        const successItems = todoContainer.querySelectorAll('.todo-item');
+        const existingMessage = todoContainer.querySelector('.no-success-message');
+        
+        if (successItems.length === 0 && !existingMessage) {
+            const noSuccessMessage = document.createElement('div');
+            noSuccessMessage.className = 'no-success-message';
+            noSuccessMessage.innerHTML = `
+                <p>완료된 항목이 없습니다</p>
+                <p>메인 페이지에서 체크 아이콘을 클릭하여 항목을 완료 처리할 수 있습니다</p>
+            `;
+            todoContainer.appendChild(noSuccessMessage);
+        } else if (successItems.length > 0 && existingMessage) {
+            existingMessage.remove();
+        }
+    }
+
     if (settingBtn) {
         settingBtn.addEventListener('click', function() {
             settingModalBackground.style.display = 'flex';
@@ -1067,21 +1149,4 @@ function updateTodoOrder() {
     .catch(error => {
         console.error('Error:', error);
     });
-}
-
-function checkEmptySuccess() {
-    const successItems = document.querySelectorAll('.contents > div');
-    const existingMessage = document.querySelector('.no-success-message');
-    
-    if (successItems.length === 0 && !existingMessage) {
-        const noSuccessMessage = document.createElement('div');
-        noSuccessMessage.className = 'no-success-message';
-        noSuccessMessage.innerHTML = `
-            <p>완료된 항목이 없습니다</p>
-            <p>메인 페이지에서 체크 아이콘을 클릭하여 항목을 완료 처리할 수 있습니다</p>
-        `;
-        document.querySelector('.contents').appendChild(noSuccessMessage);
-    } else if (successItems.length > 0 && existingMessage) {
-        existingMessage.remove();
-    }
 }

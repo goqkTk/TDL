@@ -17,5 +17,37 @@
             <button onclick="location.href='/account'">계정</button>
         </div>
     </nav>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-nav">
+                <span id="currentDate"></span>
+                <div class="nav-buttons">
+                    <button id="prevMonth">&lt;</button>
+                    <button id="nextMonth">&gt;</button>
+                </div>
+            </div>
+        </div>
+        <div class="calendar-body">
+            <div class="weekdays">
+                <div>일</div>
+                <div>월</div>
+                <div>화</div>
+                <div>수</div>
+                <div>목</div>
+                <div>금</div>
+                <div>토</div>
+            </div>
+            <div id="calendarDays" class="calendar-days"></div>
+        </div>
+        <div id="eventModal" class="event-modal">
+            <div class="event-modal-content">
+                <div class="event-input-container">
+                    <input type="text" id="eventInput" placeholder="새로운 이벤트 추가...">
+                </div>
+                <div id="eventList" class="event-list"></div>
+            </div>
+        </div>
+    </div>
 </body>
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
 </html>

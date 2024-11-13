@@ -65,9 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let categoryPlaceholder = null;
     let isDraggingCategory = false;
     let categoryDragOffsetY = 0;
-    let dragStartTime = 0;
     let moveDistance = 0;
-    let categoryToDelete = null;
     let wasSelected = false;
 
     checkForHighlight();

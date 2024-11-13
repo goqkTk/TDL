@@ -7,46 +7,56 @@
 
 body {
     background-color: #F2F2F2;
-}
-
-nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
+    min-height: 100vh;
+    overflow: hidden;
 }
 
 .calendar-container {
-    margin: 70px auto 2rem;  /* 상단 여백을 nav 높이(70px) + 20px 여유공간으로 설정 */
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    width: 90%;           /* 너비를 90%로 설정 */
-    max-width: 1000px;    /* 최대 너비 제한 */
+    width: 100%;
+    max-width: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
 
 .calendar-header {
     background: #404040;
-    padding: 1.5rem;
+    padding: 0.8rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    height: 60px;
 }
 
 .calendar-nav {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 1.5rem;
+    width: 100%;
 }
 
 #currentDate {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: white;
+    margin-right: auto;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
+
+#currentDate:hover { background: rgba(255, 255, 255, 0.1); }
 
 .nav-buttons {
     display: flex;
@@ -56,7 +66,7 @@ nav {
 .nav-buttons button {
     background: transparent;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    padding: 0.6rem 1rem;
+    padding: 0.5rem 0.8rem;
     cursor: pointer;
     border-radius: 8px;
     color: white;
@@ -70,7 +80,11 @@ nav {
 }
 
 .calendar-body {
-    padding: 1.5rem;
+    flex: 1;
+    padding: 0.5rem 10rem;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 130px);
 }
 
 .weekdays {
@@ -80,33 +94,39 @@ nav {
     font-size: 1rem;
     font-weight: 600;
     color: #404040;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    background: white;
+    border-bottom: 2px solid #eee;
+    height: 40px;
 }
 
 .calendar-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-gap: 8px;
-    padding: 0.5rem;
+    grid-gap: 0;
+    padding: 0;
+    flex: 1;
+    height: calc(100% - 40px);
 }
 
 .calendar-day {
-    aspect-ratio: 1;
-    background-color: white;
-    padding: 0.8rem;
     position: relative;
     cursor: pointer;
     border: 1px solid #eee;
-    border-radius: 8px;
+    border-radius: 0;
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 0.5rem;
+    height: 100%;
+    min-height: 0;
+    margin: -0.5px;
 }
 
 .calendar-day:hover {
     background-color: #f8f9fa;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    z-index: 1;
 }
 
 .calendar-day.other-month {
@@ -118,48 +138,116 @@ nav {
     background-color: #404040;
     color: white;
     border-color: #404040;
+    z-index: 2;
 }
 
 .calendar-day.selected {
     border: 2px solid #FF9800;
     background-color: rgba(255, 152, 0, 0.1);
+    z-index: 3;
+    margin: -1px;
 }
 
 .day-number {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 500;
-    margin-bottom: 0.25rem;
 }
 
-.event-marker {
-    width: 6px;
-    height: 6px;
-    background-color: #FF9800;
-    border-radius: 50%;
-    position: absolute;
-    bottom: 6px;
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.date-select-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    width: 300px;
+    padding: 1.5rem;
+}
+
+.date-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.date-select-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #404040;
+}
+
+.date-select-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0.2rem;
+}
+
+.date-select-content {
+    display: flex;
+    gap: 1rem;
+}
+
+.year-select, .month-select { flex: 1; }
+
+.select-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.select-input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #404040;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.select-input:hover { border-color: #FF9800; }
+
+.select-input:focus {
+    outline: none;
+    border-color: #FF9800;
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1);
 }
 
 .event-modal {
     display: none;
-    position: absolute;
+    position: fixed;
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     min-width: 320px;
+    max-width: 400px;
     z-index: 1000;
     overflow: hidden;
 }
 
-.event-modal-content {
-    padding: 1.5rem;
-}
-
-.event-input-container {
-    margin-bottom: 1rem;
-}
+.event-modal-content { padding: 1.2rem; }
+.event-input-container { margin-bottom: 1rem; }
 
 #eventInput {
     width: 100%;
@@ -179,13 +267,15 @@ nav {
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .event-item {
     padding: 0.8rem;
     background-color: #f8f9fa;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     cursor: pointer;
     border: 1px solid #eee;
     transition: all 0.3s ease;
@@ -195,4 +285,35 @@ nav {
     background-color: rgba(255, 152, 0, 0.1);
     border-color: #FF9800;
     transform: translateY(-2px);
+}
+
+@media screen and (max-width: 768px) {
+    nav { height: 60px; }
+    .calendar-container { top: 60px; }
+    .calendar-header {
+        height: 50px;
+        padding: 0.5rem 1rem;
+    }
+    
+    .calendar-body {
+        height: calc(100vh - 110px);
+        padding: 0.3rem;
+    }
+    
+    .weekdays {
+        font-size: 0.9rem;
+        height: 35px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    nav { height: 50px; }
+    .calendar-container { top: 50px; }
+    .calendar-header { height: 45px; }
+    .calendar-body { height: calc(100vh - 95px); }
+    .weekdays {
+        font-size: 0.8rem;
+        height: 30px;
+        padding: 0.3rem 0;
+    }
 }

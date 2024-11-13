@@ -20,13 +20,14 @@
     <div class="calendar-container">
         <div class="calendar-header">
             <div class="calendar-nav">
-                <span id="currentDate"></span>
+                <div id="currentDate"></div>
                 <div class="nav-buttons">
                     <button id="prevMonth">&lt;</button>
                     <button id="nextMonth">&gt;</button>
                 </div>
             </div>
         </div>
+
         <div class="calendar-body">
             <div class="weekdays">
                 <div>일</div>
@@ -39,10 +40,11 @@
             </div>
             <div id="calendarDays" class="calendar-days"></div>
         </div>
+
         <div id="eventModal" class="event-modal">
             <div class="event-modal-content">
                 <div class="event-input-container">
-                    <input type="text" id="eventInput" placeholder="새로운 이벤트 추가...">
+                    <input type="text" id="eventInput" placeholder="일정을 입력하세요">
                 </div>
                 <div id="eventList" class="event-list"></div>
             </div>

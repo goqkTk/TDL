@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>달력</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/menubar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
     <link rel="website icon" type="png" href="{{ url_for('static', filename='img/icon.png') }}">
@@ -22,12 +23,11 @@
             <div class="calendar-nav">
                 <div id="currentDate"></div>
                 <div class="nav-buttons">
-                    <button id="prevMonth">&lt;</button>
-                    <button id="nextMonth">&gt;</button>
+                    <button><i class="fa-solid fa-chevron-left"></i></button>
+                    <button><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
         </div>
-
         <div class="calendar-body">
             <div class="weekdays">
                 <div>일</div>
@@ -40,15 +40,38 @@
             </div>
             <div id="calendarDays" class="calendar-days"></div>
         </div>
-
         <div id="eventModal" class="event-modal">
             <div class="event-modal-content">
                 <div class="event-input-container">
-                    <input type="text" id="eventInput" placeholder="일정을 입력하세요">
+                    <input type="text" id="eventInput" placeholder="새로운 이벤트를 입력하세요">
                 </div>
                 <div id="eventList" class="event-list"></div>
             </div>
         </div>
+        <div id="dateSelectOverlay" class="modal-overlay"></div>
+        <div id="dateSelectModal" class="date-select-modal">
+            <div class="date-select-header">
+                <div class="date-select-title">날짜 선택</div>
+                <button class="date-select-close">×</button>
+            </div>
+            <div class="date-select-content">
+                <div class="year-select">
+                    <div class="select-label">년도</div>
+                    <div class="selection-indicator"></div>
+                    <div id="yearSpinner" class="spinner-wrapper"></div>
+                </div>
+                <div class="month-select">
+                    <div class="select-label">월</div>
+                    <div class="selection-indicator"></div>
+                    <div id="monthSpinner" class="spinner-wrapper"></div>
+                </div>
+            </div>
+            <div class="date-select-footer">
+                <button class="date-select-today" disabled>오늘</button>
+                <button class="date-select-confirm">확인</button>
+            </div>
+        </div>
+    </div>
     </div>
 </body>
 <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>

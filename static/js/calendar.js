@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
         let tempMonth = currentDate.getMonth() + 1;
         updateTodayButtonState(tempYear, tempMonth, now);
     
-        // 연도 스피너 설정
         const currentYear = now.getFullYear();
         for (let year = currentYear - 50; year <= currentYear + 50; year++) {
             const yearItem = document.createElement('div');
@@ -37,12 +36,11 @@ document.addEventListener('DOMContentLoaded', function() {
             yearItem.addEventListener('click', () => {
                 tempYear = year;
                 updateSelectedSpinnerItem(yearSpinner, year);
-                scrollToSelected(yearSpinner, year); // 클릭 시에만 스크롤
+                scrollToSelected(yearSpinner, year);
             });
             yearSpinner.appendChild(yearItem);
         }
     
-        // 월 스피너 설정
         for (let month = 1; month <= 12; month++) {
             const monthItem = document.createElement('div');
             monthItem.className = 'spinner-item' + (month === tempMonth ? ' selected' : '');
@@ -50,12 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
             monthItem.addEventListener('click', () => {
                 tempMonth = month;
                 updateSelectedSpinnerItem(monthSpinner, month);
-                scrollToSelected(monthSpinner, month); // 클릭 시에만 스크롤
+                scrollToSelected(monthSpinner, month);
             });
             monthSpinner.appendChild(monthItem);
         }
-    
-        // 초기 스크롤 위치 설정 (모달 열때만)
         setTimeout(() => {
             scrollToSelected(yearSpinner, tempYear);
             scrollToSelected(monthSpinner, tempMonth);
@@ -82,29 +78,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const spinner = e.currentTarget;
         const itemHeight = 40;
     
-        // 최근 휠 이벤트 기록
         wheelEvents.push({
             time: currentTime,
             delta: Math.abs(e.deltaY)
         });
     
-        // 오래된 휠 이벤트 제거
         wheelEvents = wheelEvents.filter(event => currentTime - event.time <= WHEEL_TIMEOUT);
     
-        // 휠 속도 계산
         const isRapidWheel = wheelEvents.length >= 3;
-        const timeDiff = currentTime - lastWheelTime;
         lastWheelTime = currentTime;
     
         if (isRapidWheel) {
-            // 빠른 휠 동작: 부드러운 스크롤
-            const scrollAmount = e.deltaY * 2.5; // 스크롤 속도 감소 (0.5 → 0.3)
+            const scrollAmount = e.deltaY * 2.5;
             spinner.scrollBy({
                 top: scrollAmount,
-                behavior: 'smooth'  // 'auto' → 'smooth'로 변경하여 부드럽게
+                behavior: 'smooth'
             });
         } else {
-            // 천천히 한 칸씩 이동
             const direction = e.deltaY > 0 ? 1 : -1;
             const scrollAmount = direction * itemHeight;
             
@@ -113,15 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 behavior: 'smooth'
             });
         }
-    
-        // 스크롤 후 가장 가까운 항목 선택 업데이트 (시간 증가)
         clearTimeout(spinner.scrollTimeout);
         spinner.scrollTimeout = setTimeout(() => {
             handleSpinnerScroll({ target: spinner });
-        }, 200); // 150 → 200ms로 증가하여 더 자연스러운 정렬
+        }, 200);
     }
-
-    function easeOutQuad(t) { return t * (2 - t); }
 
     function handleConfirm() {
         const yearItems = yearSpinner.querySelectorAll('.spinner-item');
@@ -219,9 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateCurrentDate() {
-        currentDateElement.textContent = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`;
-    }
+    function updateCurrentDate() { currentDateElement.textContent = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`; }
 
     function renderCalendar() {
         calendarDays.innerHTML = '';
@@ -229,20 +213,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         const prevMonthLastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
         
-        // 이전 달의 날짜 채우기
         for (let i = firstDay.getDay() - 1; i >= 0; i--) {
             const day = prevMonthLastDay.getDate() - i;
             createDayElement(day, 'other-month', true);
         }
         
-        // 현재 달의 날짜 채우기
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const isToday = isCurrentDay(day);
             const isSelected = isSelectedDay(day);
             createDayElement(day, isToday ? 'today' : '', false, isSelected);
         }
         
-        // 다음 달의 날짜 채우기
         const remainingDays = 42 - calendarDays.children.length;
         for (let day = 1; day <= remainingDays; day++) {
             createDayElement(day, 'other-month', true);
@@ -265,10 +246,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 marker.className = 'event-marker';
                 dayElement.appendChild(marker);
             }
-            
             dayElement.addEventListener('click', () => handleDateClick(day));
         }
-        
         calendarDays.appendChild(dayElement);
     }
 
@@ -320,13 +299,8 @@ document.addEventListener('DOMContentLoaded', function() {
                currentDate.getFullYear() === today.getFullYear();
     }
 
-    function isSelectedDay(day) {
-        return selectedDate === getDateString(day);
-    }
-
-    function getDateString(day) {
-        return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
-    }
+    function isSelectedDay(day) { return selectedDate === getDateString(day); }
+    function getDateString(day) { return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`; }
 
     function updateEventList() {
         if (!selectedDate) return;
@@ -361,7 +335,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 이벤트 리스너 설정
     function setupEventListeners() {
         prevMonthButton.addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
@@ -378,10 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentDateElement.addEventListener('click', showDateSelectModal);
         closeButton.addEventListener('click', closeDateSelectModal);
         dateSelectOverlay.addEventListener('click', closeDateSelectModal);
-        
         yearSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
         monthSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
-        
         eventInput.addEventListener('keypress', handleEventInput);
 
         document.addEventListener('click', (e) => {
@@ -402,13 +373,11 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // 초기화
     function init() {
         updateCurrentDate();
         setupSpinners();
         renderCalendar();
         setupEventListeners();
     }
-
     init();
 });

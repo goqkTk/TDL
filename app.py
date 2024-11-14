@@ -450,7 +450,8 @@ def send_help():
 def account():
     user_id = session.get('user_id')
     if 'user_id' in session:
-        return render_template('account.html', user_id=user_id)
+        user_email = get_user_email(user_id)
+        return render_template('account.html', user_id=user_id, user_email=user_email)
     else:
         return redirect('/login')
 

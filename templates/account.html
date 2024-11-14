@@ -19,7 +19,118 @@
         </div>
     </nav>
     <div class="container">
-        
+        <div class="setting-modal">
+            <div class="user-info">
+                <div>
+                    <h1>{{ user_id }}</h1>
+                    <p>{{ user_email }}</p>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>계정 설정</h4>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">아이디</div>
+                        <div class="setting-description">계정 아이디를 변경할 수 있습니다</div>
+                    </div>
+                    <button class="setting-btn">변경</button>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">비밀번호</div>
+                        <div class="setting-description">계정 비밀번호를 변경할 수 있습니다</div>
+                    </div>
+                    <button class="setting-btn">변경</button>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>알림 설정</h4>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">할 일 마감 알림</div>
+                        <div class="setting-description">마감 예정인 할 일을 메일로 알려드립니다</div>
+                    </div>
+                    <span class="toggle-slider"></span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">달력 알림</div>
+                        <div class="setting-description">달력 일정을 메일로 알려드립니다</div>
+                    </div>
+                    <span class="toggle-slider"></span>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">알림 빈도</div>
+                        <div class="setting-description">알림을 받을 시간을 선택합니다</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="notification-selector">
+                            <button class="notification-selector-btn">30분 전</button>
+                            <div class="notification-dropdown">
+                                <div class="notification-dropdown-item selected">30분 전</div>
+                                <div class="notification-dropdown-item">1시간 전</div>
+                                <div class="notification-dropdown-item">2시간 전</div>
+                                <div class="notification-dropdown-item">3시간 전</div>
+                                <div class="notification-dropdown-item">하루 전</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h4>달력 설정</h4>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">기본 달력 보기</div>
+                        <div class="setting-description">달력의 기본 표시 방식을 설정합니다</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="calendar-selector">
+                            <button class="calendar-selector-btn">월간</button>
+                            <div class="calendar-dropdown">
+                                <div class="calendar-dropdown-item selected">월간</div>
+                                <div class="calendar-dropdown-item">주간</div>
+                                <div class="calendar-dropdown-item">일간</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">주 시작일</div>
+                        <div class="setting-description">한 주의 시작일을 설정합니다</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="week-selector">
+                            <button class="week-selector-btn">일요일</button>
+                            <div class="week-dropdown">
+                                <div class="week-dropdown-item selected">일요일</div>
+                                <div class="week-dropdown-item">월요일</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="danger-zone">
+                <h4>계정 관리</h4>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">로그아웃</div>
+                        <div class="setting-description">현재 기기에서 로그아웃합니다</div>
+                    </div>
+                    <button class="logout-btn" onclick="location.href='/logout'">로그아웃</button>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">계정 탈퇴</div>
+                        <div class="setting-description">계정과 모든 데이터가 영구적으로 삭제됩니다</div>
+                    </div>
+                    <button class="delete-btn">계정 탈퇴</button>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
+<script src="{{ url_for('static', filename='js/account.js') }}"></script>
 </html>

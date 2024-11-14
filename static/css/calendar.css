@@ -27,7 +27,7 @@ body {
 }
 
 .calendar-header {
-    background: #404040;
+    background: #4A4E57;
     padding: 0.8rem 0;
     display: flex;
     justify-content: space-between;
@@ -77,8 +77,8 @@ body {
 }
 
 .nav-buttons button:hover {
-    background: rgba(255, 152, 0, 0.2);
-    border-color: #FF9800;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
     transform: translateY(-2px);
 }
 

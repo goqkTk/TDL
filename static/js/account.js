@@ -1,46 +1,92 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const weekBtn = document.querySelector('.week-selector-btn');
-    const weekDropdown = document.querySelector('.week-dropdown');
-    const weekDropdownItems = document.querySelectorAll('.week-dropdown-item');
-    const container = document.querySelector('.container');
-    
-    function initializeWeek() {
-        const savedWeek = localStorage.getItem('week') || 'sunday';
-        container.setAttribute('data-week', savedWeek);
-        updateSelectedWeek(savedWeek === 'sunday' ? '일요일' : '월요일');
-    }
+    const editIdBtn = document.getElementById('EditIdBtn');
+    const editPwBtn = document.getElementById('EditPwBtn');
+    const editIdModalBackground = document.querySelector('.edit_id_modal_background');
+    const idInput = document.querySelector('#edit_id_input');
+    const confirmEditIdBtn = document.querySelector('#confirm_edit_id');
+    const deleteBtn = document.querySelector('.delete-btn');
 
-    function updateSelectedWeek(weekName) {
-        weekBtn.textContent = weekName;
-        weekDropdownItems.forEach(item => {
-            item.classList.toggle('selected', item.textContent === weekName);
-        });
-    }
-
-    weekBtn.addEventListener('click', () => {
-        weekBtn.classList.toggle('active');
-        weekDropdown.classList.toggle('show');
-    });
-
-    weekDropdownItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const weekName = item.textContent;
-            const week = weekName === '일요일' ? 'sunday' : 'monday';
-            
-            container.setAttribute('data-week', week);
-            localStorage.setItem('week', week);
-            
-            updateSelectedWeek(weekName);
-            weekBtn.classList.remove('active');
-            weekDropdown.classList.remove('show');
-        });
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.week-selector')) {
-            weekBtn.classList.remove('active');
-            weekDropdown.classList.remove('show');
+    editIdBtn.addEventListener('click', function() {
+        editIdModalBackground.style.display = 'flex';
+        if (idInput) {
+            idInput.value = '';
+            clearErrorMessage(idInput);
         }
     });
-    initializeWeek();
+
+    editIdModalBackground.addEventListener('click', function(e) {
+        if (e.target === editIdModalBackground) {
+            editIdModalBackground.style.display = 'none';
+            if (idInput) {
+                idInput.value = '';
+                clearErrorMessage(idInput);
+            }
+        }
+    });
+
+    confirmEditIdBtn.addEventListener('click', function() {
+        const newId = idInput.value.trim();
+
+        if (!newId) {
+            setupErrorMessage(idInput, '아이디를 입력해주세요');
+            return;
+        }
+
+        fetch('/update_id', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ new_id: newId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('아이디가 성공적으로 변경되었습니다. 다시 로그인해주세요.');
+                window.location.href = '/logout';
+            } else {
+                setupErrorMessage(idInput, data.message || '아이디 변경에 실패했습니다');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            setupErrorMessage(idInput, '서버 오류가 발생했습니다');
+        });
+    });
+
+    idInput.addEventListener('focus', function() {
+        clearErrorMessage(this);
+    });
+
+    idInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            confirmEditIdBtn.click();
+        }
+    });
 });
+
+function setupErrorMessage(inputElement, messageText) {
+    if (!inputElement) return;
+    const inputGroup = inputElement.closest('.input-group');
+    if (!inputGroup) return;
+    let errorMessage = inputGroup.querySelector('.error-message');
+    
+    if (!errorMessage) {
+        errorMessage = document.createElement('span');
+        errorMessage.className = 'error-message';
+        inputGroup.appendChild(errorMessage);
+    }
+    
+    errorMessage.textContent = messageText;
+    errorMessage.style.display = 'block';
+    inputElement.classList.add('error');
+}
+
+function clearErrorMessage(inputElement) {
+    const inputGroup = inputElement.closest('.input-group');
+    const errorMessage = inputGroup.querySelector('.error-message');
+    if (errorMessage) {
+        errorMessage.style.display = 'none';
+    }
+    inputElement.classList.remove('error');
+}

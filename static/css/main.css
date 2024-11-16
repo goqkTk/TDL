@@ -556,7 +556,9 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-selector,
 .position-selector,
 .size-selector,
-.array-selector {
+.array-selector,
+.calendar-selector,
+.week-selector {
     position: relative;
     width: 200px;
 }
@@ -564,7 +566,9 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-selector-btn,
 .position-selector-btn,
 .size-selector-btn,
-.array-selector-btn {
+.array-selector-btn,
+.calendar-selector-btn,
+.week-selector-btn {
     width: 100%;
     padding: 10px 15px;
     background: var(--todo-bg);
@@ -583,14 +587,18 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-selector-btn:hover,
 .position-selector-btn:hover,
 .size-selector-btn:hover,
-.array-selector-btn:hover {
+.array-selector-btn:hover,
+.calendar-selector-btn:hover,
+.week-selector-btn:hover {
     background: var(--todo-hover);
 }
 
 .theme-selector-btn:after,
 .position-selector-btn:after,
 .size-selector-btn:after,
-.array-selector-btn:after {
+.array-selector-btn:after,
+.calendar-selector-btn:after,
+.week-selector-btn:after {
     content: '';
     width: 8px;
     height: 8px;
@@ -603,14 +611,18 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-selector-btn.active:after,
 .position-selector-btn.active:after,
 .size-selector-btn.active:after,
-.array-selector-btn.active:after {
+.array-selector-btn.active:after,
+.calendar-selector-btn.active:after,
+.week-selector-btn.active:after {
     transform: rotate(-135deg);
 }
 
 .theme-dropdown,
 .position-dropdown,
 .size-dropdown,
-.array-dropdown {
+.array-dropdown,
+.calendar-dropdown,
+.week-dropdown {
     position: absolute;
     top: calc(100% + 5px);
     left: 0;
@@ -626,7 +638,9 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-dropdown.show,
 .position-dropdown.show,
 .size-dropdown.show,
-.array-dropdown.show {
+.array-dropdown.show,
+.calendar-dropdown.show,
+.week-dropdown.show {
     display: block;
     animation: modalFadeIn 0.2s ease-out;
 }
@@ -634,7 +648,9 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-dropdown-item,
 .position-dropdown-item,
 .size-dropdown-item,
-.array-dropdown-item {
+.array-dropdown-item,
+.calendar-dropdown-item,
+.week-dropdown-item {
     padding: 10px 15px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -647,14 +663,18 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-dropdown-item:hover,
 .position-dropdown-item:hover,
 .size-dropdown-item:hover,
-.array-dropdown-item:hover {
+.array-dropdown-item:hover,
+.calendar-dropdown-item:hover,
+.week-dropdown-item:hover {
     background: var(--todo-hover);
 }
 
 .theme-dropdown-item.selected,
 .position-dropdown-item.selected,
 .size-dropdown-item.selected,
-.array-dropdown-item.selected {
+.array-dropdown-item.selected,
+.calendar-dropdown-item.selected,
+.week-dropdown-item.selected {
     color: #BDD971;
     background: #f1ffe2;
 }
@@ -662,7 +682,9 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 .theme-dropdown-item.selected:after,
 .position-dropdown-item.selected:after,
 .size-dropdown-item.selected:after,
-.array-dropdown-item.selected:after {
+.array-dropdown-item.selected:after,
+.calendar-dropdown.selected:after,
+.week-dropdown-item.selected:after {
     content: '✓';
     color: #BDD971;
     font-weight: bold;

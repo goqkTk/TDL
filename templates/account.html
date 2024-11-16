@@ -33,14 +33,14 @@
                         <div class="setting-label">아이디</div>
                         <div class="setting-description">계정 아이디를 변경할 수 있습니다</div>
                     </div>
-                    <button class="setting-btn">변경</button>
+                    <button id="EditIdBtn" class="setting-btn">변경</button>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">비밀번호</div>
                         <div class="setting-description">계정 비밀번호를 변경할 수 있습니다</div>
                     </div>
-                    <button class="setting-btn">변경</button>
+                    <button id="EditPwBtn" class="setting-btn">변경</button>
                 </div>
             </div>
             <div class="settings-section">
@@ -78,40 +78,6 @@
                     </div>
                 </div>
             </div>
-            <div class="settings-section">
-                <h4>달력 설정</h4>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">기본 달력 보기</div>
-                        <div class="setting-description">달력의 기본 표시 방식을 설정합니다</div>
-                    </div>
-                    <div class="setting-control">
-                        <div class="calendar-selector">
-                            <button class="calendar-selector-btn">월간</button>
-                            <div class="calendar-dropdown">
-                                <div class="calendar-dropdown-item selected">월간</div>
-                                <div class="calendar-dropdown-item">주간</div>
-                                <div class="calendar-dropdown-item">일간</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">주 시작일</div>
-                        <div class="setting-description">한 주의 시작일을 설정합니다</div>
-                    </div>
-                    <div class="setting-control">
-                        <div class="week-selector">
-                            <button class="week-selector-btn">일요일</button>
-                            <div class="week-dropdown">
-                                <div class="week-dropdown-item selected">일요일</div>
-                                <div class="week-dropdown-item">월요일</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="danger-zone">
                 <h4>계정 관리</h4>
                 <div class="setting-item">
@@ -128,6 +94,19 @@
                     </div>
                     <button class="delete-btn">계정 탈퇴</button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="edit_id_modal_background" style="display: none;">
+        <div class="edit_id_modal">
+            <h2>아이디 변경</h2>
+            <p>어떤 이름이든 어울리죠! 무엇인가요?</p>
+            <div class="input-group">
+                <input type="text" name="edit-id-input" id="edit-id-input" autocomplete="off">
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <div class="button-container">
+                <button id="confirm-edit-id">변경</button>
             </div>
         </div>
     </div>

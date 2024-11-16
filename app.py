@@ -455,6 +455,27 @@ def account():
     else:
         return redirect('/login')
 
+@app.route('/update_id', methods=['POST'])
+def update_id():
+    data = request.json
+    current_id = session.get('user_id')
+    new_id = data.get('new_id')
+    
+    if not current_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+        
+    if not new_id:
+        return jsonify({'success': False, 'message': '새 아이디를 입력해주세요.'})
+    
+    if not duplicate_check(new_id):
+        return jsonify({'success': False, 'message': '이미 사용 중인 아이디입니다.'})
+        
+    if update_user_id(current_id, new_id):
+        session['user_id'] = new_id
+        return jsonify({'success': True, 'message': '아이디가 변경되었습니다.'})
+    else:
+        return jsonify({'success': False, 'message': '아이디 변경에 실패했습니다.'})
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)

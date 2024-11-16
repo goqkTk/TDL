@@ -1,6 +1,22 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+def update_user_id(current_id, new_id):
+    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+    cursor = db.cursor()
+    try:
+        cursor.execute("UPDATE account SET id = %s WHERE id = %s", (new_id, current_id))
+        cursor.execute("UPDATE todo SET user_id = %s WHERE user_id = %s", (new_id, current_id))
+        cursor.execute("UPDATE categories SET user_id = %s WHERE user_id = %s", (new_id, current_id))
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"아이디 업데이트 오류: {str(e)}")
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
 def update_categories_order(user_id, new_order):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()

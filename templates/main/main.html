@@ -186,7 +186,7 @@
             </div>
         </div>
     </div>
-    <div class="edit-delete-modal-background" style="display: none;">
+    <div class="edit-delete-modal-background">
         <div class="edit-category-modal">
             <h2>카테고리 수정</h2>
             <p>더 멋진 이름이 생각났나요?</p>
@@ -276,33 +276,36 @@
                         </label>
                     </div>
                 </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <div class="setting-label">브라우저 알림</div>
-                        <div class="setting-description">할 일 마감 시간에 알림을 받습니다</div>
-                    </div>
-                    <div class="setting-control">
-                        <label class="toggle-switch">
-                            <input type="checkbox">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
             </div>
             <div class="settings-section">
-                <h4>달력 설정 (준비 중)</h4>
-                <div class="setting-item disabled">
+                <h4>달력 설정</h4>
+                <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">기본 달력 보기</div>
                         <div class="setting-description">달력의 기본 표시 방식을 설정합니다</div>
                     </div>
                     <div class="setting-control">
-                        <div class="array-selector">
-                            <button class="array-selector-btn">월간</button>
-                            <div class="array-dropdown">
-                                <div class="array-dropdown-item selected">월간</div>
-                                <div class="array-dropdown-item">주간</div>
-                                <div class="array-dropdown-item">일간</div>
+                        <div class="calendar-selector">
+                            <button class="calendar-selector-btn">월간</button>
+                            <div class="calendar-dropdown">
+                                <div class="calendar-dropdown-item selected">월간</div>
+                                <div class="calendar-dropdown-item">주간</div>
+                                <div class="calendar-dropdown-item">일간</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">주 시작일</div>
+                        <div class="setting-description">한 주의 시작일을 설정합니다</div>
+                    </div>
+                    <div class="setting-control">
+                        <div class="week-selector">
+                            <button class="week-selector-btn">일요일</button>
+                            <div class="week-dropdown">
+                                <div class="week-dropdown-item selected">일요일</div>
+                                <div class="week-dropdown-item">월요일</div>
                             </div>
                         </div>
                     </div>

@@ -243,6 +243,7 @@ body {
 }
 
 .edit_id_modal_background,
+.edit_pw_modal_background,
 .delete_account_modal_background {
     background-color: rgba(0,0,0,0.4);
     backdrop-filter: blur(2px);
@@ -346,6 +347,20 @@ body {
 .secondary-button:active { transform: translateY(1px); }
 
 .edit_id_modal,
+.edit_pw_modal {
+    width: 400px;
+    max-height: 80vh;
+    padding: 60px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-y: auto;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
 .delete_account_modal {
     width: 400px;
     max-height: 80vh;
@@ -360,7 +375,8 @@ body {
     animation: modalFadeIn 0.3s ease-out;
 }
 
-.edit_id_modal h2 {
+.edit_id_modal h2,
+.edit_pw_modal h2 {
     color: #333;
     font-size: 24px;
     margin-bottom: 15px;
@@ -371,33 +387,45 @@ body {
 .edit_id_modal p {
     color: #666;
     font-size: 15px;
-    margin-bottom: 5px;
+    margin-bottom: 25px;
     align-self: flex-start;
 }
 
 .input-group {
     position: relative;
+    margin-bottom: 30px;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
 }
 
-#edit-id-input {
-    width: 95%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+.input-group input {
+    width: 100%;
+    padding: 10px 0;
     font-size: 16px;
-    margin-bottom: 15px;
-}
-
-#edit-id-input:focus {
-    border-color: #03A9F4;
+    border: none;
+    border-bottom: 1px solid gray;
+    background: transparent;
     outline: none;
 }
 
-#edit-id-input.error { border-color: red; }
+.input-group label {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    font-size: 16px;
+    color: #999;
+    pointer-events: none;
+    transition: 0.2s ease all;
+}
+
+.input-group input:focus ~ label,
+.input-group input:not(:placeholder-shown) ~ label {
+    top: -10px;
+    font-size: 14px;
+    color: #03A9F4;
+}
+
+.input-group input:focus { border-color: #03A9F4; }
+.input-group input.error { border-bottom: 1px solid red; }
 
 .button-container {
     display: flex;
@@ -405,30 +433,39 @@ body {
     align-items: center;
     width: 100%;
     gap: 10px;
-    margin-top: -10px;
+    margin-top: 10px;
 }
 
-#confirm-edit-id:hover { background: #45a049; }
-#confirm-edit-id {
-    background-color: #4CAF50;
-    color: white;
+#confirm-edit-id,
+#confirm-edit-pw {
+    width: 300px;
+    padding: 10px;
+    margin: 0 auto;
+    margin-top: 30px;
+    font-size: 18px;
+    background-color: #BDD971;
+    color: black;
     border: none;
-    padding: 10px 5px;
-    border-radius: 4px;
-    font-size: 16px;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
-    width: 30%;
-    margin-bottom: 0px;
+    transition: background-color 0.3s ease;
     box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
 }
 
+#confirm-edit-id:hover,
+#confirm-edit-pw:hover {
+    background-color: #aec867;
+}
+
 .error-message {
+    display: none;
     color: red;
-    font-size: 14px;
     position: absolute;
-    left: 5px;
-    bottom: -5px;
+    bottom: -20px;
+    left: 0;
+    font-size: 12px;
+    width: 100%;
+    text-align: left;
 }
 
 @keyframes modalFadeIn {

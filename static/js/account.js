@@ -10,6 +10,102 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmDeleteAccountBtn = document.getElementById('confirm-delete-account');
     const deleteModalTitle = document.querySelector('.delete_account_modal p:first-of-type');
     let deleteConfirmationStep = 1;
+    const editPwModalBackground = document.querySelector('.edit_pw_modal_background');
+    const currentPwInput = document.getElementById('current-pw-input');
+    const newPwInput = document.getElementById('new-pw-input');
+    const confirmPwInput = document.getElementById('confirm-pw-input');
+    const confirmEditPwBtn = document.getElementById('confirm-edit-pw');
+
+    editPwBtn.addEventListener('click', function() {
+        editPwModalBackground.style.display = 'flex';
+        clearPasswordInputs();
+        if (currentPwInput) currentPwInput.focus();
+    });
+    
+    editPwModalBackground.addEventListener('click', function(e) {
+        if (e.target === editPwModalBackground) {
+            editPwModalBackground.style.display = 'none';
+            clearPasswordInputs();
+        }
+    });
+    
+    // 비밀번호 입력 필드 이벤트
+    [currentPwInput, newPwInput, confirmPwInput].forEach(input => {
+        if (input) {
+            input.addEventListener('focus', function() {
+                clearErrorMessage(this);
+            });
+    
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmEditPwBtn.click();
+                }
+            });
+        }
+    });
+    
+    // 비밀번호 변경 확인 버튼 클릭 이벤트
+    confirmEditPwBtn.addEventListener('click', function() {
+        const currentPw = currentPwInput.value;
+        const newPw = newPwInput.value;
+        const confirmPw = confirmPwInput.value;
+    
+        // 입력값 검증
+        if (!currentPw) {
+            setupErrorMessage(currentPwInput, '현재 비밀번호를 입력해주세요');
+            return;
+        }
+    
+        if (!newPw) {
+            setupErrorMessage(newPwInput, '새 비밀번호를 입력해주세요');
+            return;
+        }
+    
+        if (newPw.length < 8) {
+            setupErrorMessage(newPwInput, '비밀번호는 8자 이상이어야 합니다');
+            return;
+        }
+    
+        if (newPw !== confirmPw) {
+            setupErrorMessage(confirmPwInput, '비밀번호가 일치하지 않습니다');
+            return;
+        }
+    
+        // 서버로 비밀번호 변경 요청
+        fetch('/update_password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                current_password: currentPw,
+                new_password: newPw
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('비밀번호가 변경되었습니다.');
+                editPwModalBackground.style.display = 'none';
+                clearPasswordInputs();
+            } else {
+                setupErrorMessage(currentPwInput, data.message || '현재 비밀번호가 일치하지 않습니다');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            setupErrorMessage(currentPwInput, '서버 오류가 발생했습니다');
+        });
+    });
+    
+    function clearPasswordInputs() {
+        currentPwInput.value = '';
+        newPwInput.value = '';
+        confirmPwInput.value = '';
+        clearErrorMessage(currentPwInput);
+        clearErrorMessage(newPwInput);
+        clearErrorMessage(confirmPwInput);
+    }
 
     deleteBtn.addEventListener('click', function() {
         deleteConfirmationStep = 1;

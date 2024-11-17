@@ -18,6 +18,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let selectedYear = currentDate.getFullYear();
     let selectedMonth = currentDate.getMonth() + 1;
+    let days = ['일', '월', '화', '수', '목', '금', '토'];
+
+    function applyWeekStart() {
+        const weekStart = localStorage.getItem('weekStart') || 'sunday';
+        const weekdays = document.querySelector('.weekdays');
+        
+        if (weekStart === 'monday') {
+            days = ['월', '화', '수', '목', '금', '토', '일'];
+        } else {
+            days = ['일', '월', '화', '수', '목', '금', '토'];
+        }
+
+        if (weekdays) {
+            weekdays.innerHTML = days.map(day => `<div>${day}</div>`).join('');
+        }
+    }
 
     function setupSpinners() {
         yearSpinner.innerHTML = '';
@@ -213,7 +229,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         const prevMonthLastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
         
-        for (let i = firstDay.getDay() - 1; i >= 0; i--) {
+        const weekStart = localStorage.getItem('weekStart') || 'sunday';
+        let startOffset = firstDay.getDay();
+        
+        if (weekStart === 'monday') {
+            startOffset = startOffset === 0 ? 6 : startOffset - 1;
+        }
+        
+        for (let i = startOffset - 1; i >= 0; i--) {
             const day = prevMonthLastDay.getDate() - i;
             createDayElement(day, 'other-month', true);
         }
@@ -250,6 +273,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         calendarDays.appendChild(dayElement);
     }
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'weekStart') {
+            applyWeekStart();
+            renderCalendar();
+        }
+    });
 
     function showDateSelectModal(e) {
         e.stopPropagation();
@@ -376,6 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function init() {
         updateCurrentDate();
         setupSpinners();
+        applyWeekStart();
         renderCalendar();
         setupEventListeners();
     }

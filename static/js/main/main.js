@@ -69,6 +69,48 @@ document.addEventListener('DOMContentLoaded', function() {
     let wasSelected = false;
 
     checkForHighlight();
+
+    const weekBtn = document.querySelector('.week-selector-btn');
+    const weekDropdown = document.querySelector('.week-dropdown');
+    const weekDropdownItems = document.querySelectorAll('.week-dropdown-item');
+
+    function initializeWeek() {
+        const savedWeek = localStorage.getItem('weekStart') || 'sunday';
+        updateSelectedWeek(savedWeek === 'sunday' ? '일요일' : '월요일');
+        localStorage.setItem('weekStart', savedWeek);
+    }
+
+    function updateSelectedWeek(weekName) {
+        weekBtn.textContent = weekName;
+        weekDropdownItems.forEach(item => {
+            item.classList.toggle('selected', item.textContent === weekName);
+        });
+    }
+
+    weekBtn.addEventListener('click', () => {
+        weekBtn.classList.toggle('active');
+        weekDropdown.classList.toggle('show');
+    });
+
+    weekDropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const weekName = item.textContent;
+            const weekStart = weekName === '일요일' ? 'sunday' : 'monday';
+            
+            localStorage.setItem('weekStart', weekStart);
+            updateSelectedWeek(weekName);
+            weekBtn.classList.remove('active');
+            weekDropdown.classList.remove('show');
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.week-selector')) {
+            weekBtn.classList.remove('active');
+            weekDropdown.classList.remove('show');
+        }
+    });
+    initializeWeek();
     
     const autoHideToggle = document.querySelector('.toggle-switch input[type="checkbox"]');
     

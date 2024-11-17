@@ -102,12 +102,34 @@
             <h2>아이디 변경</h2>
             <p>더 멋진 아이디를 준비하셨나요? 새로운 이름을 알려주세요</p>
             <div class="input-group">
-                <input type="text" name="edit-id-input" id="edit-id-input" autocomplete="off">
+                <input type="text" id="edit-id-input" placeholder=" " autocomplete="off">
+                <label for="edit-id-input">아이디</label>
                 <span class="error-message" style="display: none;"></span>
             </div>
-            <div class="button-container">
-                <button id="confirm-edit-id">변경</button>
+            <button id="confirm-edit-id">변경</button>
+        </div>
+    </div>
+    <div class="edit_pw_modal_background" style="display: none;">
+        <div class="edit_pw_modal">
+            <h2>비밀번호 변경</h2>
+            <div class="input-group">
+                <input type="password" id="current-pw-input" placeholder=" " autocomplete="off">
+                <label for="current-pw-input">현재 비밀번호</label>
+                <span class="error-message" style="display: none;"></span>
             </div>
+    
+            <div class="input-group">
+                <input type="password" id="new-pw-input" placeholder=" " autocomplete="off">
+                <label for="new-pw-input">새 비밀번호</label>
+                <span class="error-message" style="display: none;"></span>
+            </div>
+    
+            <div class="input-group">
+                <input type="password" id="confirm-pw-input" placeholder=" " autocomplete="off">
+                <label for="confirm-pw-input">새 비밀번호 확인</label>
+                <span class="error-message" style="display: none;"></span>
+            </div>
+            <button id="confirm-edit-pw">변경</button>
         </div>
     </div>
     <div class="delete_account_modal_background" style="display: none;">

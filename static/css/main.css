@@ -516,6 +516,7 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
 }
 
 .settings-section { margin-bottom: 30px; }
+.settings-section:last-of-type { margin-bottom: 50px; }
 .settings-section h4 {
     font-size: 18px;
     color: var(--text-primary);

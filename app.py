@@ -477,6 +477,30 @@ def update_id():
         return jsonify({'success': True, 'message': '아이디가 변경되었습니다.'})
     else:
         return jsonify({'success': False, 'message': '아이디 변경에 실패했습니다.'})
+    
+@app.route('/update_password', methods=['POST'])
+def update_password():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+    
+    data = request.json
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    
+    if not current_password or not new_password:
+        return jsonify({'success': False, 'message': '모든 필드를 입력해주세요.'})
+    
+    user = get_user_by_id_or_email(session['user_id'])
+    if not user or not verify_password(user['pw'], current_password):
+        return jsonify({'success': False, 'message': '현재 비밀번호가 일치하지 않습니다.'})
+    
+    try:
+        hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+        update_user_password(session['user_id'], hashed_password)
+        return jsonify({'success': True, 'message': '비밀번호가 변경되었습니다.'})
+    except Exception as e:
+        print(f"비밀번호 변경 오류: {str(e)}")
+        return jsonify({'success': False, 'message': '비밀번호 변경에 실패했습니다.'})
 
 @app.route('/delete_account', methods=['POST'])
 def delete_account():

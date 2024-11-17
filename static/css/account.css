@@ -242,7 +242,8 @@ body {
     border-color: var(--primary-color);
 }
 
-.edit_id_modal_background {
+.edit_id_modal_background,
+.delete_account_modal_background {
     background-color: rgba(0,0,0,0.4);
     backdrop-filter: blur(2px);
     width: 100%;
@@ -256,10 +257,99 @@ body {
     z-index: 9999;
 }
 
-.edit_id_modal {
+.delete_account_modal h2 {
+    margin-bottom: 15px;
+    color: #ff4444;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+}
+
+.step-indicator {
+    font-size: 14px;
+    color: #888;
+    font-weight: normal;
+    margin-left: 3px;
+    margin-bottom: -8px;
+}
+
+.delete_account_modal p:first-of-type { margin-bottom: -15px; }
+.delete_account_modal p {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+.secondary-button::after,
+.danger-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
+}
+
+.secondary-button:active::after,
+.danger-button:active::after {
+    width: 200px;
+    height: 200px;
+    opacity: 1;
+    transition: width 0s, height 0s;
+}
+
+.danger-button {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.danger-button:hover {
+    background-color: #ff6666;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+}
+
+.danger-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 4px rgba(255, 68, 68, 0.2);
+}
+
+.secondary-button {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.secondary-button:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+.secondary-button:active { transform: translateY(1px); }
+
+.edit_id_modal,
+.delete_account_modal {
     width: 400px;
     max-height: 80vh;
-    padding: 30px;
+    padding: 20px;
     background: #ffffff;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -268,6 +358,21 @@ body {
     position: relative;
     overflow-y: auto;
     animation: modalFadeIn 0.3s ease-out;
+}
+
+.edit_id_modal h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 15px;
+    width: 100%;
+    text-align: center;
+}
+
+.edit_id_modal p {
+    color: #666;
+    font-size: 15px;
+    margin-bottom: 5px;
+    align-self: flex-start;
 }
 
 .input-group {
@@ -292,6 +397,8 @@ body {
     outline: none;
 }
 
+#edit-id-input.error { border-color: red; }
+
 .button-container {
     display: flex;
     justify-content: flex-end;
@@ -314,6 +421,14 @@ body {
     width: 30%;
     margin-bottom: 0px;
     box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.2);
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    position: absolute;
+    left: 5px;
+    bottom: -5px;
 }
 
 @keyframes modalFadeIn {

@@ -2,15 +2,105 @@ document.addEventListener('DOMContentLoaded', function() {
     const editIdBtn = document.getElementById('EditIdBtn');
     const editPwBtn = document.getElementById('EditPwBtn');
     const editIdModalBackground = document.querySelector('.edit_id_modal_background');
-    const idInput = document.querySelector('#edit_id_input');
-    const confirmEditIdBtn = document.querySelector('#confirm_edit_id');
+    const idInput = document.getElementById('edit-id-input');
+    const confirmEditIdBtn = document.getElementById('confirm-edit-id');
     const deleteBtn = document.querySelector('.delete-btn');
+    const deleteAccountModalBackground = document.querySelector('.delete_account_modal_background');
+    const cancelDeleteAccountBtn = document.getElementById('cancel-delete-account');
+    const confirmDeleteAccountBtn = document.getElementById('confirm-delete-account');
+    const deleteModalTitle = document.querySelector('.delete_account_modal p:first-of-type');
+    let deleteConfirmationStep = 1;
+
+    deleteBtn.addEventListener('click', function() {
+        deleteConfirmationStep = 1;
+        updateDeleteModal();
+        deleteAccountModalBackground.style.display = 'flex';
+    });
+
+    // 모달 외부 클릭 시 모달 닫기 및 단계 초기화
+    deleteAccountModalBackground.addEventListener('click', function(e) {
+        if (e.target === deleteAccountModalBackground) {
+            resetDeleteModal();
+        }
+    });
+
+    // 취소 버튼 클릭 시 모달 닫기 및 단계 초기화
+    cancelDeleteAccountBtn.addEventListener('click', function() {
+        resetDeleteModal();
+    });
+
+    // 삭제 확인 버튼 클릭 시 단계별 처리
+    confirmDeleteAccountBtn.addEventListener('click', function() {
+        switch(deleteConfirmationStep) {
+            case 1:
+                deleteConfirmationStep = 2;
+                updateDeleteModal();
+                break;
+            case 2:
+                deleteConfirmationStep = 3;
+                updateDeleteModal();
+                break;
+            case 3:
+                // 실제 계정 삭제 처리
+                performAccountDeletion();
+                break;
+        }
+    });
+
+    function updateDeleteModal() {
+        const stepIndicator = document.querySelector('.step-indicator');
+        
+        switch(deleteConfirmationStep) {
+            case 1:
+                deleteModalTitle.textContent = '정말 계정을 삭제하시겠습니까?';
+                stepIndicator.textContent = '( 1/3 )';
+                break;
+            case 2:
+                deleteModalTitle.textContent = '지우면 되돌릴 수 없습니다';
+                stepIndicator.textContent = '( 2/3 )';
+                break;
+            case 3:
+                deleteModalTitle.textContent = '마지막 기회입니다\n정말 삭제하시겠습니까?';
+                stepIndicator.textContent = '( 3/3 )';
+                break;
+        }
+    }
+
+    function resetDeleteModal() {
+        deleteAccountModalBackground.style.display = 'none';
+        deleteConfirmationStep = 1;
+        setTimeout(() => {
+            updateDeleteModal();
+        }, 200);
+    }
+
+    function performAccountDeletion() {
+        fetch('/delete_account', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/login';
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        });
+    }
 
     editIdBtn.addEventListener('click', function() {
         editIdModalBackground.style.display = 'flex';
         if (idInput) {
             idInput.value = '';
             clearErrorMessage(idInput);
+            idInput.focus();
         }
     });
 
@@ -42,8 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('아이디가 성공적으로 변경되었습니다. 다시 로그인해주세요.');
-                window.location.href = '/logout';
+                window.location.reload();
             } else {
                 setupErrorMessage(idInput, data.message || '아이디 변경에 실패했습니다');
             }

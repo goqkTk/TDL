@@ -3,7 +3,7 @@ from flask_mail import Mail, Message
 from mysql import *
 from datetime import timedelta
 from werkzeug.utils import secure_filename
-import bcrypt, os, tempfile
+import bcrypt, os, tempfile, traceback, logging
 
 app = Flask(__name__)
 app.secret_key = 'D324F0D74B242A246857E8BF1DEAA2C92B2BE926C0ED1CD2C099A0DB3547BF8C'
@@ -13,9 +13,11 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'tdlhelp02@gmail.com'
-app.config['MAIL_PASSWORD'] = 'kbry bbmh mpwk bjun'
+app.config['MAIL_PASSWORD'] = 'ivfg ftay ddel oqoc'
 app.config['MAIL_DEFAULT_SENDER'] = 'tdlhelp02@gmail.com'
 admin_email = 'tdlhelp02@gmail.com'
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 mail = Mail(app)
 
@@ -476,6 +478,26 @@ def update_id():
     else:
         return jsonify({'success': False, 'message': '아이디 변경에 실패했습니다.'})
 
+@app.route('/delete_account', methods=['POST'])
+def delete_account():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+    
+    try:
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM todo WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM categories WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM account WHERE id = %s", (user_id,))
+        db.commit()
+        db.close()
+        session.clear()
+        return jsonify({'success': True, 'message': '계정이 삭제되었습니다.'})
+    except Exception as e:
+        print(f"계정 삭제 오류: {str(e)}")
+        return jsonify({'success': False, 'message': '계정 삭제에 실패했습니다.'})
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
@@ -523,7 +545,7 @@ def send_register():
     verification_link = url_for('verify_email', token=token, _external=True)
     
     try:
-        msg = Message("이메일 인증", sender='noreply@example.com', recipients=[email])
+        msg = Message("이메일 인증", sender='tdlhelp02@gmail.com', recipients=[email])
         msg.html = render_template_string(register_html, verification_link=verification_link)
         mail.send(msg)
         insert_token(email, token)

@@ -7,14 +7,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentDateElement = document.getElementById('currentDate');
     const prevMonthButton = document.querySelector('.nav-buttons button:first-child');
     const nextMonthButton = document.querySelector('.nav-buttons button:last-child');
-    const eventModal = document.getElementById('eventModal');
-    const eventInput = document.getElementById('eventInput');
-    const eventList = document.getElementById('eventList');
     const dateSelectModal = document.getElementById('dateSelectModal');
     const dateSelectOverlay = document.getElementById('dateSelectOverlay');
     const yearSpinner = document.getElementById('yearSpinner');
     const monthSpinner = document.getElementById('monthSpinner');
     const closeButton = document.querySelector('.date-select-close');
+    const sideboard = document.querySelector('.sideboard');
+    const calendarContainer = document.querySelector('.calendar-container');
+    const calendarNav = document.querySelector('.calendar-nav');
+    const calendarBody = document.querySelector('.calendar-body');
     
     let selectedYear = currentDate.getFullYear();
     let selectedMonth = currentDate.getMonth() + 1;
@@ -221,7 +222,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function updateCurrentDate() { currentDateElement.textContent = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`; }
+    function updateCurrentDate() { 
+        currentDateElement.textContent = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`; 
+    }
 
     function renderCalendar() {
         calendarDays.innerHTML = '';
@@ -274,13 +277,6 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarDays.appendChild(dayElement);
     }
 
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'weekStart') {
-            applyWeekStart();
-            renderCalendar();
-        }
-    });
-
     function showDateSelectModal(e) {
         e.stopPropagation();
         dateSelectModal.style.display = 'block';
@@ -303,23 +299,49 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleDateClick(day) {
         selectedDate = getDateString(day);
         renderCalendar();
-        showEventModal(day);
+        showSideboard(day);
     }
 
-    function showEventModal(day) {
-        const dayElement = [...calendarDays.children].find(el => 
-            el.querySelector('.day-number').textContent == day && 
-            !el.classList.contains('other-month')
-        );
-            
-        if (dayElement) {
-            const rect = dayElement.getBoundingClientRect();
-            eventModal.style.display = 'block';
-            eventModal.style.top = `${rect.bottom + window.scrollY + 8}px`;
-            eventModal.style.left = `${rect.left + window.scrollX}px`;
-            eventInput.focus();
-            updateEventList();
-        }
+    function createSideboard() {
+        sideboard.innerHTML = `
+            <div class="sideboard-header">
+                <h2 class="sideboard-title"></h2>
+                <button class="sideboard-close">×</button>
+            </div>
+            <div class="sideboard-content">
+                <!-- 여기에 이벤트 관리 컨텐츠가 들어갈 예정 -->
+            </div>
+        `;
+
+        const closeBtn = sideboard.querySelector('.sideboard-close');
+        closeBtn.addEventListener('click', closeSideboard);
+    }
+
+    function showSideboard(day) {
+        const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        const formattedDate = `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${day}일`;
+        
+        sideboard.querySelector('.sideboard-title').textContent = formattedDate;
+        sideboard.classList.add('active');
+        
+        calendarContainer.classList.add('sideboard-open');
+        calendarNav.classList.add('sideboard-open');
+        calendarBody.classList.add('sideboard-open');
+        
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    function closeSideboard() {
+        sideboard.classList.remove('active');
+        
+        calendarContainer.classList.remove('sideboard-open');
+        calendarNav.classList.remove('sideboard-open');
+        calendarBody.classList.remove('sideboard-open');
+        
+        selectedDate = null;
+        renderCalendar();
+        
+        window.dispatchEvent(new Event('resize'));
     }
 
     function isCurrentDay(day) {
@@ -329,40 +351,12 @@ document.addEventListener('DOMContentLoaded', function() {
                currentDate.getFullYear() === today.getFullYear();
     }
 
-    function isSelectedDay(day) { return selectedDate === getDateString(day); }
-    function getDateString(day) { return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`; }
-
-    function updateEventList() {
-        if (!selectedDate) return;
-        
-        eventList.innerHTML = '';
-        const dateEvents = events[selectedDate] || [];
-        
-        dateEvents.forEach((event, index) => {
-            const eventElement = document.createElement('div');
-            eventElement.className = 'event-item';
-            eventElement.textContent = event;
-            eventElement.addEventListener('click', () => {
-                dateEvents.splice(index, 1);
-                events[selectedDate] = dateEvents;
-                updateEventList();
-                renderCalendar();
-            });
-            eventList.appendChild(eventElement);
-        });
+    function isSelectedDay(day) { 
+        return selectedDate === getDateString(day); 
     }
 
-    function handleEventInput(e) {
-        if (e.key === 'Enter' && e.target.value.trim() && selectedDate) {
-            const eventText = e.target.value.trim();
-            if (!events[selectedDate]) {
-                events[selectedDate] = [];
-            }
-            events[selectedDate].push(eventText);
-            e.target.value = '';
-            updateEventList();
-            renderCalendar();
-        }
+    function getDateString(day) { 
+        return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`; 
     }
 
     function setupEventListeners() {
@@ -383,15 +377,37 @@ document.addEventListener('DOMContentLoaded', function() {
         dateSelectOverlay.addEventListener('click', closeDateSelectModal);
         yearSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
         monthSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
-        eventInput.addEventListener('keypress', handleEventInput);
 
         document.addEventListener('click', (e) => {
-            if (!eventModal.contains(e.target) && 
-                !e.target.classList.contains('calendar-day')) {
-                eventModal.style.display = 'none';
+            if (!e.target.closest('.calendar-day') && 
+                !e.target.closest('.sideboard') && 
+                sideboard.classList.contains('active')) {
+                closeSideboard();
             }
         });
     }
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'weekStart') {
+            applyWeekStart();
+            renderCalendar();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sideboard.classList.contains('active')) {
+            closeSideboard();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (sideboard.classList.contains('active')) {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                calendarContainer.style.width = '100%';
+            }
+        }
+    });
 
     function debounceScroll(func, wait) {
         let timeout;
@@ -409,6 +425,8 @@ document.addEventListener('DOMContentLoaded', function() {
         applyWeekStart();
         renderCalendar();
         setupEventListeners();
+        createSideboard();
     }
+    
     init();
 });

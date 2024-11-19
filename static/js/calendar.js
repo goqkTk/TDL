@@ -11,11 +11,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateSelectOverlay = document.getElementById('dateSelectOverlay');
     const yearSpinner = document.getElementById('yearSpinner');
     const monthSpinner = document.getElementById('monthSpinner');
-    const closeButton = document.querySelector('.date-select-close');
     const sideboard = document.querySelector('.sideboard');
     const calendarContainer = document.querySelector('.calendar-container');
     const calendarNav = document.querySelector('.calendar-nav');
     const calendarBody = document.querySelector('.calendar-body');
+    const closeBtn = sideboard.querySelector('.sideboard-close');
+    const eventInput = sideboard.querySelector('.event-input');
+    const addButton = sideboard.querySelector('.add-button');
+    const eventList = sideboard.querySelector('.event-list');
     
     let selectedYear = currentDate.getFullYear();
     let selectedMonth = currentDate.getMonth() + 1;
@@ -306,15 +309,125 @@ document.addEventListener('DOMContentLoaded', function() {
         sideboard.innerHTML = `
             <div class="sideboard-header">
                 <h2 class="sideboard-title"></h2>
-                <button class="sideboard-close">×</button>
+                <button class="sideboard-close"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="sideboard-content">
-                <!-- 여기에 이벤트 관리 컨텐츠가 들어갈 예정 -->
+                <button class="add-event-button">
+                    <i class="fa-solid fa-plus"></i>
+                    새로운 일정 추가
+                </button>
+                <div class="event-list"></div>
             </div>
         `;
-
+    
+        // 이벤트 생성 모달 추가
+        const eventModalHTML = `
+            <div class="event-create-overlay"></div>
+            <div class="event-create-modal">
+                <div class="event-modal-header">
+                    <h3 class="event-modal-title">새로운 일정</h3>
+                </div>
+                <form class="event-form">
+                    <div class="form-group">
+                        <label class="form-label">제목</label>
+                        <input type="text" class="form-input" id="eventTitle" placeholder="일정 제목을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">설명</label>
+                        <textarea class="form-input" id="eventDescription" rows="3" placeholder="일정에 대한 설명을 입력하세요"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">시간</label>
+                        <input type="time" class="form-input" id="eventTime" required>
+                    </div>
+                    <div class="event-modal-footer">
+                        <button type="button" class="modal-cancel">취소</button>
+                        <button type="submit" class="modal-confirm">확인</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', eventModalHTML);
+    
         const closeBtn = sideboard.querySelector('.sideboard-close');
+        const addEventButton = sideboard.querySelector('.add-event-button');
+        const eventList = sideboard.querySelector('.event-list');
+        const eventCreateOverlay = document.querySelector('.event-create-overlay');
+        const eventCreateModal = document.querySelector('.event-create-modal');
+        const eventForm = eventCreateModal.querySelector('.event-form');
+        const cancelButton = eventCreateModal.querySelector('.modal-cancel');
+    
+        function showEventModal() {
+            eventCreateOverlay.style.display = 'block';
+            eventCreateModal.style.display = 'block';
+            eventCreateModal.querySelector('#eventTitle').focus();
+        }
+    
+        function hideEventModal() {
+            eventCreateOverlay.style.display = 'none';
+            eventCreateModal.style.display = 'none';
+            eventForm.reset();
+        }
+    
+        function createEvent(e) {
+            e.preventDefault();
+            const title = eventForm.querySelector('#eventTitle').value;
+            const description = eventForm.querySelector('#eventDescription').value;
+            const time = eventForm.querySelector('#eventTime').value;
+    
+            if (!title || !time) return;
+    
+            const eventData = {
+                title,
+                description,
+                time,
+                created: new Date().toISOString()
+            };
+    
+            if (!events[selectedDate]) {
+                events[selectedDate] = [];
+            }
+            events[selectedDate].push(eventData);
+    
+            updateEventList();
+            renderCalendar();
+            hideEventModal();
+        }
+    
+        function updateEventList() {
+            eventList.innerHTML = '';
+            const dateEvents = events[selectedDate] || [];
+            
+            dateEvents.forEach((event, index) => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'event-item';
+                eventElement.innerHTML = `
+                    <div class="event-header">
+                        <span class="event-title">${event.title}</span>
+                        <button class="delete-event"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    ${event.description ? `<p class="event-description">${event.description}</p>` : ''}
+                    <div class="event-time">${event.time}</div>
+                `;
+    
+                const deleteBtn = eventElement.querySelector('.delete-event');
+                deleteBtn.addEventListener('click', () => {
+                    events[selectedDate].splice(index, 1);
+                    updateEventList();
+                    renderCalendar();
+                });
+                
+                eventList.appendChild(eventElement);
+            });
+        }
+    
         closeBtn.addEventListener('click', closeSideboard);
+        addEventButton.addEventListener('click', showEventModal);
+        eventCreateOverlay.addEventListener('click', hideEventModal);
+        cancelButton.addEventListener('click', hideEventModal);
+        eventForm.addEventListener('submit', createEvent);
+    
+        window.updateEventList = updateEventList;
     }
 
     function showSideboard(day) {
@@ -328,7 +441,11 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarNav.classList.add('sideboard-open');
         calendarBody.classList.add('sideboard-open');
         
+        window.updateEventList?.();
         window.dispatchEvent(new Event('resize'));
+    
+        const eventInput = sideboard.querySelector('.event-input');
+        eventInput?.focus();
     }
 
     function closeSideboard() {
@@ -351,13 +468,8 @@ document.addEventListener('DOMContentLoaded', function() {
                currentDate.getFullYear() === today.getFullYear();
     }
 
-    function isSelectedDay(day) { 
-        return selectedDate === getDateString(day); 
-    }
-
-    function getDateString(day) { 
-        return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`; 
-    }
+    function isSelectedDay(day) { return selectedDate === getDateString(day); }
+    function getDateString(day) { return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`; }
 
     function setupEventListeners() {
         prevMonthButton.addEventListener('click', () => {
@@ -365,19 +477,18 @@ document.addEventListener('DOMContentLoaded', function() {
             updateCurrentDate();
             renderCalendar();
         });
-
+    
         nextMonthButton.addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() + 1);
             updateCurrentDate();
             renderCalendar();
         });
-
+    
         currentDateElement.addEventListener('click', showDateSelectModal);
-        closeButton.addEventListener('click', closeDateSelectModal);
         dateSelectOverlay.addEventListener('click', closeDateSelectModal);
         yearSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
         monthSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
-
+    
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.calendar-day') && 
                 !e.target.closest('.sideboard') && 

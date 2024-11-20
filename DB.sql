@@ -37,7 +37,7 @@ CREATE TABLE `account` (
 
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES ('test','$2b$12$3.7fT4/4DakBVvM0gRYxWeDozSchtkWNKu9fH5t9bAQE0vwBlO4Ta','jty_419@naver.com'),('Admin','$2b$12$SZr89ngHmPguatUEO174B.rTvzcAGNkLdy60zeK6La1CLbDb4ll0S','tdlhelp02@gmail.com');
+INSERT INTO `account` VALUES ('test','$2b$12$RqSoUpm1UUSWj6YShMJDfeJ1noloyM6ymMGvFAdjb.MIO8VX5Sp1m','jty_419@naver.com'),('Admin','$2b$12$SZr89ngHmPguatUEO174B.rTvzcAGNkLdy60zeK6La1CLbDb4ll0S','tdlhelp02@gmail.com');
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -91,7 +91,7 @@ CREATE TABLE `email_verifications` (
 
 LOCK TABLES `email_verifications` WRITE;
 /*!40000 ALTER TABLE `email_verifications` DISABLE KEYS */;
-INSERT INTO `email_verifications` VALUES ('jty_419@naver.com','Wxjp2DNPrCOm9cRQl0RpPw9r0UH-jSmNL_eEggs3WM4','2024-09-11 01:03:18','2024-09-11 10:13:18',1),('tdlhelp02@gmail.com','nCpv_I-Vxzc8LOCcFNvNUFVvQIf-2t-V6O0TBqm-9FU','2024-09-11 01:04:21','2024-09-11 10:14:21',1),('simik1082@gmail.com','l1ENvkx2eN16xqFkxcHCJAO8UXTxnNv4wVp-8VQx_9s','2024-10-14 04:58:49','2024-10-14 14:08:49',1);
+INSERT INTO `email_verifications` VALUES ('jty_419@naver.com','Wxjp2DNPrCOm9cRQl0RpPw9r0UH-jSmNL_eEggs3WM4','2024-09-11 01:03:18','2024-09-11 10:13:18',1),('tdlhelp02@gmail.com','nCpv_I-Vxzc8LOCcFNvNUFVvQIf-2t-V6O0TBqm-9FU','2024-09-11 01:04:21','2024-09-11 10:14:21',1),('simik1082@gmail.com','l1ENvkx2eN16xqFkxcHCJAO8UXTxnNv4wVp-8VQx_9s','2024-10-14 04:58:49','2024-10-14 14:08:49',1),('goqkTk1986@gmail.com','qbPl-PpSnWtXO8mxSUOolO8Q0XthU94JH13W0Wm_e8w','2024-11-17 05:13:13','2024-11-17 14:23:13',0),('goqkTk1986@gmail.com','J1DVZDHejcGIXlPJdhB9SI7Gpd-u4Vr4cHN3y8zFk1o','2024-11-17 05:25:55','2024-11-17 14:35:55',0),('goqkTk1986@gmail.com','L1lUCimQo8Ckv8yURZzPvuCoRJMTtGQSchMgF_MaVk0','2024-11-17 05:36:13','2024-11-17 14:46:13',1),('goqkTk1986@gmail.com','DeKXzhIieUbs_SravdDctHqBinLxCA_yZDrTQ1hzJcw','2024-11-17 05:43:33','2024-11-17 14:53:33',0),('goqkTk1986@gmail.com','LmQAg4NwHJlNnbFOO2EayPEjCnsKlrZf0je5DaY_Hts','2024-11-17 06:04:08','2024-11-17 15:14:08',0),('goqkTk1986@gmail.com','6nhUijLJn3cLj5Ykf2MJkt2U4P76GONzofxMgWDWcew','2024-11-17 06:16:34','2024-11-17 15:26:34',1);
 /*!40000 ALTER TABLE `email_verifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -119,7 +119,7 @@ CREATE TABLE `todo` (
   PRIMARY KEY (`id`),
   KEY `fk_category` (`category_id`),
   CONSTRAINT `fk_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=61 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -128,7 +128,7 @@ CREATE TABLE `todo` (
 
 LOCK TABLES `todo` WRITE;
 /*!40000 ALTER TABLE `todo` DISABLE KEYS */;
-INSERT INTO `todo` VALUES (27,'test','test 카테고리 1','','2024-10-21 13:49:06',0,1,0,1,NULL,0,NULL,14),(28,'test','test 카테고리 2','22222','2024-10-21 13:49:14',0,0,1,9999,NULL,0,NULL,14),(41,'test','메인 카테고리 1','','2024-10-25 23:53:18',0,1,NULL,0,NULL,1,NULL,NULL),(42,'test','메인 카테고리 2','22222','2024-10-25 23:53:27',0,0,0,9999,NULL,0,NULL,NULL),(54,'Admin','test 카테고리 1','test1','2024-11-11 15:00:17',0,1,0,NULL,NULL,0,NULL,34),(55,'Admin','test 카테고리 2','test2','2024-11-11 15:00:26',0,0,1,9999,NULL,0,NULL,34),(56,'Admin','메인 카테고리 1','','2024-11-11 15:00:40',0,1,NULL,0,NULL,1,NULL,NULL),(57,'Admin','메인 카테고리 2','','2024-11-11 15:00:50',1,0,0,9999,NULL,0,'2024-11-12 22:15:28',NULL);
+INSERT INTO `todo` VALUES (27,'test','test 카테고리 1','','2024-10-21 13:49:06',0,1,0,1,NULL,0,NULL,14),(28,'test','test 카테고리 2','22222','2024-10-21 13:49:14',0,0,1,9999,NULL,0,NULL,14),(41,'test','메인 카테고리 1','','2024-10-25 23:53:18',0,1,NULL,0,NULL,1,NULL,NULL),(42,'test','메인 카테고리 2','22222','2024-10-25 23:53:27',0,0,0,9999,NULL,0,NULL,NULL),(54,'Admin','test 카테고리 1','test1','2024-11-11 15:00:17',0,1,0,NULL,NULL,0,NULL,34),(55,'Admin','test 카테고리 2','test2','2024-11-11 15:00:26',0,0,1,9999,NULL,0,NULL,34),(56,'Admin','메인 카테고리 1','','2024-11-11 15:00:40',0,1,NULL,0,NULL,1,NULL,NULL),(57,'Admin','메인 카테고리 2','','2024-11-11 15:00:50',0,0,0,9999,NULL,0,NULL,NULL),(58,'test','컴퓨터 TDL 계정 로그인하기','','2024-11-17 17:21:55',0,0,1,9999,NULL,0,NULL,NULL),(60,'Admin','컴퓨터 TDL 계정 로그인','','2024-11-17 17:22:51',0,0,1,9999,NULL,0,NULL,NULL);
 /*!40000 ALTER TABLE `todo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -160,10 +160,6 @@ LOCK TABLES `verification_codes` WRITE;
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'tdl'
---
-
---
 -- Dumping routines for database 'tdl'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -176,4 +172,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-12 23:10:27
+-- Dump completed on 2024-11-20 18:14:18

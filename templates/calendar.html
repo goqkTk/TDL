@@ -40,7 +40,98 @@
             </div>
             <div id="calendarDays" class="calendar-days"></div>
         </div>
-        <div class="sideboard"></div>
+        <div class="sideboard">
+            <div class="sideboard-header">
+                <h2 class="sideboard-title"></h2>
+                <button class="sideboard-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="sideboard-content">
+                <button class="add-event-button">
+                    <i class="fa-solid fa-plus"></i>
+                    새로운 일정 추가
+                </button>
+                <div class="event-list"></div>
+            </div>
+        </div>
+        <div class="event-create-overlay"></div>
+        <div class="event-create-modal">
+            <div class="event-modal-header">
+                <h3 class="event-modal-title">새로운 일정</h3>
+            </div>
+            <form class="event-form">
+                <div class="form-group">
+                    <label class="form-label">제목</label>
+                    <input type="text" class="form-input" id="eventTitle" placeholder="일정 제목을 입력하세요" required>
+                </div>
+                <div class="form-group datetime-group">
+                    <div class="datetime-start">
+                        <label class="form-label">시작 일시</label>
+                        <div class="datetime-inputs">
+                            <input type="date" class="form-input" id="eventStartDate" required>
+                            <button type="button" class="time-select-button" id="startTimeButton">10:00</button>
+                        </div>
+                    </div>
+                    <div class="datetime-end">
+                        <label class="form-label">종료 일시</label>
+                        <div class="datetime-inputs">
+                            <input type="date" class="form-input" id="eventEndDate" required>
+                            <button type="button" class="time-select-button" id="endTimeButton">11:00</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="time-select-overlay"></div>
+                <div class="time-select-modal">
+                    <div class="time-select-header">
+                        <div class="time-select-title">시간 선택</div>
+                    </div>
+                    <div class="time-select-content">
+                        <div class="period-select">
+                            <div class="select-label">오전/오후</div>
+                            <div class="selection-indicator"></div>
+                            <div class="spinner-wrapper period-spinner"></div>
+                        </div>
+                        <div class="hour-select">
+                            <div class="select-label">시</div>
+                            <div class="selection-indicator"></div>
+                            <div class="spinner-wrapper hour-spinner"></div>
+                        </div>
+                        <div class="minute-select">
+                            <div class="select-label">분</div>
+                            <div class="selection-indicator"></div>
+                            <div class="spinner-wrapper minute-spinner"></div>
+                        </div>
+                    </div>
+                    <div class="time-select-footer">
+                        <button type="button" class="time-select-cancel">취소</button>
+                        <button type="button" class="time-select-confirm">확인</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">알림</label>
+                    <select class="form-input" id="eventNotification">
+                        <option value="none">알림 없음</option>
+                        <option value="10">10분 전</option>
+                        <option value="30">30분 전</option>
+                        <option value="60">1시간 전</option>
+                        <option value="1440">1일 전</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL</label>
+                    <input type="url" class="form-input" id="eventUrl" placeholder="관련 URL을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">메모</label>
+                    <textarea class="form-input" id="eventMemo" rows="3" placeholder="메모를 입력하세요"></textarea>
+                </div>
+                <div class="event-modal-footer">
+                    <button type="button" class="modal-cancel">취소</button>
+                    <button type="submit" class="modal-confirm">확인</button>
+                </div>
+            </form>
+        </div>
         <div id="dateSelectOverlay" class="modal-overlay"></div>
         <div id="dateSelectModal" class="date-select-modal">
             <div class="date-select-header">
@@ -59,11 +150,10 @@
                 </div>
             </div>
             <div class="date-select-footer">
-                <button class="date-select-today" disabled>오늘</button>
+                <button class="date-select-today">오늘</button>
                 <button class="date-select-confirm">확인</button>
             </div>
         </div>
-    </div>
     </div>
 </body>
 <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>

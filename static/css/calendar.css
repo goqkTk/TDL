@@ -488,7 +488,7 @@ body {
 .form-input[type="date"]:focus,
 .form-input[type="time"]:focus {
     outline: none;
-    border-color: #eee;
+    border-color: #FF9800;
 }
 
 .form-input[type="date"]::-webkit-calendar-picker-indicator,
@@ -497,8 +497,17 @@ body {
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    cursor: pointer;
+    width: 20px;
+    height: 20px;
     opacity: 0.6;
+    cursor: pointer;
+}
+
+.form-input[type="date"]::-moz-calendar-picker-indicator,
+.form-input[type="time"]::-moz-calendar-picker-indicator {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
 }
 
 .form-input[type="date"]::-webkit-calendar-picker-indicator:hover,
@@ -516,13 +525,11 @@ body {
     color: #333;
 }
 
-/* 플레이스홀더와 같은 효과를 위한 스타일 */
 .form-input[type="date"]:invalid::-webkit-datetime-edit,
 .form-input[type="time"]:invalid::-webkit-datetime-edit {
     color: #999;
 }
 
-/* Edge와 IE에서의 스타일링 */
 .form-input[type="date"]::-ms-clear,
 .form-input[type="date"]::-ms-reveal,
 .form-input[type="time"]::-ms-clear,
@@ -762,6 +769,122 @@ select.form-input {
     white-space: pre-line;
 }
 
+.time-select-button {
+    background: white;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.time-select-button:hover {
+    background-color: #f8f9fa;
+    border-color: #FF9800;
+}
+
+.time-select-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2002;
+}
+
+.time-select-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    z-index: 2003;
+    width: 420px;
+    padding: 1.5rem;
+}
+
+.time-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.time-select-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.time-select-content {
+    display: flex;
+    gap: 1rem;
+    padding: 0;
+}
+
+.period-select,
+.hour-select,
+.minute-select {
+    flex: 1;
+    position: relative;
+    height: 240px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f8f8f8;
+}
+
+.time-select-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.time-select-cancel {
+    background-color: white;
+    color: #666;
+    border: 1px solid #ddd;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-select-cancel:hover {
+    background-color: #f5f5f5;
+}
+
+.time-select-confirm {
+    background-color: #FF9800;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-select-confirm:hover {
+    background-color: #F57C00;
+    transform: translateY(-1px);
+}
+
 @media screen and (max-width: 768px) {
     nav { height: 60px; }
 
@@ -806,6 +929,11 @@ select.form-input {
     .datetime-inputs .form-input[type="time"] {
         width: 100%;
     }
+
+    .form-input[type="date"],
+    .form-input[type="time"] {
+        font-size: 16px;
+    }
 }
 
 @media screen and (max-width: 480px) {
@@ -834,5 +962,13 @@ select.form-input {
     .sideboard {
         width: 100%;
         max-width: none;
+    }
+
+    .time-select-modal { width: 340px; }
+    .time-select-content { gap: 0.5rem; }
+    
+    .time-select-cancel,
+    .time-select-confirm {
+        padding: 0.8rem 1rem;
     }
 }

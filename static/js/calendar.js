@@ -1,8 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    let currentDate = new Date();
-    let selectedDate = null;
-    let events = {};
-    
+    const categoryContainer = document.querySelector('.other_categories');
     const calendarDays = document.getElementById('calendarDays');
     const currentDateElement = document.getElementById('currentDate');
     const prevMonthButton = document.querySelector('.nav-buttons button:first-child');
@@ -15,14 +12,271 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarContainer = document.querySelector('.calendar-container');
     const calendarNav = document.querySelector('.calendar-nav');
     const calendarBody = document.querySelector('.calendar-body');
-    const closeBtn = sideboard.querySelector('.sideboard-close');
-    const eventInput = sideboard.querySelector('.event-input');
-    const addButton = sideboard.querySelector('.add-button');
-    const eventList = sideboard.querySelector('.event-list');
     
+    let currentDate = new Date();
+    let selectedDate = null;
+    let events = {};
     let selectedYear = currentDate.getFullYear();
     let selectedMonth = currentDate.getMonth() + 1;
     let days = ['일', '월', '화', '수', '목', '금', '토'];
+    let currentTimeButton = null;
+    let selectedPeriod = 'AM';
+    let selectedHour = 10;
+    let selectedMinute = 0;
+
+    function setupTimeSelect() {
+        const startTimeBtn = document.getElementById('startTimeButton');
+        const endTimeBtn = document.getElementById('endTimeButton');
+        const timeSelectOverlay = document.querySelector('.time-select-overlay');
+        const timeSelectModal = document.querySelector('.time-select-modal');
+        const cancelBtn = timeSelectModal.querySelector('.time-select-cancel');
+        const confirmBtn = timeSelectModal.querySelector('.time-select-confirm');
+        const periodSpinner = timeSelectModal.querySelector('.period-spinner');
+        const hourSpinner = timeSelectModal.querySelector('.hour-spinner');
+        const minuteSpinner = timeSelectModal.querySelector('.minute-spinner');
+    
+        // 이벤트 리스너 설정
+        startTimeBtn.addEventListener('click', () => showTimeSelectModal(startTimeBtn));
+        endTimeBtn.addEventListener('click', () => showTimeSelectModal(endTimeBtn));
+        timeSelectOverlay.addEventListener('click', hideTimeSelectModal);
+        cancelBtn.addEventListener('click', hideTimeSelectModal);
+        confirmBtn.addEventListener('click', confirmTimeSelection);
+    
+        // 스피너에 wheel 이벤트 추가
+        periodSpinner.addEventListener('wheel', handleWheel, { passive: false });
+        hourSpinner.addEventListener('wheel', handleWheel, { passive: false });
+        minuteSpinner.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    
+    function showTimeSelectModal(button) {
+        currentTimeButton = button;
+        const timeSelectOverlay = document.querySelector('.time-select-overlay');
+        const timeSelectModal = document.querySelector('.time-select-modal');
+        const currentTime = button.textContent;
+        
+        // 현재 선택된 시간 파싱
+        parseCurrentTime(currentTime);
+        
+        // 스피너 설정
+        setupTimeSpinners();
+        
+        timeSelectOverlay.style.display = 'block';
+        timeSelectModal.style.display = 'block';
+    }
+    
+    function parseCurrentTime(timeString) {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        selectedHour = hours > 12 ? hours - 12 : hours;
+        selectedPeriod = hours >= 12 ? 'PM' : 'AM';
+        selectedMinute = minutes;
+    }
+    
+    function setupTimeSpinners() {
+        const periodSpinner = document.querySelector('.period-spinner');
+        const hourSpinner = document.querySelector('.hour-spinner');
+        const minuteSpinner = document.querySelector('.minute-spinner');
+    
+        // 오전/오후 스피너 설정
+        periodSpinner.innerHTML = '';
+        ['AM', 'PM'].forEach(period => {
+            const periodItem = document.createElement('div');
+            periodItem.className = 'spinner-item' + (period === selectedPeriod ? ' selected' : '');
+            periodItem.textContent = period;
+            periodItem.addEventListener('click', () => {
+                selectedPeriod = period;
+                updateSelectedSpinnerItem(periodSpinner, period);
+            });
+            periodSpinner.appendChild(periodItem);
+        });
+    
+        // 시간 스피너 설정
+        hourSpinner.innerHTML = '';
+        for (let hour = 1; hour <= 12; hour++) {
+            const hourItem = document.createElement('div');
+            hourItem.className = 'spinner-item' + (hour === selectedHour ? ' selected' : '');
+            hourItem.textContent = hour;
+            hourItem.addEventListener('click', () => {
+                selectedHour = hour;
+                updateSelectedSpinnerItem(hourSpinner, hour);
+            });
+            hourSpinner.appendChild(hourItem);
+        }
+    
+        // 분 스피너 설정
+        minuteSpinner.innerHTML = '';
+        for (let minute = 0; minute < 60; minute += 5) {
+            const minuteItem = document.createElement('div');
+            minuteItem.className = 'spinner-item' + (minute === selectedMinute ? ' selected' : '');
+            minuteItem.textContent = minute.toString().padStart(2, '0');
+            minuteItem.addEventListener('click', () => {
+                selectedMinute = minute;
+                updateSelectedSpinnerItem(minuteSpinner, minute);
+            });
+            minuteSpinner.appendChild(minuteItem);
+        }
+    
+        // 스크롤 초기 위치 설정
+        setTimeout(() => {
+            scrollToSelected(periodSpinner, selectedPeriod);
+            scrollToSelected(hourSpinner, selectedHour);
+            scrollToSelected(minuteSpinner, selectedMinute);
+        }, 0);
+    }
+    
+    function confirmTimeSelection() {
+        if (!currentTimeButton) return;
+        
+        // 24시간 형식으로 변환
+        let hours = selectedHour;
+        if (selectedPeriod === 'PM' && hours !== 12) {
+            hours += 12;
+        } else if (selectedPeriod === 'AM' && hours === 12) {
+            hours = 0;
+        }
+    
+        // 시간 문자열 생성
+        const timeString = `${hours.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+        currentTimeButton.textContent = timeString;
+        
+        // 모달 닫기
+        hideTimeSelectModal();
+    }
+    
+    function hideTimeSelectModal() {
+        const timeSelectOverlay = document.querySelector('.time-select-overlay');
+        const timeSelectModal = document.querySelector('.time-select-modal');
+        timeSelectOverlay.style.display = 'none';
+        timeSelectModal.style.display = 'none';
+        currentTimeButton = null;
+    }
+
+    function showEventModal() {
+        const eventCreateOverlay = document.querySelector('.event-create-overlay');
+        const eventCreateModal = document.querySelector('.event-create-modal');
+        eventCreateOverlay.style.display = 'block';
+        eventCreateModal.style.display = 'block';
+        const today = new Date(selectedDate);
+        const formattedDate = today.toISOString().split('T')[0];
+        eventCreateModal.querySelector('#eventStartDate').value = formattedDate;
+        eventCreateModal.querySelector('#eventEndDate').value = formattedDate;
+        eventCreateModal.querySelector('#eventTitle').focus();
+    }
+
+    function hideEventModal() {
+        const eventCreateOverlay = document.querySelector('.event-create-overlay');
+        const eventCreateModal = document.querySelector('.event-create-modal');
+        const eventForm = eventCreateModal.querySelector('.event-form');
+        eventCreateOverlay.style.display = 'none';
+        eventCreateModal.style.display = 'none';
+        eventForm.reset();
+        eventForm.querySelector('#eventStartTime').value = '10:00';
+        eventForm.querySelector('#eventEndTime').value = '11:00';
+    }
+
+    function createEvent(e) {
+        e.preventDefault();
+        const eventForm = document.querySelector('.event-form');
+        const title = eventForm.querySelector('#eventTitle').value;
+        const startDate = eventForm.querySelector('#eventStartDate').value;
+        const startTime = eventForm.querySelector('#eventStartTime').value;
+        const endDate = eventForm.querySelector('#eventEndDate').value;
+        const endTime = eventForm.querySelector('#eventEndTime').value;
+        const notification = eventForm.querySelector('#eventNotification').value;
+        const url = eventForm.querySelector('#eventUrl').value;
+        const memo = eventForm.querySelector('#eventMemo').value;
+
+        if (!title || !startDate || !startTime || !endDate || !endTime) return;
+
+        const eventData = {
+            title,
+            startDateTime: `${startDate} ${startTime}`,
+            endDateTime: `${endDate} ${endTime}`,
+            notification,
+            url,
+            memo,
+            created: new Date().toISOString()
+        };
+
+        if (!events[selectedDate]) {
+            events[selectedDate] = [];
+        }
+        events[selectedDate].push(eventData);
+
+        updateEventList();
+        renderCalendar();
+        hideEventModal();
+    }
+
+    function updateEventList() {
+        const eventList = document.querySelector('.event-list');
+        eventList.innerHTML = '';
+        const dateEvents = events[selectedDate] || [];
+        
+        dateEvents.forEach((event, index) => {
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event-item';
+            
+            const startDate = new Date(event.startDateTime);
+            const endDate = new Date(event.endDateTime);
+            const isSameDay = startDate.toDateString() === endDate.toDateString();
+            
+            const formatDate = (date) => {
+                const options = { 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                };
+                return date.toLocaleString('ko-KR', options);
+            };
+
+            eventElement.innerHTML = `
+                <div class="event-header">
+                    <span class="event-title">${event.title}</span>
+                    <button class="delete-event"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="event-time">
+                    ${formatDate(startDate)} ~ ${formatDate(endDate)}
+                </div>
+                ${event.memo ? `<p class="event-memo">${event.memo}</p>` : ''}
+                ${event.url ? `<a href="${event.url}" class="event-url" target="_blank">${event.url}</a>` : ''}
+            `;
+
+            const deleteBtn = eventElement.querySelector('.delete-event');
+            deleteBtn.addEventListener('click', () => {
+                events[selectedDate].splice(index, 1);
+                updateEventList();
+                renderCalendar();
+            });
+            
+            eventList.appendChild(eventElement);
+        });
+    }
+
+    function initSideboardEvents() {
+        const closeBtn = sideboard.querySelector('.sideboard-close');
+        const addEventButton = sideboard.querySelector('.add-event-button');
+        const eventCreateOverlay = document.querySelector('.event-create-overlay');
+        const eventCreateModal = document.querySelector('.event-create-modal');
+        const eventForm = eventCreateModal.querySelector('.event-form');
+        const cancelButton = eventCreateModal.querySelector('.modal-cancel');
+    
+        addEventButton.addEventListener('click', showEventModal);
+        eventCreateOverlay.addEventListener('click', hideEventModal);
+        cancelButton.addEventListener('click', hideEventModal);
+        eventForm.addEventListener('submit', createEvent);
+        closeBtn.addEventListener('click', closeSideboard);
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.calendar-day') && 
+                !e.target.closest('.sideboard') && 
+                !e.target.closest('.event-create-modal') && 
+                sideboard.classList.contains('active') &&
+                eventCreateModal.style.display !== 'block') {
+                closeSideboard();
+            }
+        });
+    }
 
     function applyWeekStart() {
         const weekStart = localStorage.getItem('weekStart') || 'sunday';
@@ -72,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             monthSpinner.appendChild(monthItem);
         }
+        
         setTimeout(() => {
             scrollToSelected(yearSpinner, tempYear);
             scrollToSelected(monthSpinner, tempMonth);
@@ -305,200 +560,6 @@ document.addEventListener('DOMContentLoaded', function() {
         showSideboard(day);
     }
 
-    function createSideboard() {
-        sideboard.innerHTML = `
-            <div class="sideboard-header">
-                <h2 class="sideboard-title"></h2>
-                <button class="sideboard-close"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="sideboard-content">
-                <button class="add-event-button">
-                    <i class="fa-solid fa-plus"></i>
-                    새로운 일정 추가
-                </button>
-                <div class="event-list"></div>
-            </div>
-        `;
-    
-        const eventModalHTML = `
-            <div class="event-create-overlay"></div>
-            <div class="event-create-modal">
-                <div class="event-modal-header">
-                    <h3 class="event-modal-title">새로운 일정</h3>
-                </div>
-                <form class="event-form">
-                    <div class="form-group">
-                        <label class="form-label">제목</label>
-                        <input type="text" class="form-input" id="eventTitle" placeholder="일정 제목을 입력하세요" required>
-                    </div>
-                    <div class="form-group datetime-group">
-                        <div class="datetime-start">
-                            <label class="form-label">시작 일시</label>
-                            <div class="datetime-inputs">
-                                <input type="date" class="form-input" id="eventStartDate" required>
-                                <input type="time" class="form-input" id="eventStartTime" value="10:00" required>
-                            </div>
-                        </div>
-                        <div class="datetime-end">
-                            <label class="form-label">종료 일시</label>
-                            <div class="datetime-inputs">
-                                <input type="date" class="form-input" id="eventEndDate" required>
-                                <input type="time" class="form-input" id="eventEndTime" value="11:00" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">알림</label>
-                        <select class="form-input" id="eventNotification">
-                            <option value="none">알림 없음</option>
-                            <option value="10">10분 전</option>
-                            <option value="30">30분 전</option>
-                            <option value="60">1시간 전</option>
-                            <option value="1440">1일 전</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">URL</label>
-                        <input type="url" class="form-input" id="eventUrl" placeholder="관련 URL을 입력하세요">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">메모</label>
-                        <textarea class="form-input" id="eventMemo" rows="3" placeholder="메모를 입력하세요"></textarea>
-                    </div>
-                    <div class="event-modal-footer">
-                        <button type="button" class="modal-cancel">취소</button>
-                        <button type="submit" class="modal-confirm">확인</button>
-                    </div>
-                </form>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', eventModalHTML);
-    
-        const closeBtn = sideboard.querySelector('.sideboard-close');
-        const addEventButton = sideboard.querySelector('.add-event-button');
-        const eventList = sideboard.querySelector('.event-list');
-        const eventCreateOverlay = document.querySelector('.event-create-overlay');
-        const eventCreateModal = document.querySelector('.event-create-modal');
-        const eventForm = eventCreateModal.querySelector('.event-form');
-        const cancelButton = eventCreateModal.querySelector('.modal-cancel');
-    
-        function showEventModal() {
-            eventCreateOverlay.style.display = 'block';
-            eventCreateModal.style.display = 'block';
-            const today = new Date(selectedDate);
-            const formattedDate = today.toISOString().split('T')[0];
-            eventCreateModal.querySelector('#eventStartDate').value = formattedDate;
-            eventCreateModal.querySelector('#eventEndDate').value = formattedDate;
-            eventCreateModal.querySelector('#eventTitle').focus();
-        }
-    
-        function hideEventModal() {
-            eventCreateOverlay.style.display = 'none';
-            eventCreateModal.style.display = 'none';
-            eventForm.reset();
-            // 시간 기본값 다시 설정
-            eventForm.querySelector('#eventStartTime').value = '10:00';
-            eventForm.querySelector('#eventEndTime').value = '11:00';
-        }
-    
-        function createEvent(e) {
-            e.preventDefault();
-            const title = eventForm.querySelector('#eventTitle').value;
-            const startDate = eventForm.querySelector('#eventStartDate').value;
-            const startTime = eventForm.querySelector('#eventStartTime').value;
-            const endDate = eventForm.querySelector('#eventEndDate').value;
-            const endTime = eventForm.querySelector('#eventEndTime').value;
-            const notification = eventForm.querySelector('#eventNotification').value;
-            const url = eventForm.querySelector('#eventUrl').value;
-            const memo = eventForm.querySelector('#eventMemo').value;
-    
-            if (!title || !startDate || !startTime || !endDate || !endTime) return;
-    
-            const eventData = {
-                title,
-                startDateTime: `${startDate} ${startTime}`,
-                endDateTime: `${endDate} ${endTime}`,
-                notification,
-                url,
-                memo,
-                created: new Date().toISOString()
-            };
-    
-            if (!events[selectedDate]) {
-                events[selectedDate] = [];
-            }
-            events[selectedDate].push(eventData);
-    
-            updateEventList();
-            renderCalendar();
-            hideEventModal();
-        }
-    
-        function updateEventList() {
-            eventList.innerHTML = '';
-            const dateEvents = events[selectedDate] || [];
-            
-            dateEvents.forEach((event, index) => {
-                const eventElement = document.createElement('div');
-                eventElement.className = 'event-item';
-                
-                const startDate = new Date(event.startDateTime);
-                const endDate = new Date(event.endDateTime);
-                const isSameDay = startDate.toDateString() === endDate.toDateString();
-                
-                const formatDate = (date) => {
-                    const options = { 
-                        month: 'long', 
-                        day: 'numeric',
-                        hour: '2-digit', 
-                        minute: '2-digit'
-                    };
-                    return date.toLocaleString('ko-KR', options);
-                };
-    
-                eventElement.innerHTML = `
-                    <div class="event-header">
-                        <span class="event-title">${event.title}</span>
-                        <button class="delete-event"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                    <div class="event-time">
-                        ${formatDate(startDate)} ~ ${formatDate(endDate)}
-                    </div>
-                    ${event.memo ? `<p class="event-memo">${event.memo}</p>` : ''}
-                    ${event.url ? `<a href="${event.url}" class="event-url" target="_blank">${event.url}</a>` : ''}
-                `;
-    
-                const deleteBtn = eventElement.querySelector('.delete-event');
-                deleteBtn.addEventListener('click', () => {
-                    events[selectedDate].splice(index, 1);
-                    updateEventList();
-                    renderCalendar();
-                });
-                
-                eventList.appendChild(eventElement);
-            });
-        }
-
-        document.addEventListener('click', (e) => {
-            const isModalOpen = eventCreateModal.style.display === 'block';
-            if (!e.target.closest('.calendar-day') && 
-                !e.target.closest('.sideboard') && 
-                !e.target.closest('.event-create-modal') && // 모달 클릭은 제외
-                sideboard.classList.contains('active') &&
-                !isModalOpen) { // 모달이 열려있지 않을 때만
-                closeSideboard();
-            }
-        });
-    
-        closeBtn.addEventListener('click', closeSideboard);
-        addEventButton.addEventListener('click', showEventModal);
-        eventCreateOverlay.addEventListener('click', hideEventModal);
-        cancelButton.addEventListener('click', hideEventModal);
-        eventForm.addEventListener('submit', createEvent);
-    
-        window.updateEventList = updateEventList;
-    }
-
     function showSideboard(day) {
         const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
         const formattedDate = `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${day}일`;
@@ -510,11 +571,8 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarNav.classList.add('sideboard-open');
         calendarBody.classList.add('sideboard-open');
         
-        window.updateEventList?.();
+        updateEventList();
         window.dispatchEvent(new Event('resize'));
-    
-        const eventInput = sideboard.querySelector('.event-input');
-        eventInput?.focus();
     }
 
     function closeSideboard() {
@@ -537,8 +595,13 @@ document.addEventListener('DOMContentLoaded', function() {
                currentDate.getFullYear() === today.getFullYear();
     }
 
-    function isSelectedDay(day) { return selectedDate === getDateString(day); }
-    function getDateString(day) { return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`; }
+    function isSelectedDay(day) { 
+        return selectedDate === getDateString(day); 
+    }
+
+    function getDateString(day) { 
+        return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`; 
+    }
 
     function setupEventListeners() {
         prevMonthButton.addEventListener('click', () => {
@@ -557,14 +620,6 @@ document.addEventListener('DOMContentLoaded', function() {
         dateSelectOverlay.addEventListener('click', closeDateSelectModal);
         yearSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
         monthSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
-    
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.calendar-day') && 
-                !e.target.closest('.sideboard') && 
-                sideboard.classList.contains('active')) {
-                closeSideboard();
-            }
-        });
     }
 
     window.addEventListener('storage', function(e) {
@@ -602,11 +657,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function init() {
         updateCurrentDate();
         setupSpinners();
+        setupTimeSelect();
         applyWeekStart();
         renderCalendar();
         setupEventListeners();
-        createSideboard();
+        initSideboardEvents();
     }
-    
     init();
 });

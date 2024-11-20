@@ -320,7 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
     
-        // 이벤트 생성 모달 추가
         const eventModalHTML = `
             <div class="event-create-overlay"></div>
             <div class="event-create-modal">
@@ -332,17 +331,39 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label class="form-label">제목</label>
                         <input type="text" class="form-input" id="eventTitle" placeholder="일정 제목을 입력하세요" required>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">설명</label>
-                        <textarea class="form-input" id="eventDescription" rows="3" placeholder="일정에 대한 설명을 입력하세요"></textarea>
-                    </div>
-                    <div class="form-group time-group">
-                        <label class="form-label">시간</label>
-                        <div class="time-inputs">
-                            <input type="time" class="form-input" id="eventStartTime" value="10:00" required>
-                            <span class="time-separator">~</span>
-                            <input type="time" class="form-input" id="eventEndTime" value="11:00" required>
+                    <div class="form-group datetime-group">
+                        <div class="datetime-start">
+                            <label class="form-label">시작 일시</label>
+                            <div class="datetime-inputs">
+                                <input type="date" class="form-input" id="eventStartDate" required>
+                                <input type="time" class="form-input" id="eventStartTime" value="10:00" required>
+                            </div>
                         </div>
+                        <div class="datetime-end">
+                            <label class="form-label">종료 일시</label>
+                            <div class="datetime-inputs">
+                                <input type="date" class="form-input" id="eventEndDate" required>
+                                <input type="time" class="form-input" id="eventEndTime" value="11:00" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">알림</label>
+                        <select class="form-input" id="eventNotification">
+                            <option value="none">알림 없음</option>
+                            <option value="10">10분 전</option>
+                            <option value="30">30분 전</option>
+                            <option value="60">1시간 전</option>
+                            <option value="1440">1일 전</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">URL</label>
+                        <input type="url" class="form-input" id="eventUrl" placeholder="관련 URL을 입력하세요">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">메모</label>
+                        <textarea class="form-input" id="eventMemo" rows="3" placeholder="메모를 입력하세요"></textarea>
                     </div>
                     <div class="event-modal-footer">
                         <button type="button" class="modal-cancel">취소</button>
@@ -364,6 +385,10 @@ document.addEventListener('DOMContentLoaded', function() {
         function showEventModal() {
             eventCreateOverlay.style.display = 'block';
             eventCreateModal.style.display = 'block';
+            const today = new Date(selectedDate);
+            const formattedDate = today.toISOString().split('T')[0];
+            eventCreateModal.querySelector('#eventStartDate').value = formattedDate;
+            eventCreateModal.querySelector('#eventEndDate').value = formattedDate;
             eventCreateModal.querySelector('#eventTitle').focus();
         }
     
@@ -379,17 +404,23 @@ document.addEventListener('DOMContentLoaded', function() {
         function createEvent(e) {
             e.preventDefault();
             const title = eventForm.querySelector('#eventTitle').value;
-            const description = eventForm.querySelector('#eventDescription').value;
+            const startDate = eventForm.querySelector('#eventStartDate').value;
             const startTime = eventForm.querySelector('#eventStartTime').value;
+            const endDate = eventForm.querySelector('#eventEndDate').value;
             const endTime = eventForm.querySelector('#eventEndTime').value;
+            const notification = eventForm.querySelector('#eventNotification').value;
+            const url = eventForm.querySelector('#eventUrl').value;
+            const memo = eventForm.querySelector('#eventMemo').value;
     
-            if (!title || !startTime || !endTime) return;
+            if (!title || !startDate || !startTime || !endDate || !endTime) return;
     
             const eventData = {
                 title,
-                description,
-                startTime,
-                endTime,
+                startDateTime: `${startDate} ${startTime}`,
+                endDateTime: `${endDate} ${endTime}`,
+                notification,
+                url,
+                memo,
                 created: new Date().toISOString()
             };
     
@@ -410,13 +441,31 @@ document.addEventListener('DOMContentLoaded', function() {
             dateEvents.forEach((event, index) => {
                 const eventElement = document.createElement('div');
                 eventElement.className = 'event-item';
+                
+                const startDate = new Date(event.startDateTime);
+                const endDate = new Date(event.endDateTime);
+                const isSameDay = startDate.toDateString() === endDate.toDateString();
+                
+                const formatDate = (date) => {
+                    const options = { 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit', 
+                        minute: '2-digit'
+                    };
+                    return date.toLocaleString('ko-KR', options);
+                };
+    
                 eventElement.innerHTML = `
                     <div class="event-header">
                         <span class="event-title">${event.title}</span>
                         <button class="delete-event"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    ${event.description ? `<p class="event-description">${event.description}</p>` : ''}
-                    <div class="event-time">${event.startTime} ~ ${event.endTime}</div>
+                    <div class="event-time">
+                        ${formatDate(startDate)} ~ ${formatDate(endDate)}
+                    </div>
+                    ${event.memo ? `<p class="event-memo">${event.memo}</p>` : ''}
+                    ${event.url ? `<a href="${event.url}" class="event-url" target="_blank">${event.url}</a>` : ''}
                 `;
     
                 const deleteBtn = eventElement.querySelector('.delete-event');
@@ -429,8 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 eventList.appendChild(eventElement);
             });
         }
-    
-        // 모달이 열려있을 때 사이드보드가 닫히지 않도록 수정
+
         document.addEventListener('click', (e) => {
             const isModalOpen = eventCreateModal.style.display === 'block';
             if (!e.target.closest('.calendar-day') && 

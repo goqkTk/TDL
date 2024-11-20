@@ -223,22 +223,6 @@ body {
     color: #333;
 }
 
-.date-select-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #666;
-    padding: 0.5rem;
-    margin: -0.5rem;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-.date-select-close:hover {
-    background-color: #f5f5f5;
-}
-
 .date-select-content {
     display: flex;
     gap: 1rem;
@@ -457,87 +441,6 @@ body {
     overflow-y: auto;
 }
 
-.add-event {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.event-input {
-    flex: 1;
-    padding: 0.8rem 1rem;
-    border: 2px solid #eee;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.event-input:focus {
-    outline: none;
-    border-color: #FF9800;
-}
-
-.add-button {
-    background-color: #FF9800;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 0 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.add-button:hover {
-    background-color: #F57C00;
-    transform: translateY(-1px);
-}
-
-.event-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-}
-
-.event-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.event-item:hover {
-    border-color: #FF9800;
-    background-color: rgba(255, 152, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.event-text {
-    font-size: 0.95rem;
-    color: #333;
-}
-
-.delete-event {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    padding: 0.5rem;
-    margin: -0.5rem;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-.delete-event:hover {
-    background-color: rgba(255, 0, 0, 0.1);
-    color: #dc3545;
-}
-
-/* 이벤트 추가 관련 스타일 */
 .add-event-button {
     width: 100%;
     padding: 1rem;
@@ -562,21 +465,70 @@ body {
 
 .add-event-button i { font-size: 1.2rem; }
 .form-input[rows] { resize: none; }
-.time-group { margin-bottom: 0.5rem; }
 
-.time-inputs {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+.form-input[type="date"],
+.form-input[type="time"] {
+    position: relative;
+    font-family: inherit;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #fff;
+    min-height: 44px;
+    color: #333;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
 }
 
-.time-separator {
-    color: #666;
-    font-weight: 500;
-    font-size: 20px;
+.form-input[type="date"]:hover,
+.form-input[type="time"]:hover {
+    background-color: #f8f9fa;
 }
 
-.time-inputs .form-input { width: 146px; font-size: 15px; }
+.form-input[type="date"]:focus,
+.form-input[type="time"]:focus {
+    outline: none;
+    border-color: #eee;
+}
+
+.form-input[type="date"]::-webkit-calendar-picker-indicator,
+.form-input[type="time"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.form-input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.form-input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+.form-input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+.form-input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+
+.form-input[type="date"]::-webkit-datetime-edit,
+.form-input[type="time"]::-webkit-datetime-edit {
+    color: #333;
+}
+
+/* 플레이스홀더와 같은 효과를 위한 스타일 */
+.form-input[type="date"]:invalid::-webkit-datetime-edit,
+.form-input[type="time"]:invalid::-webkit-datetime-edit {
+    color: #999;
+}
+
+/* Edge와 IE에서의 스타일링 */
+.form-input[type="date"]::-ms-clear,
+.form-input[type="date"]::-ms-reveal,
+.form-input[type="time"]::-ms-clear,
+.form-input[type="time"]::-ms-reveal {
+    display: none;
+}
 
 .event-create-overlay {
     display: none;
@@ -599,7 +551,8 @@ body {
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     z-index: 2001;
-    width: 400px;
+    width: 500px;
+    max-width: 95vw;
     padding: 2rem;
 }
 
@@ -626,6 +579,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 1.2rem;
 }
 
 .form-label {
@@ -635,6 +589,7 @@ body {
 }
 
 .form-input {
+    width: 100%;
     padding: 0.8rem 1rem;
     border: 2px solid #eee;
     border-radius: 8px;
@@ -645,6 +600,15 @@ body {
 .form-input:focus {
     outline: none;
     border-color: #FF9800;
+}
+
+select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
 }
 
 .event-modal-footer {
@@ -687,7 +651,40 @@ body {
     transform: translateY(-1px);
 }
 
-/* 이벤트 아이템 스타일 업데이트 */
+.datetime-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.datetime-start,
+.datetime-end {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.datetime-inputs {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.time-separator {
+    color: #666;
+    font-weight: 500;
+}
+
+.time-inputs .form-input {
+    width: 146px;
+    font-size: 15px;
+}
+
+.event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
 .event-item {
     display: flex;
     flex-direction: column;
@@ -697,6 +694,12 @@ body {
     border: 1px solid #eee;
     border-radius: 8px;
     transition: all 0.3s ease;
+}
+
+.event-item:hover {
+    border-color: #FF9800;
+    background-color: rgba(255, 152, 0, 0.1);
+    transform: translateY(-2px);
 }
 
 .event-header {
@@ -718,9 +721,45 @@ body {
 }
 
 .event-time {
-    font-size: 0.85rem;
-    color: #888;
+    font-size: 0.9rem;
+    color: #666;
     margin-top: 0.5rem;
+}
+
+.delete-event {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin: -0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.delete-event:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+    color: #dc3545;
+}
+
+.event-url {
+    display: block;
+    font-size: 0.85rem;
+    color: #007bff;
+    text-decoration: none;
+    margin-top: 0.5rem;
+    word-break: break-all;
+}
+
+.event-url:hover {
+    text-decoration: underline;
+}
+
+.event-memo {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0.5rem;
+    white-space: pre-line;
 }
 
 @media screen and (max-width: 768px) {
@@ -756,6 +795,16 @@ body {
     .sideboard {
         width: 100%;
         max-width: 400px;
+    }
+
+    .datetime-inputs {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .datetime-inputs .form-input[type="date"],
+    .datetime-inputs .form-input[type="time"] {
+        width: 100%;
     }
 }
 

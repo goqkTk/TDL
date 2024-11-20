@@ -336,9 +336,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label class="form-label">설명</label>
                         <textarea class="form-input" id="eventDescription" rows="3" placeholder="일정에 대한 설명을 입력하세요"></textarea>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group time-group">
                         <label class="form-label">시간</label>
-                        <input type="time" class="form-input" id="eventTime" required>
+                        <div class="time-inputs">
+                            <input type="time" class="form-input" id="eventStartTime" value="10:00" required>
+                            <span class="time-separator">~</span>
+                            <input type="time" class="form-input" id="eventEndTime" value="11:00" required>
+                        </div>
                     </div>
                     <div class="event-modal-footer">
                         <button type="button" class="modal-cancel">취소</button>
@@ -367,20 +371,25 @@ document.addEventListener('DOMContentLoaded', function() {
             eventCreateOverlay.style.display = 'none';
             eventCreateModal.style.display = 'none';
             eventForm.reset();
+            // 시간 기본값 다시 설정
+            eventForm.querySelector('#eventStartTime').value = '10:00';
+            eventForm.querySelector('#eventEndTime').value = '11:00';
         }
     
         function createEvent(e) {
             e.preventDefault();
             const title = eventForm.querySelector('#eventTitle').value;
             const description = eventForm.querySelector('#eventDescription').value;
-            const time = eventForm.querySelector('#eventTime').value;
+            const startTime = eventForm.querySelector('#eventStartTime').value;
+            const endTime = eventForm.querySelector('#eventEndTime').value;
     
-            if (!title || !time) return;
+            if (!title || !startTime || !endTime) return;
     
             const eventData = {
                 title,
                 description,
-                time,
+                startTime,
+                endTime,
                 created: new Date().toISOString()
             };
     
@@ -407,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button class="delete-event"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                     ${event.description ? `<p class="event-description">${event.description}</p>` : ''}
-                    <div class="event-time">${event.time}</div>
+                    <div class="event-time">${event.startTime} ~ ${event.endTime}</div>
                 `;
     
                 const deleteBtn = eventElement.querySelector('.delete-event');
@@ -420,6 +429,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 eventList.appendChild(eventElement);
             });
         }
+    
+        // 모달이 열려있을 때 사이드보드가 닫히지 않도록 수정
+        document.addEventListener('click', (e) => {
+            const isModalOpen = eventCreateModal.style.display === 'block';
+            if (!e.target.closest('.calendar-day') && 
+                !e.target.closest('.sideboard') && 
+                !e.target.closest('.event-create-modal') && // 모달 클릭은 제외
+                sideboard.classList.contains('active') &&
+                !isModalOpen) { // 모달이 열려있지 않을 때만
+                closeSideboard();
+            }
+        });
     
         closeBtn.addEventListener('click', closeSideboard);
         addEventButton.addEventListener('click', showEventModal);

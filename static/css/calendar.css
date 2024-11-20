@@ -416,6 +416,8 @@ body {
     border-left: 1px solid #eee;
 }
 
+.sideboard.modal-open { pointer-events: none; }
+.sideboard.modal-open .sideboard-content { pointer-events: all; }
 .sideboard.active { right: 0; }
 
 .sideboard-header {
@@ -558,11 +560,24 @@ body {
     transform: translateY(-1px);
 }
 
-.add-event-button i {
-    font-size: 1.2rem;
+.add-event-button i { font-size: 1.2rem; }
+.form-input[rows] { resize: none; }
+.time-group { margin-bottom: 0.5rem; }
+
+.time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-/* 이벤트 생성 모달 */
+.time-separator {
+    color: #666;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.time-inputs .form-input { width: 146px; font-size: 15px; }
+
 .event-create-overlay {
     display: none;
     position: fixed;

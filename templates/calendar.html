@@ -69,15 +69,15 @@
                     <div class="datetime-start">
                         <label class="form-label">시작 일시</label>
                         <div class="datetime-inputs">
-                            <input type="date" class="form-input" id="eventStartDate" required>
-                            <button type="button" class="time-select-button" id="startTimeButton">10:00</button>
+                            <button type="button" class="date-select-button" id="startDateButton">2024년 3월 21일</button>
+                            <button type="button" class="time-select-button" id="startTimeButton">오전 10:00</button>
                         </div>
                     </div>
                     <div class="datetime-end">
                         <label class="form-label">종료 일시</label>
                         <div class="datetime-inputs">
-                            <input type="date" class="form-input" id="eventEndDate" required>
-                            <button type="button" class="time-select-button" id="endTimeButton">11:00</button>
+                            <button type="button" class="date-select-button" id="endDateButton">2024년 3월 21일</button>
+                            <button type="button" class="time-select-button" id="endTimeButton">오전 11:00</button>
                         </div>
                     </div>
                 </div>
@@ -88,17 +88,14 @@
                     </div>
                     <div class="time-select-content">
                         <div class="period-select">
-                            <div class="select-label">오전/오후</div>
                             <div class="selection-indicator"></div>
                             <div class="spinner-wrapper period-spinner"></div>
                         </div>
                         <div class="hour-select">
-                            <div class="select-label">시</div>
                             <div class="selection-indicator"></div>
                             <div class="spinner-wrapper hour-spinner"></div>
                         </div>
                         <div class="minute-select">
-                            <div class="select-label">분</div>
                             <div class="selection-indicator"></div>
                             <div class="spinner-wrapper minute-spinner"></div>
                         </div>
@@ -139,12 +136,10 @@
             </div>
             <div class="date-select-content">
                 <div class="year-select">
-                    <div class="select-label">년도</div>
                     <div class="selection-indicator"></div>
                     <div id="yearSpinner" class="spinner-wrapper"></div>
                 </div>
                 <div class="month-select">
-                    <div class="select-label">월</div>
                     <div class="selection-indicator"></div>
                     <div id="monthSpinner" class="spinner-wrapper"></div>
                 </div>

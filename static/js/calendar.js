@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarBody = document.querySelector('.calendar-body');
     
     let currentDate = new Date();
+    let currentDateButton = null;
     let selectedDate = null;
     let events = {};
     let selectedYear = currentDate.getFullYear();
@@ -23,6 +24,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedPeriod = 'AM';
     let selectedHour = 10;
     let selectedMinute = 0;
+
+    function initDateTimeButtons() {
+        const startDateBtn = document.getElementById('startDateButton');
+        const endDateBtn = document.getElementById('endDateButton');
+        
+        startDateBtn.addEventListener('click', (e) => showDateSelectModal(e, startDateBtn));
+        endDateBtn.addEventListener('click', (e) => showDateSelectModal(e, endDateBtn));
+    
+        updateDateButtonText(startDateBtn, new Date());
+        updateDateButtonText(endDateBtn, new Date());
+    }
+
+    function updateDateButtonText(button, date) {
+        button.textContent = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
 
     function setupTimeSelect() {
         const startTimeBtn = document.getElementById('startTimeButton');
@@ -35,29 +51,33 @@ document.addEventListener('DOMContentLoaded', function() {
         const hourSpinner = timeSelectModal.querySelector('.hour-spinner');
         const minuteSpinner = timeSelectModal.querySelector('.minute-spinner');
     
-        // 이벤트 리스너 설정
         startTimeBtn.addEventListener('click', () => showTimeSelectModal(startTimeBtn));
         endTimeBtn.addEventListener('click', () => showTimeSelectModal(endTimeBtn));
         timeSelectOverlay.addEventListener('click', hideTimeSelectModal);
         cancelBtn.addEventListener('click', hideTimeSelectModal);
         confirmBtn.addEventListener('click', confirmTimeSelection);
-    
-        // 스피너에 wheel 이벤트 추가
         periodSpinner.addEventListener('wheel', handleWheel, { passive: false });
         hourSpinner.addEventListener('wheel', handleWheel, { passive: false });
         minuteSpinner.addEventListener('wheel', handleWheel, { passive: false });
+        periodSpinner.addEventListener('scroll', debounceScroll(handleTimeSpinnerScroll, 100));
+        hourSpinner.addEventListener('scroll', debounceScroll(handleTimeSpinnerScroll, 100));
+        minuteSpinner.addEventListener('scroll', debounceScroll(handleTimeSpinnerScroll, 100));
     }
     
     function showTimeSelectModal(button) {
         currentTimeButton = button;
         const timeSelectOverlay = document.querySelector('.time-select-overlay');
         const timeSelectModal = document.querySelector('.time-select-modal');
+        const modalTitle = timeSelectModal.querySelector('.time-select-title');
         const currentTime = button.textContent;
         
-        // 현재 선택된 시간 파싱
-        parseCurrentTime(currentTime);
+        if (button.id === 'startTimeButton') {
+            modalTitle.textContent = '시작 시간';
+        } else {
+            modalTitle.textContent = '종료 시간';
+        }
         
-        // 스피너 설정
+        parseCurrentTime(currentTime);
         setupTimeSpinners();
         
         timeSelectOverlay.style.display = 'block';
@@ -65,10 +85,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function parseCurrentTime(timeString) {
-        const [hours, minutes] = timeString.split(':').map(Number);
-        selectedHour = hours > 12 ? hours - 12 : hours;
-        selectedPeriod = hours >= 12 ? 'PM' : 'AM';
-        selectedMinute = minutes;
+        const matches = timeString.match(/^(오전|오후)\s+(\d+):(\d+)$/);
+        if (matches) {
+            const period = matches[1] === '오전' ? 'AM' : 'PM';
+            const hour = parseInt(matches[2]);
+            const minute = parseInt(matches[3]);
+            selectedPeriod = period;
+            selectedHour = hour;
+            selectedMinute = minute;
+        } else {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            selectedHour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+            selectedPeriod = hours >= 12 ? 'PM' : 'AM';
+            selectedMinute = minutes;
+        }
     }
     
     function setupTimeSpinners() {
@@ -76,20 +106,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const hourSpinner = document.querySelector('.hour-spinner');
         const minuteSpinner = document.querySelector('.minute-spinner');
     
-        // 오전/오후 스피너 설정
         periodSpinner.innerHTML = '';
-        ['AM', 'PM'].forEach(period => {
+        [['AM', '오전'], ['PM', '오후']].forEach(([value, text]) => {
             const periodItem = document.createElement('div');
-            periodItem.className = 'spinner-item' + (period === selectedPeriod ? ' selected' : '');
-            periodItem.textContent = period;
+            periodItem.className = 'spinner-item' + (value === selectedPeriod ? ' selected' : '');
+            periodItem.textContent = text;
+            periodItem.dataset.value = value;
             periodItem.addEventListener('click', () => {
-                selectedPeriod = period;
-                updateSelectedSpinnerItem(periodSpinner, period);
+                selectedPeriod = value;
+                updateSelectedSpinnerItem(periodSpinner, value);
+                // 클릭 시 스크롤 추가
+                scrollToSelected(periodSpinner, value, true);
             });
             periodSpinner.appendChild(periodItem);
         });
     
-        // 시간 스피너 설정
         hourSpinner.innerHTML = '';
         for (let hour = 1; hour <= 12; hour++) {
             const hourItem = document.createElement('div');
@@ -98,11 +129,11 @@ document.addEventListener('DOMContentLoaded', function() {
             hourItem.addEventListener('click', () => {
                 selectedHour = hour;
                 updateSelectedSpinnerItem(hourSpinner, hour);
+                scrollToSelected(hourSpinner, hour);
             });
             hourSpinner.appendChild(hourItem);
         }
     
-        // 분 스피너 설정
         minuteSpinner.innerHTML = '';
         for (let minute = 0; minute < 60; minute += 5) {
             const minuteItem = document.createElement('div');
@@ -111,13 +142,13 @@ document.addEventListener('DOMContentLoaded', function() {
             minuteItem.addEventListener('click', () => {
                 selectedMinute = minute;
                 updateSelectedSpinnerItem(minuteSpinner, minute);
+                scrollToSelected(minuteSpinner, minute);
             });
             minuteSpinner.appendChild(minuteItem);
         }
     
-        // 스크롤 초기 위치 설정
         setTimeout(() => {
-            scrollToSelected(periodSpinner, selectedPeriod);
+            scrollToSelected(periodSpinner, selectedPeriod, true);
             scrollToSelected(hourSpinner, selectedHour);
             scrollToSelected(minuteSpinner, selectedMinute);
         }, 0);
@@ -126,7 +157,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function confirmTimeSelection() {
         if (!currentTimeButton) return;
         
-        // 24시간 형식으로 변환
         let hours = selectedHour;
         if (selectedPeriod === 'PM' && hours !== 12) {
             hours += 12;
@@ -134,40 +164,48 @@ document.addEventListener('DOMContentLoaded', function() {
             hours = 0;
         }
     
-        // 시간 문자열 생성
-        const timeString = `${hours.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+        const period = selectedPeriod === 'AM' ? '오전' : '오후';
+        const displayHour = selectedHour;
+        const timeString = `${period} ${displayHour}:${selectedMinute.toString().padStart(2, '0')}`;
         currentTimeButton.textContent = timeString;
         
-        // 모달 닫기
         hideTimeSelectModal();
     }
     
     function hideTimeSelectModal() {
         const timeSelectOverlay = document.querySelector('.time-select-overlay');
         const timeSelectModal = document.querySelector('.time-select-modal');
-        timeSelectOverlay.style.display = 'none';
         timeSelectModal.style.display = 'none';
+        timeSelectOverlay.style.display = 'none';
         currentTimeButton = null;
     }
 
     function showEventModal() {
+        hideAllModals();
+        
         const eventCreateOverlay = document.querySelector('.event-create-overlay');
         const eventCreateModal = document.querySelector('.event-create-modal');
         eventCreateOverlay.style.display = 'block';
         eventCreateModal.style.display = 'block';
+        
         const today = new Date(selectedDate);
-        const formattedDate = today.toISOString().split('T')[0];
-        eventCreateModal.querySelector('#eventStartDate').value = formattedDate;
-        eventCreateModal.querySelector('#eventEndDate').value = formattedDate;
+        const startDateBtn = document.getElementById('startDateButton');
+        const endDateBtn = document.getElementById('endDateButton');
+        updateDateButtonText(startDateBtn, today);
+        updateDateButtonText(endDateBtn, today);
+        
+        const startTimeBtn = document.getElementById('startTimeButton');
+        const endTimeBtn = document.getElementById('endTimeButton');
+        if (startTimeBtn) startTimeBtn.textContent = '오전 10:00';
+        if (endTimeBtn) endTimeBtn.textContent = '오전 11:00';
+        
         eventCreateModal.querySelector('#eventTitle').focus();
     }
 
     function hideEventModal() {
-        const eventCreateOverlay = document.querySelector('.event-create-overlay');
         const eventCreateModal = document.querySelector('.event-create-modal');
         const eventForm = eventCreateModal.querySelector('.event-form');
-        eventCreateOverlay.style.display = 'none';
-        eventCreateModal.style.display = 'none';
+        hideAllModals();
         eventForm.reset();
         eventForm.querySelector('#eventStartTime').value = '10:00';
         eventForm.querySelector('#eventEndTime').value = '11:00';
@@ -256,26 +294,55 @@ document.addEventListener('DOMContentLoaded', function() {
     function initSideboardEvents() {
         const closeBtn = sideboard.querySelector('.sideboard-close');
         const addEventButton = sideboard.querySelector('.add-event-button');
-        const eventCreateOverlay = document.querySelector('.event-create-overlay');
-        const eventCreateModal = document.querySelector('.event-create-modal');
-        const eventForm = eventCreateModal.querySelector('.event-form');
-        const cancelButton = eventCreateModal.querySelector('.modal-cancel');
-    
+        const eventForm = document.querySelector('.event-form');
+        
         addEventButton.addEventListener('click', showEventModal);
-        eventCreateOverlay.addEventListener('click', hideEventModal);
-        cancelButton.addEventListener('click', hideEventModal);
-        eventForm.addEventListener('submit', createEvent);
+        document.querySelector('.event-create-overlay').addEventListener('click', hideAllModals);
+        document.querySelector('.time-select-overlay').addEventListener('click', hideAllModals);
+        document.getElementById('dateSelectOverlay').addEventListener('click', hideAllModals);
+        eventForm.querySelector('.modal-cancel').addEventListener('click', hideAllModals);
         closeBtn.addEventListener('click', closeSideboard);
-
+    
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.calendar-day') && 
                 !e.target.closest('.sideboard') && 
                 !e.target.closest('.event-create-modal') && 
-                sideboard.classList.contains('active') &&
-                eventCreateModal.style.display !== 'block') {
+                !e.target.closest('.time-select-modal') && 
+                !e.target.closest('.date-select-modal') && 
+                sideboard.classList.contains('active')) {
                 closeSideboard();
+                hideAllModals();
             }
         });
+    }
+
+    function hideAllModals() {
+        // 시간 선택 모달 닫기
+        const timeSelectOverlay = document.querySelector('.time-select-overlay');
+        const timeSelectModal = document.querySelector('.time-select-modal');
+        if (timeSelectModal) {
+            timeSelectModal.style.display = 'none';
+            timeSelectOverlay.style.display = 'none';
+            currentTimeButton = null;
+        }
+    
+        // 이벤트 생성 모달 닫기
+        const eventCreateOverlay = document.querySelector('.event-create-overlay');
+        const eventCreateModal = document.querySelector('.event-create-modal');
+        const eventForm = eventCreateModal?.querySelector('.event-form');
+        if (eventCreateModal) {
+            eventCreateOverlay.style.display = 'none';
+            eventCreateModal.style.display = 'none';
+            if (eventForm) eventForm.reset();
+        }
+    
+        // 날짜 선택 모달 닫기
+        const dateSelectModal = document.getElementById('dateSelectModal');
+        const dateSelectOverlay = document.getElementById('dateSelectOverlay');
+        if (dateSelectModal) {
+            dateSelectModal.style.display = 'none';
+            dateSelectOverlay.style.display = 'none';
+        }
     }
 
     function applyWeekStart() {
@@ -398,9 +465,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function scrollToSelected(spinner, value) {
+    function scrollToSelected(spinner, value, isPeriod = false) {
         const items = spinner.querySelectorAll('.spinner-item');
         const selectedItem = Array.from(items).find(item => {
+            if (isPeriod) {
+                return item.dataset.value === value;
+            }
             const itemValue = parseInt(item.textContent);
             return itemValue === value;
         });
@@ -421,9 +491,55 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSelectedSpinnerItem(spinner, value) {
         const items = spinner.querySelectorAll('.spinner-item');
         items.forEach(item => {
-            const itemValue = parseInt(item.textContent);
-            item.classList.toggle('selected', itemValue === value);
+            if (item.dataset.value) {
+                item.classList.toggle('selected', item.dataset.value === value);
+            } else {
+                const itemValue = parseInt(item.textContent);
+                item.classList.toggle('selected', itemValue === value);
+            }
         });
+    }
+
+    function handleTimeSpinnerScroll(event) {
+        const spinner = event.target;
+        const spinnerRect = spinner.getBoundingClientRect();
+        const spinnerCenter = spinnerRect.top + (spinnerRect.height / 2);
+        
+        let closestItem = null;
+        let minDistance = Infinity;
+        
+        const visibleItems = Array.from(spinner.querySelectorAll('.spinner-item')).filter(item => {
+            const itemRect = item.getBoundingClientRect();
+            return itemRect.top >= spinnerRect.top - itemRect.height &&
+                   itemRect.bottom <= spinnerRect.bottom + itemRect.height;
+        });
+    
+        visibleItems.forEach(item => {
+            const itemRect = item.getBoundingClientRect();
+            const itemCenter = itemRect.top + (itemRect.height / 2);
+            const distance = Math.abs(spinnerCenter - itemCenter);
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestItem = item;
+            }
+        });
+    
+        if (closestItem) {
+            if (spinner.classList.contains('period-spinner')) {
+                const value = closestItem.dataset.value;
+                selectedPeriod = value;
+                updateSelectedSpinnerItem(spinner, value);
+            } else if (spinner.classList.contains('hour-spinner')) {
+                const value = parseInt(closestItem.textContent);
+                selectedHour = value;
+                updateSelectedSpinnerItem(spinner, value);
+            } else if (spinner.classList.contains('minute-spinner')) {
+                const value = parseInt(closestItem.textContent);
+                selectedMinute = value;
+                updateSelectedSpinnerItem(spinner, value);
+            }
+        }
     }
 
     function updateTodayButtonState(year, month, now = new Date()) {
@@ -535,8 +651,17 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarDays.appendChild(dayElement);
     }
 
-    function showDateSelectModal(e) {
+    function showDateSelectModal(e, button) {
         e.stopPropagation();
+        currentDateButton = button;
+        
+        const dateText = button.textContent;
+        const matches = dateText.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/);
+        if (matches) {
+            selectedYear = parseInt(matches[1]);
+            selectedMonth = parseInt(matches[2]);
+        }
+        
         dateSelectModal.style.display = 'block';
         dateSelectOverlay.style.display = 'block';
         setupSpinners();
@@ -545,12 +670,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeDateSelectModal() {
         dateSelectModal.style.display = 'none';
         dateSelectOverlay.style.display = 'none';
+        currentDateButton = null;
     }
 
     function handleDateChange() {
-        currentDate = new Date(selectedYear, selectedMonth - 1);
-        updateCurrentDate();
-        renderCalendar();
+        if (currentDateButton) {
+            const selectedDate = new Date(selectedYear, selectedMonth - 1);
+            updateDateButtonText(currentDateButton, selectedDate);
+        }
         closeDateSelectModal();
     }
 
@@ -658,6 +785,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCurrentDate();
         setupSpinners();
         setupTimeSelect();
+        initDateTimeButtons();
         applyWeekStart();
         renderCalendar();
         setupEventListeners();

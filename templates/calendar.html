@@ -81,30 +81,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="time-select-overlay"></div>
-                <div class="time-select-modal">
-                    <div class="time-select-header">
-                        <div class="time-select-title">시간 선택</div>
-                    </div>
-                    <div class="time-select-content">
-                        <div class="period-select">
-                            <div class="selection-indicator"></div>
-                            <div class="spinner-wrapper period-spinner"></div>
-                        </div>
-                        <div class="hour-select">
-                            <div class="selection-indicator"></div>
-                            <div class="spinner-wrapper hour-spinner"></div>
-                        </div>
-                        <div class="minute-select">
-                            <div class="selection-indicator"></div>
-                            <div class="spinner-wrapper minute-spinner"></div>
-                        </div>
-                    </div>
-                    <div class="time-select-footer">
-                        <button type="button" class="time-select-cancel">취소</button>
-                        <button type="button" class="time-select-confirm">확인</button>
-                    </div>
-                </div>
                 <div class="form-group">
                     <label class="form-label">알림</label>
                     <select class="form-input" id="eventNotification">
@@ -129,6 +105,30 @@
                 </div>
             </form>
         </div>
+        <div class="time-select-overlay"></div>
+        <div class="time-select-modal">
+            <div class="time-select-header">
+                <div class="time-select-title">시간 선택</div>
+            </div>
+            <div class="time-select-content">
+                <div class="period-select">
+                    <div class="selection-indicator"></div>
+                    <div class="spinner-wrapper period-spinner"></div>
+                </div>
+                <div class="hour-select">
+                    <div class="selection-indicator"></div>
+                    <div class="spinner-wrapper hour-spinner"></div>
+                </div>
+                <div class="minute-select">
+                    <div class="selection-indicator"></div>
+                    <div class="spinner-wrapper minute-spinner"></div>
+                </div>
+            </div>
+            <div class="time-select-footer">
+                <button type="button" class="time-select-cancel">취소</button>
+                <button type="button" class="time-select-confirm">확인</button>
+            </div>
+        </div>
         <div id="dateSelectOverlay" class="modal-overlay"></div>
         <div id="dateSelectModal" class="date-select-modal">
             <div class="date-select-header">
@@ -147,6 +147,35 @@
             <div class="date-select-footer">
                 <button class="date-select-today">오늘</button>
                 <button class="date-select-confirm">확인</button>
+            </div>
+        </div>
+        <div class="full-date-select-overlay"></div>
+        <div class="full-date-select-modal">
+            <div class="full-date-select-header">
+                <div class="full-date-select-title">날짜 선택</div>
+            </div>
+            <div class="full-date-select-content">
+                <div class="full-calendar">
+                    <div class="full-calendar-header">
+                        <button class="prev-month-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div class="current-month">2024년 3월</div>
+                        <button class="next-month-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="full-calendar-weekdays">
+                        <div>일</div>
+                        <div>월</div>
+                        <div>화</div>
+                        <div>수</div>
+                        <div>목</div>
+                        <div>금</div>
+                        <div>토</div>
+                    </div>
+                    <div class="full-calendar-days"></div>
+                </div>
+            </div>
+            <div class="full-date-select-footer">
+                <button class="full-date-select-today">오늘</button>
+                <button class="full-date-select-confirm">확인</button>
             </div>
         </div>
     </div>

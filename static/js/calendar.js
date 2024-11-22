@@ -24,16 +24,144 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedPeriod = 'AM';
     let selectedHour = 10;
     let selectedMinute = 0;
+    let tempDisplayDate = new Date();
+    let selectedFullDate = null;
+
+    function showFullDateSelectModal(button) {
+        currentDateButton = button;
+        const fullDateSelectModal = document.querySelector('.full-date-select-modal');
+        const fullDateSelectOverlay = document.querySelector('.full-date-select-overlay');
+        
+        // 현재 선택된 날짜 파싱
+        const dateText = button.textContent;
+        const matches = dateText.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/);
+        if (matches) {
+            tempDisplayDate = new Date(
+                parseInt(matches[1]),
+                parseInt(matches[2]) - 1,
+                parseInt(matches[3])
+            );
+            selectedFullDate = new Date(tempDisplayDate);
+        }
+        
+        updateFullCalendar();
+        fullDateSelectModal.style.display = 'block';
+        fullDateSelectOverlay.style.display = 'block';
+    }
+
+    function updateFullCalendar() {
+        const currentMonth = document.querySelector('.current-month');
+        const calendarDays = document.querySelector('.full-calendar-days');
+        
+        currentMonth.textContent = `${tempDisplayDate.getFullYear()}년 ${tempDisplayDate.getMonth() + 1}월`;
+        
+        const firstDay = new Date(tempDisplayDate.getFullYear(), tempDisplayDate.getMonth(), 1);
+        const lastDay = new Date(tempDisplayDate.getFullYear(), tempDisplayDate.getMonth() + 1, 0);
+        const prevMonthLastDay = new Date(tempDisplayDate.getFullYear(), tempDisplayDate.getMonth(), 0);
+        
+        let startOffset = firstDay.getDay();
+        calendarDays.innerHTML = '';
+        
+        // 이전 달의 날짜들
+        for (let i = startOffset - 1; i >= 0; i--) {
+            const day = prevMonthLastDay.getDate() - i;
+            createFullCalendarDay(day, true);
+        }
+        
+        // 현재 달의 날짜들
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            createFullCalendarDay(day, false);
+        }
+        
+        // 다음 달의 날짜들
+        const remainingDays = 42 - calendarDays.children.length;
+        for (let day = 1; day <= remainingDays; day++) {
+            createFullCalendarDay(day, true);
+        }
+    }
+
+    function createFullCalendarDay(day, isOtherMonth) {
+        const calendarDays = document.querySelector('.full-calendar-days');
+        const dayElement = document.createElement('div');
+        dayElement.textContent = day;
+        
+        const today = new Date();
+        const isToday = !isOtherMonth && 
+                    day === today.getDate() && 
+                    tempDisplayDate.getMonth() === today.getMonth() && 
+                    tempDisplayDate.getFullYear() === today.getFullYear();
+                    
+        const isSelected = !isOtherMonth && 
+                        selectedFullDate && 
+                        day === selectedFullDate.getDate() && 
+                        tempDisplayDate.getMonth() === selectedFullDate.getMonth() && 
+                        tempDisplayDate.getFullYear() === selectedFullDate.getFullYear();
+        
+        dayElement.className = `full-calendar-day${isOtherMonth ? ' other-month' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}`;
+        
+        if (!isOtherMonth) {
+            dayElement.addEventListener('click', () => {
+                document.querySelectorAll('.full-calendar-day').forEach(el => el.classList.remove('selected'));
+                dayElement.classList.add('selected');
+                selectedFullDate = new Date(tempDisplayDate.getFullYear(), tempDisplayDate.getMonth(), day);
+            });
+        }
+        
+        calendarDays.appendChild(dayElement);
+    }
+
+    function initFullDateSelect() {
+        const prevMonthBtn = document.querySelector('.prev-month-btn');
+        const nextMonthBtn = document.querySelector('.next-month-btn');
+        const todayBtn = document.querySelector('.full-date-select-today');
+        const confirmBtn = document.querySelector('.full-date-select-confirm');
+        const overlay = document.querySelector('.full-date-select-overlay');
+        
+        prevMonthBtn.addEventListener('click', () => {
+            tempDisplayDate.setMonth(tempDisplayDate.getMonth() - 1);
+            updateFullCalendar();
+        });
+        
+        nextMonthBtn.addEventListener('click', () => {
+            tempDisplayDate.setMonth(tempDisplayDate.getMonth() + 1);
+            updateFullCalendar();
+        });
+        
+        todayBtn.addEventListener('click', () => {
+            tempDisplayDate = new Date();
+            selectedFullDate = new Date();
+            updateFullCalendar();
+        });
+        
+        confirmBtn.addEventListener('click', () => {
+            if (selectedFullDate && currentDateButton) {
+                currentDateButton.textContent = `${selectedFullDate.getFullYear()}년 ${selectedFullDate.getMonth() + 1}월 ${selectedFullDate.getDate()}일`;
+            }
+            hideFullDateSelectModal();
+        });
+        
+        overlay.addEventListener('click', hideFullDateSelectModal);
+    }
+
+    function hideFullDateSelectModal() {
+        const modal = document.querySelector('.full-date-select-modal');
+        const overlay = document.querySelector('.full-date-select-overlay');
+        modal.style.display = 'none';
+        overlay.style.display = 'none';
+        currentDateButton = null;
+    }
 
     function initDateTimeButtons() {
         const startDateBtn = document.getElementById('startDateButton');
         const endDateBtn = document.getElementById('endDateButton');
         
-        startDateBtn.addEventListener('click', (e) => showDateSelectModal(e, startDateBtn));
-        endDateBtn.addEventListener('click', (e) => showDateSelectModal(e, endDateBtn));
-    
+        startDateBtn.addEventListener('click', () => showFullDateSelectModal(startDateBtn));
+        endDateBtn.addEventListener('click', () => showFullDateSelectModal(endDateBtn));
+        
         updateDateButtonText(startDateBtn, new Date());
         updateDateButtonText(endDateBtn, new Date());
+        
+        initFullDateSelect();
     }
 
     function updateDateButtonText(button, date) {
@@ -203,12 +331,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function hideEventModal() {
+        const eventCreateOverlay = document.querySelector('.event-create-overlay');
         const eventCreateModal = document.querySelector('.event-create-modal');
-        const eventForm = eventCreateModal.querySelector('.event-form');
-        hideAllModals();
-        eventForm.reset();
-        eventForm.querySelector('#eventStartTime').value = '10:00';
-        eventForm.querySelector('#eventEndTime').value = '11:00';
+        const eventForm = eventCreateModal?.querySelector('.event-form');
+        eventCreateOverlay.style.display = 'none';
+        eventCreateModal.style.display = 'none';
+        if (eventForm) eventForm.reset();
     }
 
     function createEvent(e) {
@@ -297,52 +425,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const eventForm = document.querySelector('.event-form');
         
         addEventButton.addEventListener('click', showEventModal);
-        document.querySelector('.event-create-overlay').addEventListener('click', hideAllModals);
-        document.querySelector('.time-select-overlay').addEventListener('click', hideAllModals);
-        document.getElementById('dateSelectOverlay').addEventListener('click', hideAllModals);
-        eventForm.querySelector('.modal-cancel').addEventListener('click', hideAllModals);
-        closeBtn.addEventListener('click', closeSideboard);
-    
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.calendar-day') && 
-                !e.target.closest('.sideboard') && 
-                !e.target.closest('.event-create-modal') && 
-                !e.target.closest('.time-select-modal') && 
-                !e.target.closest('.date-select-modal') && 
-                sideboard.classList.contains('active')) {
-                closeSideboard();
-                hideAllModals();
+        
+        document.querySelector('.event-create-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                hideEventModal();
             }
         });
+    
+        document.querySelector('.time-select-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                hideTimeSelectModal();
+            }
+        });
+        
+        eventForm.querySelector('.modal-cancel').addEventListener('click', hideEventModal);
+        closeBtn.addEventListener('click', closeSideboard);
     }
 
     function hideAllModals() {
-        // 시간 선택 모달 닫기
-        const timeSelectOverlay = document.querySelector('.time-select-overlay');
-        const timeSelectModal = document.querySelector('.time-select-modal');
-        if (timeSelectModal) {
-            timeSelectModal.style.display = 'none';
-            timeSelectOverlay.style.display = 'none';
-            currentTimeButton = null;
-        }
-    
-        // 이벤트 생성 모달 닫기
-        const eventCreateOverlay = document.querySelector('.event-create-overlay');
-        const eventCreateModal = document.querySelector('.event-create-modal');
-        const eventForm = eventCreateModal?.querySelector('.event-form');
-        if (eventCreateModal) {
-            eventCreateOverlay.style.display = 'none';
-            eventCreateModal.style.display = 'none';
-            if (eventForm) eventForm.reset();
-        }
-    
-        // 날짜 선택 모달 닫기
-        const dateSelectModal = document.getElementById('dateSelectModal');
-        const dateSelectOverlay = document.getElementById('dateSelectOverlay');
-        if (dateSelectModal) {
-            dateSelectModal.style.display = 'none';
-            dateSelectOverlay.style.display = 'none';
-        }
+        hideTimeSelectModal();
+        hideEventModal();
+        closeDateSelectModal();
     }
 
     function applyWeekStart() {
@@ -678,6 +781,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedDate = new Date(selectedYear, selectedMonth - 1);
             updateDateButtonText(currentDateButton, selectedDate);
         }
+        else { 
+            currentDate = new Date(selectedYear, selectedMonth - 1);
+            updateCurrentDate();
+            renderCalendar();
+        }
         closeDateSelectModal();
     }
 
@@ -743,7 +851,16 @@ document.addEventListener('DOMContentLoaded', function() {
             renderCalendar();
         });
     
-        currentDateElement.addEventListener('click', showDateSelectModal);
+        currentDateElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedYear = currentDate.getFullYear();
+            selectedMonth = currentDate.getMonth() + 1;
+            currentDateButton = null;
+            dateSelectModal.style.display = 'block';
+            dateSelectOverlay.style.display = 'block';
+            setupSpinners();
+        });
+    
         dateSelectOverlay.addEventListener('click', closeDateSelectModal);
         yearSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
         monthSpinner.addEventListener('scroll', debounceScroll(handleSpinnerScroll, 100));
@@ -757,8 +874,41 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && sideboard.classList.contains('active')) {
-            closeSideboard();
+        if (e.key === 'Escape') {
+            // 시간 선택 모달이 열려있는 경우
+            const timeSelectModal = document.querySelector('.time-select-modal');
+            if (timeSelectModal && window.getComputedStyle(timeSelectModal).display === 'block') {
+                hideTimeSelectModal();
+                return;
+            }
+    
+            // full date 선택 모달이 열려있는 경우
+            const fullDateSelectModal = document.querySelector('.full-date-select-modal');
+            if (fullDateSelectModal && window.getComputedStyle(fullDateSelectModal).display === 'block') {
+                hideFullDateSelectModal();
+                return;
+            }
+    
+            // 날짜 선택 모달이 열려있는 경우
+            const dateSelectModal = document.getElementById('dateSelectModal');
+            if (dateSelectModal && window.getComputedStyle(dateSelectModal).display === 'block') {
+                closeDateSelectModal();
+                return;
+            }
+    
+            // 일정 추가 모달이 열려있는 경우
+            const eventCreateModal = document.querySelector('.event-create-modal');
+            if (eventCreateModal && window.getComputedStyle(eventCreateModal).display === 'block') {
+                hideEventModal();
+                return;
+            }
+    
+            // 사이드보드만 열려있는 경우
+            const sideboard = document.querySelector('.sideboard');
+            if (sideboard && sideboard.classList.contains('active')) {
+                closeSideboard();
+                return;
+            }
         }
     });
 

@@ -879,9 +879,7 @@ select.form-input {
     transition: all 0.2s ease;
 }
 
-.time-select-cancel:hover {
-    background-color: #f5f5f5;
-}
+.time-select-cancel:hover { background-color: #f5f5f5; }
 
 .time-select-confirm {
     background-color: #FF9800;
@@ -896,6 +894,154 @@ select.form-input {
 }
 
 .time-select-confirm:hover {
+    background-color: #F57C00;
+    transform: translateY(-1px);
+}
+
+.full-date-select-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2004;
+}
+
+.full-date-select-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    z-index: 2005;
+    width: 360px;
+    padding: 1.5rem;
+}
+
+.full-date-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.full-date-select-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.full-calendar { width: 100%; }
+
+.full-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.full-calendar-header button {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: #666;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.full-calendar-header button:hover {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #FF9800;
+}
+
+.current-month {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.full-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.full-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.full-calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.full-calendar-day:hover { background-color: rgba(255, 152, 0, 0.1); }
+.full-calendar-day.other-month { color: #ccc; }
+
+.full-calendar-day.selected {
+    background-color: #FF9800;
+    color: white;
+    font-weight: 600;
+}
+
+.full-calendar-day.today {
+    border: 2px solid #FF9800;
+    font-weight: 600;
+}
+
+.full-date-select-footer {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.full-date-select-today,
+.full-date-select-confirm {
+    padding: 0.8rem 0;
+    width: 120px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.full-date-select-today {
+    background-color: white;
+    color: #FF9800;
+    border: 1px solid #FF9800;
+}
+
+.full-date-select-today:hover { background-color: rgba(255, 152, 0, 0.1); }
+
+.full-date-select-confirm {
+    background-color: #FF9800;
+    color: white;
+    border: none;
+}
+
+.full-date-select-confirm:hover {
     background-color: #F57C00;
     transform: translateY(-1px);
 }
@@ -985,5 +1131,11 @@ select.form-input {
     .time-select-cancel,
     .time-select-confirm {
         padding: 0.8rem 1rem;
+    }
+
+    .full-date-select-modal { width: 320px; }
+    .full-date-select-today,
+    .full-date-select-confirm {
+        width: 100px;
     }
 }

@@ -31,8 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
         currentDateButton = button;
         const fullDateSelectModal = document.querySelector('.full-date-select-modal');
         const fullDateSelectOverlay = document.querySelector('.full-date-select-overlay');
-        
-        // 현재 선택된 날짜 파싱
         const dateText = button.textContent;
         const matches = dateText.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/);
         if (matches) {
@@ -62,18 +60,15 @@ document.addEventListener('DOMContentLoaded', function() {
         let startOffset = firstDay.getDay();
         calendarDays.innerHTML = '';
         
-        // 이전 달의 날짜들
         for (let i = startOffset - 1; i >= 0; i--) {
             const day = prevMonthLastDay.getDate() - i;
             createFullCalendarDay(day, true);
         }
         
-        // 현재 달의 날짜들
         for (let day = 1; day <= lastDay.getDate(); day++) {
             createFullCalendarDay(day, false);
         }
         
-        // 다음 달의 날짜들
         const remainingDays = 42 - calendarDays.children.length;
         for (let day = 1; day <= remainingDays; day++) {
             createFullCalendarDay(day, true);
@@ -243,7 +238,6 @@ document.addEventListener('DOMContentLoaded', function() {
             periodItem.addEventListener('click', () => {
                 selectedPeriod = value;
                 updateSelectedSpinnerItem(periodSpinner, value);
-                // 클릭 시 스크롤 추가
                 scrollToSelected(periodSpinner, value, true);
             });
             periodSpinner.appendChild(periodItem);
@@ -875,35 +869,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            // 시간 선택 모달이 열려있는 경우
             const timeSelectModal = document.querySelector('.time-select-modal');
             if (timeSelectModal && window.getComputedStyle(timeSelectModal).display === 'block') {
                 hideTimeSelectModal();
                 return;
             }
     
-            // full date 선택 모달이 열려있는 경우
             const fullDateSelectModal = document.querySelector('.full-date-select-modal');
             if (fullDateSelectModal && window.getComputedStyle(fullDateSelectModal).display === 'block') {
                 hideFullDateSelectModal();
                 return;
             }
     
-            // 날짜 선택 모달이 열려있는 경우
             const dateSelectModal = document.getElementById('dateSelectModal');
             if (dateSelectModal && window.getComputedStyle(dateSelectModal).display === 'block') {
                 closeDateSelectModal();
                 return;
             }
     
-            // 일정 추가 모달이 열려있는 경우
             const eventCreateModal = document.querySelector('.event-create-modal');
             if (eventCreateModal && window.getComputedStyle(eventCreateModal).display === 'block') {
                 hideEventModal();
                 return;
             }
     
-            // 사이드보드만 열려있는 경우
             const sideboard = document.querySelector('.sideboard');
             if (sideboard && sideboard.classList.contains('active')) {
                 closeSideboard();

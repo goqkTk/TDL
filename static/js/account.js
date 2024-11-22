@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 비밀번호 입력 필드 이벤트
     [currentPwInput, newPwInput, confirmPwInput].forEach(input => {
         if (input) {
             input.addEventListener('focus', function() {
@@ -44,13 +43,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 비밀번호 변경 확인 버튼 클릭 이벤트
     confirmEditPwBtn.addEventListener('click', function() {
         const currentPw = currentPwInput.value;
         const newPw = newPwInput.value;
         const confirmPw = confirmPwInput.value;
     
-        // 입력값 검증
         if (!currentPw) {
             setupErrorMessage(currentPwInput, '현재 비밀번호를 입력해주세요');
             return;
@@ -71,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
     
-        // 서버로 비밀번호 변경 요청
         fetch('/update_password', {
             method: 'POST',
             headers: {
@@ -113,19 +109,16 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteAccountModalBackground.style.display = 'flex';
     });
 
-    // 모달 외부 클릭 시 모달 닫기 및 단계 초기화
     deleteAccountModalBackground.addEventListener('click', function(e) {
         if (e.target === deleteAccountModalBackground) {
             resetDeleteModal();
         }
     });
 
-    // 취소 버튼 클릭 시 모달 닫기 및 단계 초기화
     cancelDeleteAccountBtn.addEventListener('click', function() {
         resetDeleteModal();
     });
 
-    // 삭제 확인 버튼 클릭 시 단계별 처리
     confirmDeleteAccountBtn.addEventListener('click', function() {
         switch(deleteConfirmationStep) {
             case 1:
@@ -137,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateDeleteModal();
                 break;
             case 3:
-                // 실제 계정 삭제 처리
                 performAccountDeletion();
                 break;
         }

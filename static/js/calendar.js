@@ -27,6 +27,68 @@ document.addEventListener('DOMContentLoaded', function() {
     let tempDisplayDate = new Date();
     let selectedFullDate = null;
 
+    function renderEvents(calendarDays) {
+        // 모든 이벤트 요소 초기화
+        document.querySelectorAll('.event-bar').forEach(el => el.remove());
+        
+        // 현재 표시된 달의 시작일과 종료일 계산
+        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        
+        // 서버에서 해당 월의 이벤트 데이터 가져오기
+        fetch(`/get_events?start=${firstDay.toISOString()}&end=${lastDay.toISOString()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.events) {
+                    data.events.forEach(event => {
+                        const startDate = new Date(event.start_datetime);
+                        const endDate = new Date(event.end_datetime);
+                        
+                        // 달력의 각 날짜 셀에 이벤트 바 추가
+                        calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
+                            const dayNumber = dayCell.querySelector('.day-number');
+                            if (!dayNumber) return;
+                            
+                            const day = parseInt(dayNumber.textContent);
+                            if (isNaN(day)) return;
+                            
+                            const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                            
+                            if (cellDate >= startDate && cellDate <= endDate) {
+                                addEventBar(dayCell, event);
+                            }
+                        });
+                    });
+                }
+            })
+            .catch(error => console.error('이벤트 로딩 오류:', error));
+    }
+    
+    function addEventBar(dayCell, event) {
+        const eventBar = document.createElement('div');
+        eventBar.className = 'event-bar';
+        eventBar.style.backgroundColor = event.color;
+        eventBar.textContent = event.title;
+        eventBar.title = `${event.title}\n${formatDateTime(event.start_datetime)} - ${formatDateTime(event.end_datetime)}`;
+        
+        // 이벤트 클릭 시 상세 정보 표시
+        eventBar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showEventDetails(event);
+        });
+        
+        dayCell.appendChild(eventBar);
+    }
+    
+    function isDateInRange(date, start, end) {
+        return date >= start.setHours(0,0,0,0) && date <= end.setHours(23,59,59,999);
+    }
+    
+    function getCellDate(dayCell) {
+        const day = parseInt(dayCell.querySelector('.day-number').textContent);
+        return new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    }
+
     function showFullDateSelectModal(button) {
         currentDateButton = button;
         const fullDateSelectModal = document.querySelector('.full-date-select-modal');
@@ -337,34 +399,69 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const eventForm = document.querySelector('.event-form');
         const title = eventForm.querySelector('#eventTitle').value;
-        const startDate = eventForm.querySelector('#eventStartDate').value;
-        const startTime = eventForm.querySelector('#eventStartTime').value;
-        const endDate = eventForm.querySelector('#eventEndDate').value;
-        const endTime = eventForm.querySelector('#eventEndTime').value;
+        const startDate = document.getElementById('startDateButton').textContent;
+        const startTime = document.getElementById('startTimeButton').textContent;
+        const endDate = document.getElementById('endDateButton').textContent;
+        const endTime = document.getElementById('endTimeButton').textContent;
         const notification = eventForm.querySelector('#eventNotification').value;
         const url = eventForm.querySelector('#eventUrl').value;
         const memo = eventForm.querySelector('#eventMemo').value;
-
-        if (!title || !startDate || !startTime || !endDate || !endTime) return;
-
+    
+        if (!title) {
+            alert('제목을 입력해주세요.');
+            return;
+        }
+    
+        // 날짜와 시간 문자열을 Date 객체로 변환
+        function parseDateTime(dateStr, timeStr) {
+            const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);
+            const [period, time] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
+            const [hours, minutes] = time.split(':');
+            let hour = parseInt(hours);
+            
+            if (period === '오후' && hour !== 12) {
+                hour += 12;
+            } else if (period === '오전' && hour === 12) {
+                hour = 0;
+            }
+            
+            return new Date(year, month - 1, day, hour, parseInt(minutes));
+        }
+    
+        const startDateTime = parseDateTime(startDate, startTime);
+        const endDateTime = parseDateTime(endDate, endTime);
+    
         const eventData = {
             title,
-            startDateTime: `${startDate} ${startTime}`,
-            endDateTime: `${endDate} ${endTime}`,
+            startDateTime: startDateTime.toISOString(),
+            endDateTime: endDateTime.toISOString(),
             notification,
             url,
-            memo,
-            created: new Date().toISOString()
+            memo
         };
-
-        if (!events[selectedDate]) {
-            events[selectedDate] = [];
-        }
-        events[selectedDate].push(eventData);
-
-        updateEventList();
-        renderCalendar();
-        hideEventModal();
+    
+        // 서버에 이벤트 데이터 전송
+        fetch('/save_event', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(eventData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                hideEventModal();
+                renderCalendar(); // 달력 다시 렌더링
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('일정 저장 오류:', error);
+            alert('일정 저장에 실패했습니다.');
+        });
     }
 
     function updateEventList() {
@@ -698,7 +795,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderCalendar() {
-        calendarDays.innerHTML = '';
+        calendarDays.innerHTML = '';  // 기존 날짜들 초기화
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         const prevMonthLastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
@@ -710,21 +807,30 @@ document.addEventListener('DOMContentLoaded', function() {
             startOffset = startOffset === 0 ? 6 : startOffset - 1;
         }
         
+        // 이전 달의 마지막 날짜들
         for (let i = startOffset - 1; i >= 0; i--) {
             const day = prevMonthLastDay.getDate() - i;
-            createDayElement(day, 'other-month', true);
+            const dayElement = createDayElement(day, 'other-month', true);
+            calendarDays.appendChild(dayElement);  // 여기서 실제로 추가
         }
         
+        // 현재 달의 날짜들
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const isToday = isCurrentDay(day);
             const isSelected = isSelectedDay(day);
-            createDayElement(day, isToday ? 'today' : '', false, isSelected);
+            const dayElement = createDayElement(day, isToday ? 'today' : '', false, isSelected);
+            calendarDays.appendChild(dayElement);  // 여기서 실제로 추가
         }
         
+        // 다음 달의 시작 날짜들
         const remainingDays = 42 - calendarDays.children.length;
         for (let day = 1; day <= remainingDays; day++) {
-            createDayElement(day, 'other-month', true);
+            const dayElement = createDayElement(day, 'other-month', true);
+            calendarDays.appendChild(dayElement);  // 여기서 실제로 추가
         }
+    
+        // 이벤트 다시 렌더링
+        renderEvents(calendarDays);
     }
 
     function createDayElement(day, className, isOtherMonth, isSelected = false) {
@@ -736,16 +842,15 @@ document.addEventListener('DOMContentLoaded', function() {
         dayNumber.textContent = day;
         dayElement.appendChild(dayNumber);
         
+        const eventContainer = document.createElement('div');
+        eventContainer.className = 'event-container';
+        dayElement.appendChild(eventContainer);
+        
         if (!isOtherMonth) {
-            const dateString = getDateString(day);
-            if (events[dateString] && events[dateString].length > 0) {
-                const marker = document.createElement('div');
-                marker.className = 'event-marker';
-                dayElement.appendChild(marker);
-            }
             dayElement.addEventListener('click', () => handleDateClick(day));
         }
-        calendarDays.appendChild(dayElement);
+        
+        return dayElement;
     }
 
     function showDateSelectModal(e, button) {
@@ -929,6 +1034,11 @@ document.addEventListener('DOMContentLoaded', function() {
         renderCalendar();
         setupEventListeners();
         initSideboardEvents();
+        
+        const eventForm = document.querySelector('.event-form');
+        if (eventForm) {
+            eventForm.addEventListener('submit', createEvent);
+        }
     }
     init();
 });

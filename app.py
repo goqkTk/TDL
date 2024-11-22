@@ -401,6 +401,80 @@ def calendar():
         return render_template('calendar.html', user_id=user_id)
     return render_template('comingsoon.html', user_id=user_id)
 
+@app.route('/save_event', methods=['POST'])
+def save_event():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+    
+    try:
+        data = request.json
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        
+        event_data = {
+            'user_id': user_id,
+            'title': data.get('title'),
+            'start_datetime': data.get('startDateTime'),
+            'end_datetime': data.get('endDateTime'),
+            'notification': data.get('notification'),
+            'url': data.get('url'),
+            'memo': data.get('memo')
+        }
+        
+        success, event_id = save_calendar_event(db, event_data)
+        db.close()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': '일정이 저장되었습니다.',
+                'event_id': event_id
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '일정 저장에 실패했습니다.'
+            })
+            
+    except Exception as e:
+        print(f"일정 저장 오류: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '일정 저장 중 오류가 발생했습니다.'
+        })
+
+@app.route('/get_events')
+def get_events():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.', 'events': []})
+    
+    start_date = request.args.get('start')
+    end_date = request.args.get('end')
+    
+    try:
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        events = get_calendar_events(db, user_id, start_date, end_date)
+        db.close()
+        
+        for event in events:
+            if isinstance(event['start_datetime'], datetime):
+                event['start_datetime'] = event['start_datetime'].isoformat()
+            if isinstance(event['end_datetime'], datetime):
+                event['end_datetime'] = event['end_datetime'].isoformat()
+                
+        return jsonify({
+            'success': True,
+            'events': events
+        })
+    except Exception as e:
+        print(f"이벤트 조회 오류: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '이벤트 조회에 실패했습니다.',
+            'events': []
+        })
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
@@ -513,6 +587,7 @@ def delete_account():
         cursor = db.cursor()
         cursor.execute("DELETE FROM todo WHERE user_id = %s", (user_id,))
         cursor.execute("DELETE FROM categories WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM calendar_events WHERE user_id = %s", (user_id,))
         cursor.execute("DELETE FROM account WHERE id = %s", (user_id,))
         db.commit()
         db.close()

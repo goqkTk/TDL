@@ -1,6 +1,68 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+def save_calendar_event(db, event_data):
+    cursor = db.cursor()
+    try:
+        sql = """
+        INSERT INTO calendar_events 
+        (user_id, title, start_datetime, end_datetime, notification, url, memo) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (
+            event_data['user_id'],
+            event_data['title'],
+            event_data['start_datetime'],
+            event_data['end_datetime'],
+            event_data.get('notification'),
+            event_data.get('url'),
+            event_data.get('memo')
+        ))
+        db.commit()
+        return True, cursor.lastrowid
+    except Exception as e:
+        print(f"일정 저장 오류: {str(e)}")
+        db.rollback()
+        return False, None
+    finally:
+        cursor.close()
+
+def get_calendar_events(db, user_id, start_date, end_date):
+    cursor = db.cursor()
+    try:
+        sql = """
+        SELECT id, user_id, title, start_datetime, end_datetime,
+               notification, url, memo, created_at, color
+        FROM calendar_events 
+        WHERE user_id = %s 
+        AND ((start_datetime BETWEEN %s AND %s) 
+             OR (end_datetime BETWEEN %s AND %s)
+             OR (start_datetime <= %s AND end_datetime >= %s))
+        ORDER BY start_datetime
+        """
+        cursor.execute(sql, (user_id, start_date, end_date, start_date, end_date, start_date, end_date))
+        
+        events = []
+        for row in cursor.fetchall():
+            events.append({
+                'id': row[0],
+                'user_id': row[1],
+                'title': row[2],
+                'start_datetime': row[3],
+                'end_datetime': row[4],
+                'notification': row[5],
+                'url': row[6],
+                'memo': row[7],
+                'created_at': row[8],
+                'color': row[9]
+            })
+        return events
+    except Exception as e:
+        print(f"일정 조회 오류: {str(e)}")
+        return []
+    finally:
+        cursor.close()
+
 def update_user_id(current_id, new_id):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
     cursor = db.cursor()

@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderEvents(calendarDays) {
         // 모든 이벤트 요소 초기화
-        document.querySelectorAll('.event-bar').forEach(el => el.remove());
+        calendarDays.querySelectorAll('.event-container').forEach(container => {
+            container.innerHTML = '';
+        });
         
         // 현재 표시된 달의 시작일과 종료일 계산
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -53,9 +55,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (isNaN(day)) return;
                             
                             const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                            // 날짜 비교를 위해 시간을 제거
+                            const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
+                            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
                             
-                            if (cellDate >= startDate && cellDate <= endDate) {
-                                addEventBar(dayCell, event);
+                            if (cellDateOnly >= startDateOnly && cellDateOnly <= endDateOnly) {
+                                const eventContainer = dayCell.querySelector('.event-container');
+                                if (eventContainer) {
+                                    addEventBar(eventContainer, event);
+                                }
                             }
                         });
                     });
@@ -64,12 +73,23 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('이벤트 로딩 오류:', error));
     }
     
-    function addEventBar(dayCell, event) {
+    function addEventBar(container, event) {
         const eventBar = document.createElement('div');
         eventBar.className = 'event-bar';
-        eventBar.style.backgroundColor = event.color;
+        eventBar.style.backgroundColor = event.color || '#4285F4';  // 기본 색상 추가
         eventBar.textContent = event.title;
-        eventBar.title = `${event.title}\n${formatDateTime(event.start_datetime)} - ${formatDateTime(event.end_datetime)}`;
+        
+        // 시간 포맷팅 함수
+        const formatTime = (dateStr) => {
+            const date = new Date(dateStr);
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            const period = hours >= 12 ? '오후' : '오전';
+            const displayHours = hours % 12 || 12;
+            return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
+        };
+        
+        eventBar.title = `${event.title}\n${formatTime(event.start_datetime)} - ${formatTime(event.end_datetime)}`;
         
         // 이벤트 클릭 시 상세 정보 표시
         eventBar.addEventListener('click', (e) => {
@@ -77,7 +97,29 @@ document.addEventListener('DOMContentLoaded', function() {
             showEventDetails(event);
         });
         
-        dayCell.appendChild(eventBar);
+        container.appendChild(eventBar);
+    }
+
+    function showEventDetails(event) {
+        const formatDateTime = (dateStr) => {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+            const period = hours >= 12 ? '오후' : '오전';
+            const displayHours = hours % 12 || 12;
+            return `${year}년 ${month}월 ${day}일 ${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
+        };
+    
+        alert(
+            `제목: ${event.title}\n` +
+            `시작: ${formatDateTime(event.start_datetime)}\n` +
+            `종료: ${formatDateTime(event.end_datetime)}\n` +
+            (event.memo ? `메모: ${event.memo}\n` : '') +
+            (event.url ? `URL: ${event.url}` : '')
+        );
     }
     
     function isDateInRange(date, start, end) {
@@ -412,20 +454,21 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
     
-        // 날짜와 시간 문자열을 Date 객체로 변환
+        // 날짜와 시간 문자열을 MySQL datetime 형식으로 변환
         function parseDateTime(dateStr, timeStr) {
             const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);
-            const [period, time] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
-            const [hours, minutes] = time.split(':');
-            let hour = parseInt(hours);
+            const [period, hourMin] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
+            const [hours, minutes] = hourMin.split(':').map(num => parseInt(num));
             
+            let hour = parseInt(hours);
             if (period === '오후' && hour !== 12) {
                 hour += 12;
             } else if (period === '오전' && hour === 12) {
                 hour = 0;
             }
-            
-            return new Date(year, month - 1, day, hour, parseInt(minutes));
+    
+            // MySQL datetime 형식으로 반환 (YYYY-MM-DD HH:mm:ss)
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
         }
     
         const startDateTime = parseDateTime(startDate, startTime);
@@ -433,8 +476,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
         const eventData = {
             title,
-            startDateTime: startDateTime.toISOString(),
-            endDateTime: endDateTime.toISOString(),
+            startDateTime: startDateTime,
+            endDateTime: endDateTime,
             notification,
             url,
             memo

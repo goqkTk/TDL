@@ -33,20 +33,22 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = '';
         });
         
-        // 현재 표시된 달의 시작일과 종료일 계산
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         
-        // 서버에서 해당 월의 이벤트 데이터 가져오기
         fetch(`/get_events?start=${firstDay.toISOString()}&end=${lastDay.toISOString()}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.events) {
+                    // 이벤트를 날짜별로 그룹화하고 위치를 계산
+                    const eventPositions = new Map(); // 각 이벤트의 수직 위치를 저장
+                    
                     data.events.forEach(event => {
                         const startDate = new Date(event.start_datetime);
                         const endDate = new Date(event.end_datetime);
                         
                         // 달력의 각 날짜 셀에 이벤트 바 추가
+                        let isFirstDay = true;
                         calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
                             const dayNumber = dayCell.querySelector('.day-number');
                             if (!dayNumber) return;
@@ -55,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (isNaN(day)) return;
                             
                             const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                            // 날짜 비교를 위해 시간을 제거
                             const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
                             const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
                             const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
@@ -63,7 +64,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (cellDateOnly >= startDateOnly && cellDateOnly <= endDateOnly) {
                                 const eventContainer = dayCell.querySelector('.event-container');
                                 if (eventContainer) {
-                                    addEventBar(eventContainer, event);
+                                    const isSingleDay = startDateOnly.getTime() === endDateOnly.getTime();
+                                    const isLastDay = cellDateOnly.getTime() === endDateOnly.getTime();
+                                    
+                                    if (isFirstDay || isSingleDay) {
+                                        // 이벤트의 첫 번째 날 또는 단일 날짜 이벤트
+                                        const eventBar = addEventBar(eventContainer, event, {
+                                            isStart: true,
+                                            isEnd: isLastDay || isSingleDay,
+                                            isSingleDay: isSingleDay,
+                                            title: event.title
+                                        });
+                                        isFirstDay = false;
+                                    } else {
+                                        // 이벤트의 연속되는 날
+                                        addEventBar(eventContainer, event, {
+                                            isStart: false,
+                                            isEnd: isLastDay,
+                                            isSingleDay: false,
+                                            title: isLastDay ? event.title : ''  // 마지막 날에만 제목 표시
+                                        });
+                                    }
                                 }
                             }
                         });
@@ -73,11 +94,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('이벤트 로딩 오류:', error));
     }
     
-    function addEventBar(container, event) {
+    function addEventBar(container, event, options) {
         const eventBar = document.createElement('div');
         eventBar.className = 'event-bar';
-        eventBar.style.backgroundColor = event.color || '#4285F4';  // 기본 색상 추가
-        eventBar.textContent = event.title;
+    
+        if (options.isStart) { eventBar.classList.add('start'); }
+        if (options.isEnd) { eventBar.classList.add('end'); }
+        if (options.isSingleDay) { eventBar.classList.add('single-day'); }
+        
+        eventBar.style.backgroundColor = event.color || '#4285F4';
+        eventBar.textContent = options.title;
         
         // 시간 포맷팅 함수
         const formatTime = (dateStr) => {
@@ -89,15 +115,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
         };
         
+        // 툴팁에는 항상 전체 정보 표시
         eventBar.title = `${event.title}\n${formatTime(event.start_datetime)} - ${formatTime(event.end_datetime)}`;
         
-        // 이벤트 클릭 시 상세 정보 표시
         eventBar.addEventListener('click', (e) => {
             e.stopPropagation();
             showEventDetails(event);
         });
         
         container.appendChild(eventBar);
+        return eventBar;
     }
 
     function showEventDetails(event) {

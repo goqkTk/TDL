@@ -126,24 +126,25 @@ body {
 .event-container {
     position: relative;
     margin-top: 5px;
-    z-index: 1;  /* 이벤트 컨테이너를 더 위로 */
+    z-index: 1;
 }
 
 .event-bar {
     position: relative;
-    background-color: #4285F4;
+    background-color: #4A4E57;
     color: white;
     font-size: 12px;
     padding: 4px;
     height: 20px;
     line-height: 20px;
-    margin: 1px -6px;  /* -5px에서 -6px로 변경 */
+    margin: 1px -6px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: pointer;
-    z-index: 3;  /* z-index 값 증가 */
+    z-index: 3;
     box-sizing: border-box;
+    transition: all 0.2s ease;
 }
 
 .event-bar.start {
@@ -163,8 +164,10 @@ body {
     border-radius: 4px;
 }
 
-.event-bar:hover { opacity: 0.9; }
-.today .event-bar { background-color: #34A853; }
+.event-bar.hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
 
 .calendar-day {
     position: relative;

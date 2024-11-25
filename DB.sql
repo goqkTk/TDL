@@ -42,6 +42,39 @@ INSERT INTO `account` VALUES ('test','$2b$12$RqSoUpm1UUSWj6YShMJDfeJ1noloyM6ymMG
 UNLOCK TABLES;
 
 --
+-- Table structure for table `calendar_events`
+--
+
+DROP TABLE IF EXISTS `calendar_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `calendar_events` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(50) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `start_datetime` datetime NOT NULL,
+  `end_datetime` datetime NOT NULL,
+  `notification` varchar(20) DEFAULT NULL,
+  `url` varchar(500) DEFAULT NULL,
+  `memo` text,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `color` varchar(20) DEFAULT '#4285F4',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_dates` (`user_id`,`start_datetime`,`end_datetime`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `calendar_events`
+--
+
+LOCK TABLES `calendar_events` WRITE;
+/*!40000 ALTER TABLE `calendar_events` DISABLE KEYS */;
+INSERT INTO `calendar_events` VALUES (1,'Admin','TEST','2024-11-26 10:00:00','2024-11-28 11:00:00','none','','','2024-11-25 14:14:21','#4285F4');
+/*!40000 ALTER TABLE `calendar_events` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `categories`
 --
 
@@ -65,7 +98,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (14,'test','test',0,'2024-10-18 08:21:42',0),(21,'test','test1',0,'2024-10-23 10:29:47',1),(32,'test','test2',0,'2024-11-10 12:59:32',2),(34,'Admin','test',0,'2024-11-11 05:59:23',3),(35,'Admin','test1',0,'2024-11-11 05:59:52',9999),(36,'Admin','test2',0,'2024-11-11 05:59:57',9999);
+INSERT INTO `categories` VALUES (14,'test','test',0,'2024-10-18 08:21:42',0),(21,'test','test1',0,'2024-10-23 10:29:47',1),(32,'test','test2',0,'2024-11-10 12:59:32',2),(34,'Admin','test',0,'2024-11-11 05:59:23',0),(35,'Admin','test1',0,'2024-11-11 05:59:52',1),(36,'Admin','test2',0,'2024-11-11 05:59:57',2);
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -160,6 +193,10 @@ LOCK TABLES `verification_codes` WRITE;
 UNLOCK TABLES;
 
 --
+-- Dumping events for database 'tdl'
+--
+
+--
 -- Dumping routines for database 'tdl'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -172,4 +209,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-20 18:14:18
+-- Dump completed on 2024-11-25 14:27:06

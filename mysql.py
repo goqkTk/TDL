@@ -32,7 +32,7 @@ def get_calendar_events(db, user_id, start_date, end_date):
     try:
         sql = """
         SELECT id, user_id, title, start_datetime, end_datetime,
-               notification, url, memo, created_at, color
+               notification, url, memo, created_at
         FROM calendar_events 
         WHERE user_id = %s 
         AND ((start_datetime BETWEEN %s AND %s) 
@@ -53,8 +53,7 @@ def get_calendar_events(db, user_id, start_date, end_date):
                 'notification': row[5],
                 'url': row[6],
                 'memo': row[7],
-                'created_at': row[8],
-                'color': row[9]
+                'created_at': row[8]
             })
         return events
     except Exception as e:

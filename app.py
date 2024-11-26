@@ -475,6 +475,28 @@ def get_events():
             'events': []
         })
 
+@app.route('/delete_event', methods=['POST'])
+def delete_event():
+    try:
+        data = request.json
+        event_id = data.get('eventId')
+        if not event_id:
+            return jsonify({'success': False, 'message': '일정 ID가 필요합니다.'})
+            
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        cursor = db.cursor()
+        
+        sql = "DELETE FROM calendar_events WHERE id = %s"
+        cursor.execute(sql, (event_id,))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': '일정이 삭제되었습니다.'})
+    except Exception as e:
+        print(f"일정 삭제 오류: {str(e)}")
+        return jsonify({'success': False, 'message': '일정 삭제에 실패했습니다.'})
+    finally:
+        db.close()
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):

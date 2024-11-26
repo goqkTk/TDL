@@ -58,10 +58,9 @@ CREATE TABLE `calendar_events` (
   `url` varchar(500) DEFAULT NULL,
   `memo` text,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `color` varchar(20) DEFAULT '#4285F4',
   PRIMARY KEY (`id`),
   KEY `idx_user_dates` (`user_id`,`start_datetime`,`end_datetime`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +69,7 @@ CREATE TABLE `calendar_events` (
 
 LOCK TABLES `calendar_events` WRITE;
 /*!40000 ALTER TABLE `calendar_events` DISABLE KEYS */;
-INSERT INTO `calendar_events` VALUES (1,'Admin','TEST','2024-11-26 10:00:00','2024-11-28 11:00:00','none','','','2024-11-25 14:14:21','#4285F4');
+INSERT INTO `calendar_events` VALUES (1,'Admin','TEST','2024-11-26 10:00:00','2024-11-28 11:00:00','none','','','2024-11-25 14:14:21'),(3,'Admin','test1','2024-11-20 10:00:00','2024-11-22 11:00:00','none','','','2024-11-26 12:07:06'),(4,'Admin','test2','2024-11-08 10:00:00','2024-11-11 11:00:00','none','','','2024-11-26 12:07:54'),(5,'Admin','test3','2024-11-08 10:00:00','2024-11-11 11:00:00','none','','','2024-11-26 12:08:14'),(6,'Admin','test3','2024-11-13 10:00:00','2024-11-13 11:00:00','none','','','2024-11-26 12:48:32'),(7,'Admin','테스트','2024-11-14 10:00:00','2024-11-14 11:00:00','none','','','2024-11-26 12:48:46'),(8,'Admin','일정제목이이렇게존나길면어떡함옆일정까지늘어나나?어떻게처리를해놨지?끝에가면텍스트가...으로바뀌게해놨나?','2024-11-17 10:00:00','2024-11-18 11:00:00','none','','','2024-11-26 12:49:37'),(9,'Admin','ㅅㄷㄴㅅ','2024-11-12 10:00:00','2024-11-14 11:00:00','none','','','2024-11-26 13:36:19'),(10,'Admin','ㅁㄴㄹㅇㅁㄹㄴㅇ','2024-11-12 10:00:00','2024-11-12 11:00:00','none','','','2024-11-26 13:49:31'),(11,'Admin','호ㅓㅘㅓㅣ,','2024-11-15 10:00:00','2024-11-15 11:00:00','none','','','2024-11-26 13:50:29'),(12,'Admin','ㅎ료ㅗㄹ옿ㄹㅇ홀홍ㄹㅇ호','2024-11-15 10:00:00','2024-11-15 11:00:00','none','','','2024-11-26 13:50:42'),(13,'Admin','ㅀ올ㅇ호ㅓㅗㄹㅇㅎ놇ㅇㄴㅇㅎㄹㄶㅇㄹ','2024-11-15 10:00:00','2024-11-15 11:00:00','none','','','2024-11-26 13:50:46'),(14,'Admin','ㅀㄴㅊ픁ㅌㅍㅊㅍㅊㅌㅊㅌㅍ','2024-11-15 10:00:00','2024-11-15 11:00:00','none','','','2024-11-26 13:50:51'),(15,'Admin',' ㅌ츞ㅊ튳ㅍ튳ㅌ','2024-11-15 10:00:00','2024-11-15 11:00:00','none','','','2024-11-26 13:50:57');
 /*!40000 ALTER TABLE `calendar_events` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -209,4 +208,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-25 14:27:06
+-- Dump completed on 2024-11-26 14:45:16

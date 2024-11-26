@@ -966,10 +966,88 @@ document.addEventListener('DOMContentLoaded', function() {
         closeDateSelectModal();
     }
 
+    function updateSideboardEvents(selectedDate) {
+        const startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+    
+        fetch(`/get_events?start=${startDate.toISOString()}&end=${endDate.toISOString()}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const eventList = document.querySelector('.event-list');
+                    if (eventList) {
+                        renderSideboardEvents(data.events, eventList);
+                    }
+                }
+            })
+            .catch(error => console.error('이벤트 로딩 오류:', error));
+    }
+    
+    function formatEventTime(dateStr) {
+        const date = new Date(dateStr);
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const period = hours >= 12 ? '오후' : '오전';
+        const displayHours = hours % 12 || 12;
+        return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
+    }
+    
+    function formatEventDate(dateStr) {
+        const date = new Date(dateStr);
+        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
+    
+    function renderSideboardEvents(events, container) {
+        let html = `
+            <button class="add-event-button">
+                <i class="fas fa-plus"></i>
+                새로운 일정 추가
+            </button>
+        `;
+    
+        events.forEach(event => {
+            html += `
+                <div class="event-item">
+                    <div class="event-header">
+                        <span class="event-title">${event.title}</span>
+                        <button class="delete-event"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="event-time">
+                        ${formatEventDate(event.start_datetime)} ${formatEventTime(event.start_datetime)} ~ 
+                        ${formatEventDate(event.end_datetime)} ${formatEventTime(event.end_datetime)}
+                    </div>
+                    ${event.memo ? `<p class="event-memo">${event.memo}</p>` : ''}
+                    ${event.url ? `<a href="${event.url}" class="event-url" target="_blank">${event.url}</a>` : ''}
+                </div>
+            `;
+        });
+    
+        container.innerHTML = html;
+    
+        // 이벤트 리스너 다시 설정
+        container.querySelector('.add-event-button').addEventListener('click', showEventModal);
+        
+        // 삭제 버튼에 대한 이벤트 리스너
+        container.querySelectorAll('.delete-event').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const eventItem = e.target.closest('.event-item');
+                if (confirm('이 일정을 삭제하시겠습니까?')) {
+                    // 여기에 일정 삭제 로직 추가
+                    eventItem.remove();
+                }
+            });
+        });
+    }
+
     function handleDateClick(day) {
         selectedDate = getDateString(day);
         renderCalendar();
         showSideboard(day);
+        
+        const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        updateSideboardEvents(selectedDateObj);
     }
 
     function showSideboard(day) {

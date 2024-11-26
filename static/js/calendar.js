@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const categoryContainer = document.querySelector('.other_categories');
     const calendarDays = document.getElementById('calendarDays');
     const currentDateElement = document.getElementById('currentDate');
     const prevMonthButton = document.querySelector('.nav-buttons button:first-child');
@@ -53,9 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     
-                            // other-month 클래스가 있는지 확인
                             const isOtherMonth = dayCell.classList.contains('other-month');
-                            if (isOtherMonth) return;  // 다른 달의 날짜면 건너뜀
+                            if (isOtherMonth) return;
     
                             const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
                             const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
@@ -72,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             isStart: true,
                                             isEnd: isLastDay || isSingleDay,
                                             isSingleDay: isSingleDay,
-                                            title: event.title  // 시작 날짜에는 제목 표시
+                                            title: event.title
                                         });
                                         isFirstDay = false;
                                     } else {
@@ -80,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             isStart: false,
                                             isEnd: isLastDay,
                                             isSingleDay: false,
-                                            title: ''  // 시작 날짜가 아닌 경우 제목 표시하지 않음
+                                            title: ''
                                         });
                                     }
                                 }
@@ -117,15 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 .forEach(bar => bar.classList.remove('hover'));
         });
         
-        const formatTime = (dateStr) => {
-            const date = new Date(dateStr);
-            const hours = date.getHours();
-            const minutes = date.getMinutes();
-            const period = hours >= 12 ? '오후' : '오전';
-            const displayHours = hours % 12 || 12;
-            return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
-        };
-        
         eventBar.addEventListener('click', (e) => {
             e.stopPropagation();
             showEventDetails(event);
@@ -155,15 +144,6 @@ document.addEventListener('DOMContentLoaded', function() {
             (event.memo ? `메모: ${event.memo}\n` : '') +
             (event.url ? `URL: ${event.url}` : '')
         );
-    }
-    
-    function isDateInRange(date, start, end) {
-        return date >= start.setHours(0,0,0,0) && date <= end.setHours(23,59,59,999);
-    }
-    
-    function getCellDate(dayCell) {
-        const day = parseInt(dayCell.querySelector('.day-number').textContent);
-        return new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     }
 
     function showFullDateSelectModal(button) {
@@ -558,7 +538,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const startDate = new Date(event.startDateTime);
             const endDate = new Date(event.endDateTime);
-            const isSameDay = startDate.toDateString() === endDate.toDateString();
             
             const formatDate = (date) => {
                 const options = { 
@@ -686,7 +665,6 @@ document.addEventListener('DOMContentLoaded', function() {
         monthSpinner.addEventListener('wheel', handleWheel, { passive: false });
     }
 
-    let lastWheelTime = Date.now();
     let wheelEvents = [];
     const WHEEL_TIMEOUT = 150;
 
@@ -878,7 +856,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderCalendar() {
-        calendarDays.innerHTML = '';  // 기존 날짜들 초기화
+        calendarDays.innerHTML = '';
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         const prevMonthLastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
@@ -890,29 +868,24 @@ document.addEventListener('DOMContentLoaded', function() {
             startOffset = startOffset === 0 ? 6 : startOffset - 1;
         }
         
-        // 이전 달의 마지막 날짜들
         for (let i = startOffset - 1; i >= 0; i--) {
             const day = prevMonthLastDay.getDate() - i;
             const dayElement = createDayElement(day, 'other-month', true);
-            calendarDays.appendChild(dayElement);  // 여기서 실제로 추가
+            calendarDays.appendChild(dayElement);
         }
         
-        // 현재 달의 날짜들
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const isToday = isCurrentDay(day);
             const isSelected = isSelectedDay(day);
             const dayElement = createDayElement(day, isToday ? 'today' : '', false, isSelected);
-            calendarDays.appendChild(dayElement);  // 여기서 실제로 추가
+            calendarDays.appendChild(dayElement);
         }
         
-        // 다음 달의 시작 날짜들
         const remainingDays = 42 - calendarDays.children.length;
         for (let day = 1; day <= remainingDays; day++) {
             const dayElement = createDayElement(day, 'other-month', true);
-            calendarDays.appendChild(dayElement);  // 여기서 실제로 추가
+            calendarDays.appendChild(dayElement);
         }
-    
-        // 이벤트 다시 렌더링
         renderEvents(calendarDays);
     }
 
@@ -934,22 +907,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return dayElement;
-    }
-
-    function showDateSelectModal(e, button) {
-        e.stopPropagation();
-        currentDateButton = button;
-        
-        const dateText = button.textContent;
-        const matches = dateText.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/);
-        if (matches) {
-            selectedYear = parseInt(matches[1]);
-            selectedMonth = parseInt(matches[2]);
-        }
-        
-        dateSelectModal.style.display = 'block';
-        dateSelectOverlay.style.display = 'block';
-        setupSpinners();
     }
 
     function closeDateSelectModal() {
@@ -983,14 +940,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     const eventList = document.querySelector('.event-list');
                     if (eventList) {
-                        // 새로운 일정을 추가하기 전에 기존 일정 모두 제거
                         const addEventButton = eventList.querySelector('.add-event-button');
                         eventList.innerHTML = '';
                         if (addEventButton) {
                             eventList.appendChild(addEventButton);
                         }
                         
-                        // 일정들을 추가
                         data.events.forEach(event => {
                             const eventElement = createEventElement(event);
                             eventList.appendChild(eventElement);
@@ -1013,16 +968,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatEventDate(dateStr) {
         const date = new Date(dateStr);
         return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-    }
-    
-    function renderSideboardEvents(events) {
-        const eventsContainer = document.querySelector('.events-container');
-        eventsContainer.innerHTML = '';
-    
-        events.forEach(event => {
-            const eventElement = createEventElement(event);
-            eventsContainer.appendChild(eventElement);
-        });
     }
     
     function createEventElement(event) {

@@ -588,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     editDeleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        button.addEventListener('click', function() {
             if (isDraggingCategory) return;
             
             const categoryContainer = this.closest('.category-container');
@@ -1108,7 +1108,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         todoItem.querySelector('.detail').textContent = data.detail;
                         const infoContainer = todoItem.querySelector('.info-container');
                         if (infoContainer) {
-                            console.log('Updating info container');
                             infoContainer.innerHTML = `
                                 <p>생성일: ${data.created_at}</p>
                                 <p>수정일: ${data.updated_at}</p>

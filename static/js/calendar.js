@@ -449,7 +449,63 @@ document.addEventListener('DOMContentLoaded', function() {
         const eventForm = eventCreateModal?.querySelector('.event-form');
         eventCreateOverlay.style.display = 'none';
         eventCreateModal.style.display = 'none';
-        if (eventForm) eventForm.reset();
+        if (eventForm) {
+            eventForm.reset();
+            delete eventForm.dataset.eventId;
+            eventCreateModal.querySelector('.event-modal-title').textContent = '새로운 일정';  // 제목 초기화
+        }
+    }
+
+    function showEditEventModal(event) {
+        hideAllModals();
+        
+        const eventCreateModal = document.querySelector('.event-create-modal');
+        const eventCreateOverlay = document.querySelector('.event-create-overlay');
+        const eventForm = document.querySelector('.event-form');
+        const modalTitle = eventCreateModal.querySelector('.event-modal-title');
+        
+        // 모달 제목 변경
+        modalTitle.textContent = '일정 수정';
+        
+        // 폼 데이터 설정
+        eventForm.querySelector('#eventTitle').value = event.title;
+        eventForm.querySelector('#eventUrl').value = event.url || '';
+        eventForm.querySelector('#eventMemo').value = event.memo || '';
+        eventForm.querySelector('#eventNotification').value = event.notification || 'none';
+    
+        // 날짜와 시간 설정
+        const startDate = new Date(event.start_datetime);
+        const endDate = new Date(event.end_datetime);
+        
+        const startDateBtn = document.getElementById('startDateButton');
+        const endDateBtn = document.getElementById('endDateButton');
+        const startTimeBtn = document.getElementById('startTimeButton');
+        const endTimeBtn = document.getElementById('endTimeButton');
+        
+        updateDateButtonText(startDateBtn, startDate);
+        updateDateButtonText(endDateBtn, endDate);
+        
+        // 시간 버튼 텍스트 업데이트
+        startTimeBtn.textContent = formatTimeButtonText(startDate);
+        endTimeBtn.textContent = formatTimeButtonText(endDate);
+        
+        // 폼 데이터에 이벤트 ID 추가
+        eventForm.dataset.eventId = event.id;
+        
+        // 모달 표시
+        eventCreateOverlay.style.display = 'block';
+        eventCreateModal.style.display = 'block';
+        
+        // 제목 입력란에 포커스
+        eventForm.querySelector('#eventTitle').focus();
+    }
+
+    function formatTimeButtonText(date) {
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const period = hours >= 12 ? '오후' : '오전';
+        const displayHours = hours % 12 || 12;
+        return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
     }
 
     function createEvent(e) {
@@ -463,6 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const notification = eventForm.querySelector('#eventNotification').value;
         const url = eventForm.querySelector('#eventUrl').value;
         const memo = eventForm.querySelector('#eventMemo').value;
+        const eventId = eventForm.dataset.eventId;
     
         if (!title) {
             alert('제목을 입력해주세요.');
@@ -505,26 +562,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     
-        fetch('/save_event', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(eventData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                hideEventModal();
-                refreshCalendarAndSideboard();
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('일정 저장 오류:', error);
-            alert('일정 저장에 실패했습니다.');
-        });
+        if (eventId) {
+            fetch(`/update_event/${eventId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideEventModal();
+                    refreshCalendarAndSideboard();
+                } else {
+                    alert(data.message || '일정 수정에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('일정 수정 오류:', error);
+                alert('일정 수정에 실패했습니다.');
+            });
+        } else {
+            fetch('/save_event', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideEventModal();
+                    refreshCalendarAndSideboard();
+                } else {
+                    alert(data.message || '일정 저장에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('일정 저장 오류:', error);
+                alert('일정 저장에 실패했습니다.');
+            });
+        }
     }
 
     function updateEventList() {
@@ -985,7 +1065,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-event';
         deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-        deleteBtn.onclick = () => handleEventDelete(event.id);
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            handleEventDelete(event.id);
+        };
     
         const time = document.createElement('div');
         time.className = 'event-time';
@@ -1011,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', function() {
             url.textContent = event.url;
             eventDiv.appendChild(url);
         }
-    
+        eventDiv.addEventListener('click', () => showEditEventModal(event));
         return eventDiv;
     }
 

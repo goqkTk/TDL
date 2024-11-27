@@ -1,6 +1,38 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+def update_calendar_event(db, event_id, event_data):
+    cursor = db.cursor()
+    try:
+        sql = """
+        UPDATE calendar_events 
+        SET title = %s, 
+            start_datetime = %s, 
+            end_datetime = %s, 
+            notification = %s, 
+            url = %s, 
+            memo = %s 
+        WHERE id = %s AND user_id = %s
+        """
+        cursor.execute(sql, (
+            event_data['title'],
+            event_data['startDateTime'],
+            event_data['endDateTime'],
+            event_data.get('notification'),
+            event_data.get('url'),
+            event_data.get('memo'),
+            event_id,
+            event_data['user_id']
+        ))
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"일정 수정 오류: {str(e)}")
+        db.rollback()
+        return False
+    finally:
+        cursor.close()
+
 def save_calendar_event(db, event_data):
     cursor = db.cursor()
     try:

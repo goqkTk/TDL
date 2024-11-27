@@ -401,6 +401,47 @@ def calendar():
         return render_template('calendar.html', user_id=user_id)
     return render_template('comingsoon.html', user_id=user_id)
 
+@app.route('/update_event/<int:event_id>', methods=['PUT'])
+def update_event(event_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+    
+    try:
+        data = request.json
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        
+        event_data = {
+            'user_id': user_id,
+            'title': data.get('title'),
+            'startDateTime': data.get('startDateTime'),
+            'endDateTime': data.get('endDateTime'),
+            'notification': data.get('notification'),
+            'url': data.get('url'),
+            'memo': data.get('memo')
+        }
+        
+        success = update_calendar_event(db, event_id, event_data)
+        db.close()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': '일정이 수정되었습니다.'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': '일정 수정에 실패했습니다.'
+            })
+            
+    except Exception as e:
+        print(f"일정 수정 오류: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '일정 수정 중 오류가 발생했습니다.'
+        })
+
 @app.route('/save_event', methods=['POST'])
 def save_event():
     user_id = session.get('user_id')

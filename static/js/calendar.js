@@ -117,33 +117,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         eventBar.addEventListener('click', (e) => {
             e.stopPropagation();
-            showEventDetails(event);
+            const clickedDate = new Date(event.start_datetime);
+            const day = clickedDate.getDate();
+            
+            if (currentDate.getMonth() !== clickedDate.getMonth() || 
+                currentDate.getFullYear() !== clickedDate.getFullYear()) {
+                currentDate = new Date(clickedDate.getFullYear(), clickedDate.getMonth(), 1);
+                updateCurrentDate();
+                renderCalendar();
+            }
+            handleDateClick(day);
+            setTimeout(() => showEditEventModal(event), 100);
         });
         
         container.appendChild(eventBar);
         return eventBar;
-    }
-
-    function showEventDetails(event) {
-        const formatDateTime = (dateStr) => {
-            const date = new Date(dateStr);
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
-            const hours = date.getHours();
-            const minutes = date.getMinutes();
-            const period = hours >= 12 ? '오후' : '오전';
-            const displayHours = hours % 12 || 12;
-            return `${year}년 ${month}월 ${day}일 ${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
-        };
-    
-        alert(
-            `제목: ${event.title}\n` +
-            `시작: ${formatDateTime(event.start_datetime)}\n` +
-            `종료: ${formatDateTime(event.end_datetime)}\n` +
-            (event.memo ? `메모: ${event.memo}\n` : '') +
-            (event.url ? `URL: ${event.url}` : '')
-        );
     }
 
     function showFullDateSelectModal(button) {

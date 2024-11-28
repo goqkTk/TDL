@@ -38,52 +38,90 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.events) {
+                    // 날짜별로 이벤트를 그룹화하는 맵 생성
+                    const eventsByDay = new Map();
+                    
                     data.events.forEach(event => {
                         const startDate = new Date(event.start_datetime);
                         const endDate = new Date(event.end_datetime);
                         
-                        let isFirstDay = true;
                         calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
                             const dayNumber = dayCell.querySelector('.day-number');
                             if (!dayNumber) return;
                             
                             const day = parseInt(dayNumber.textContent);
                             if (isNaN(day)) return;
-                            
-                            const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     
+                            // other-month 체크를 먼저 수행
                             const isOtherMonth = dayCell.classList.contains('other-month');
                             if (isOtherMonth) return;
-    
+                            
+                            const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
                             const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
                             const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
                             const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
                             
-                            if (cellDateOnly >= startDateOnly && cellDateOnly <= endDateOnly) {
-                                const eventContainer = dayCell.querySelector('.event-container');
-                                if (eventContainer) {
-                                    const isSingleDay = startDateOnly.getTime() === endDateOnly.getTime();
-                                    const isLastDay = cellDateOnly.getTime() === endDateOnly.getTime();
-                                    
-                                    if (isFirstDay || isSingleDay) {
-                                        const eventBar = addEventBar(eventContainer, event, {
-                                            isStart: true,
-                                            isEnd: isLastDay || isSingleDay,
-                                            isSingleDay: isSingleDay,
-                                            title: event.title
-                                        });
-                                        isFirstDay = false;
-                                    } else {
-                                        addEventBar(eventContainer, event, {
-                                            isStart: false,
-                                            isEnd: isLastDay,
-                                            isSingleDay: false,
-                                            title: ''
-                                        });
-                                    }
+                            if (cellDateOnly >= startDateOnly && cellDateOnly <= endDateOnly && 
+                                cellDate.getMonth() === currentDate.getMonth()) {  // 현재 월에 해당하는 날짜만 처리
+                                const dateKey = cellDateOnly.toISOString();
+                                if (!eventsByDay.has(dateKey)) {
+                                    eventsByDay.set(dateKey, []);
                                 }
+                                eventsByDay.get(dateKey).push({
+                                    event,
+                                    isStart: cellDateOnly.getTime() === startDateOnly.getTime(),
+                                    isEnd: cellDateOnly.getTime() === endDateOnly.getTime(),
+                                    isSingleDay: startDateOnly.getTime() === endDateOnly.getTime()
+                                });
                             }
                         });
+                    });
+    
+                    // 각 날짜 칸에 대해 이벤트 렌더링
+                    calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
+                        const dayNumber = dayCell.querySelector('.day-number');
+                        if (!dayNumber) return;
+                        
+                        const day = parseInt(dayNumber.textContent);
+                        if (isNaN(day)) return;
+                        
+                        // other-month 체크
+                        const isOtherMonth = dayCell.classList.contains('other-month');
+                        if (isOtherMonth) return;
+                        
+                        const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                        const dateKey = cellDate.toISOString();
+                        let dayEvents = eventsByDay.get(dateKey) || [];
+    
+                        // 생성일시(created_at) 기준으로 정렬 (최신순)
+                        dayEvents.sort((a, b) => {
+                            const dateA = new Date(a.event.created_at);
+                            const dateB = new Date(b.event.created_at);
+                            return dateB - dateA;
+                        });
+                        
+                        const eventContainer = dayCell.querySelector('.event-container');
+                        if (eventContainer && dayEvents.length > 0) {
+                            // 최대 3개까지만 표시
+                            const visibleEvents = dayEvents.slice(0, 3);
+                            const remainingCount = dayEvents.length - 3;
+    
+                            visibleEvents.forEach(({ event, isStart, isEnd, isSingleDay }) => {
+                                addEventBar(eventContainer, event, {
+                                    isStart,
+                                    isEnd,
+                                    isSingleDay,
+                                    title: event.title
+                                });
+                            });
+    
+                            if (remainingCount > 0) {
+                                const moreText = document.createElement('div');
+                                moreText.className = 'more-events';
+                                moreText.textContent = `+${remainingCount}`;
+                                eventContainer.appendChild(moreText);
+                            }
+                        }
                     });
                 }
             })
@@ -96,14 +134,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (options.isSingleDay) {
             eventBar.classList.add('single-day');
+            eventBar.textContent = options.title;  // 단일 일정일 경우 제목 표시
         } else {
-            if (options.isStart) eventBar.classList.add('start');
-            if (options.isEnd) eventBar.classList.add('end');
+            if (options.isStart) {
+                eventBar.classList.add('start');
+                eventBar.textContent = options.title;  // 시작일 때만 제목 표시
+            }
+            if (options.isEnd) {
+                eventBar.classList.add('end');
+            }
         }
         
         eventBar.dataset.eventId = event.id;
         eventBar.style.backgroundColor = '#4A4E57';
-        eventBar.textContent = options.title;
         
         eventBar.addEventListener('mouseenter', () => {
             document.querySelectorAll(`.event-bar[data-event-id="${event.id}"]`)
@@ -1014,7 +1057,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             eventList.appendChild(addEventButton);
                         }
                         
-                        data.events.forEach(event => {
+                        const sortedEvents = data.events.sort((a, b) => {
+                            const dateA = new Date(a.created_at);
+                            const dateB = new Date(b.created_at);
+                            return dateB - dateA;
+                        });
+                        
+                        sortedEvents.forEach(event => {
                             const eventElement = createEventElement(event);
                             eventList.appendChild(eventElement);
                         });

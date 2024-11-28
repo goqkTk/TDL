@@ -124,6 +124,13 @@ body {
     margin-bottom: 5px;
 }
 
+.more-events {
+    color: #666;
+    font-size: 17px;
+    padding: 2px 8px;
+    margin-top: 2px;
+}
+
 .event-container {
     position: relative;
     margin-top: 5px;
@@ -1149,6 +1156,17 @@ select.form-input {
 .full-date-select-confirm:hover {
     background-color: #F57C00;
     transform: translateY(-1px);
+}
+
+.delete-confirm-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
 }
 
 .delete-confirm-modal {

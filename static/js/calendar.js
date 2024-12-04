@@ -26,24 +26,19 @@ document.addEventListener('DOMContentLoaded', function() {
     let tempDisplayDate = new Date();
     let selectedFullDate = null;
 
-    function getEventRows(events, startDate, endDate) {
-        // 이벤트들의 행 위치를 계산하는 함수
-        const rows = new Map(); // 날짜별 사용 중인 행을 추적
-        const eventPositions = new Map(); // 각 이벤트의 행 위치를 저장
+    function getEventRows(events) {
+        const rows = new Map();
+        const eventPositions = new Map();
     
-        // 이벤트를 시작 시간 순으로 정렬
         events.sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime));
     
         events.forEach(event => {
             const start = new Date(event.start_datetime);
             const end = new Date(event.end_datetime);
             let rowIndex = 0;
-    
-            // 이벤트가 겹치지 않는 가장 낮은 행 찾기
             let foundRow = false;
             while (!foundRow) {
                 foundRow = true;
-                // 이벤트 기간 동안 각 날짜 확인
                 for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
                     const dateStr = date.toISOString().split('T')[0];
                     if (!rows.has(dateStr)) {
@@ -56,8 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
-    
-            // 찾은 행에 이벤트 배치
+
             for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
                 const dateStr = date.toISOString().split('T')[0];
                 rows.get(dateStr).add(rowIndex);
@@ -81,10 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.events) {
-                    // 모든 이벤트의 행 위치 계산
                     const eventPositions = getEventRows(data.events, firstDay, lastDay);
-                    
-                    // 날짜별로 이벤트를 그룹화
                     const eventsByDay = new Map();
                     
                     data.events.forEach(event => {
@@ -123,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     });
     
-                    // 각 날짜 칸에 이벤트 렌더링
                     calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
                         const dayNumber = dayCell.querySelector('.day-number');
                         if (!dayNumber) return;
@@ -140,10 +130,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
                         const eventContainer = dayCell.querySelector('.event-container');
                         if (eventContainer && dayEvents.length > 0) {
-                            // 이벤트를 행 위치에 따라 정렬
                             dayEvents.sort((a, b) => a.rowIndex - b.rowIndex);
                             
-                            // 최대 3개만 표시
                             const eventsToShow = dayEvents.slice(0, 3);
                             
                             eventsToShow.forEach(({ event, isStart, isEnd, isSingleDay, rowIndex }) => {
@@ -194,12 +182,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 eventContainer.appendChild(eventBar);
                             });
                             
-                            // 3개 이상의 이벤트가 있을 경우 "+더보기" 표시
                             if (dayEvents.length > 3) {
                                 const moreText = document.createElement('div');
                                 moreText.className = 'more-events';
                                 moreText.textContent = `+${dayEvents.length - 3}`;
-                                moreText.style.gridRow = 4;  // 네 번째 행에 위치
+                                moreText.style.gridRow = 4;
                                 eventContainer.appendChild(moreText);
                             }
                         }
@@ -207,55 +194,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => console.error('이벤트 로딩 오류:', error));
-    }
-    
-    function addEventBar(container, event, options) {
-        const eventBar = document.createElement('div');
-        eventBar.className = 'event-bar';
-        
-        if (options.isSingleDay) {
-            eventBar.classList.add('single-day');
-            eventBar.textContent = options.title;  // 단일 일정일 경우 제목 표시
-        } else {
-            if (options.isStart) {
-                eventBar.classList.add('start');
-                eventBar.textContent = options.title;  // 시작일 때만 제목 표시
-            }
-            if (options.isEnd) {
-                eventBar.classList.add('end');
-            }
-        }
-        
-        eventBar.dataset.eventId = event.id;
-        eventBar.style.backgroundColor = '#4A4E57';
-        
-        eventBar.addEventListener('mouseenter', () => {
-            document.querySelectorAll(`.event-bar[data-event-id="${event.id}"]`)
-                .forEach(bar => bar.classList.add('hover'));
-        });
-        
-        eventBar.addEventListener('mouseleave', () => {
-            document.querySelectorAll(`.event-bar[data-event-id="${event.id}"]`)
-                .forEach(bar => bar.classList.remove('hover'));
-        });
-        
-        eventBar.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const clickedDate = new Date(event.start_datetime);
-            const day = clickedDate.getDate();
-            
-            if (currentDate.getMonth() !== clickedDate.getMonth() || 
-                currentDate.getFullYear() !== clickedDate.getFullYear()) {
-                currentDate = new Date(clickedDate.getFullYear(), clickedDate.getMonth(), 1);
-                updateCurrentDate();
-                renderCalendar();
-            }
-            handleDateClick(day);
-            setTimeout(() => showEditEventModal(event), 100);
-        });
-        
-        container.appendChild(eventBar);
-        return eventBar;
     }
 
     function showFullDateSelectModal(button) {
@@ -564,7 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (eventForm) {
             eventForm.reset();
             delete eventForm.dataset.eventId;
-            eventCreateModal.querySelector('.event-modal-title').textContent = '새로운 일정';  // 제목 초기화
+            eventCreateModal.querySelector('.event-modal-title').textContent = '새로운 일정';
         }
     }
 
@@ -576,16 +514,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const eventForm = document.querySelector('.event-form');
         const modalTitle = eventCreateModal.querySelector('.event-modal-title');
         
-        // 모달 제목 변경
         modalTitle.textContent = '일정 수정';
-        
-        // 폼 데이터 설정
         eventForm.querySelector('#eventTitle').value = event.title;
         eventForm.querySelector('#eventUrl').value = event.url || '';
         eventForm.querySelector('#eventMemo').value = event.memo || '';
         eventForm.querySelector('#eventNotification').value = event.notification || 'none';
     
-        // 날짜와 시간 설정
         const startDate = new Date(event.start_datetime);
         const endDate = new Date(event.end_datetime);
         
@@ -597,18 +531,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDateButtonText(startDateBtn, startDate);
         updateDateButtonText(endDateBtn, endDate);
         
-        // 시간 버튼 텍스트 업데이트
         startTimeBtn.textContent = formatTimeButtonText(startDate);
         endTimeBtn.textContent = formatTimeButtonText(endDate);
-        
-        // 폼 데이터에 이벤트 ID 추가
         eventForm.dataset.eventId = event.id;
-        
-        // 모달 표시
         eventCreateOverlay.style.display = 'block';
         eventCreateModal.style.display = 'block';
-        
-        // 제목 입력란에 포커스
         eventForm.querySelector('#eventTitle').focus();
     }
 

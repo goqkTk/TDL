@@ -161,7 +161,7 @@ body {
     transition: all 0.4s ease;
     height: 25px;
     line-height: 16px;
-    border-radius: 0;
+    border-radius: 6px;
     margin: 0;
     width: calc(100% + 12px);
     margin-left: -6px;
@@ -170,6 +170,8 @@ body {
 .event-bar.start {
     border-top-left-radius: 6px;
     border-bottom-left-radius: 6px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
     margin-left: 5px;
     width: calc(100% + 6px);
 }
@@ -177,6 +179,8 @@ body {
 .event-bar.end {
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
     margin-right: 5px;
     width: calc(100% + 1px);
 }
@@ -190,16 +194,19 @@ body {
 .event-bar.hover {
     opacity: 1;
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .event-bar:not(.start):not(.single-day) {
     margin-left: -6px;
-    border-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
 }
 
 .event-bar:not(.end):not(.single-day) {
     margin-right: -6px;
-    border-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 .event-bar.start.end {

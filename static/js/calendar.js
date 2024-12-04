@@ -142,8 +142,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (eventContainer && dayEvents.length > 0) {
                             // 이벤트를 행 위치에 따라 정렬
                             dayEvents.sort((a, b) => a.rowIndex - b.rowIndex);
-    
-                            dayEvents.forEach(({ event, isStart, isEnd, isSingleDay, rowIndex }) => {
+                            
+                            // 최대 3개만 표시
+                            const eventsToShow = dayEvents.slice(0, 3);
+                            
+                            eventsToShow.forEach(({ event, isStart, isEnd, isSingleDay, rowIndex }) => {
                                 const eventBar = document.createElement('div');
                                 eventBar.className = 'event-bar';
                                 eventBar.style.gridRow = rowIndex + 1;
@@ -196,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const moreText = document.createElement('div');
                                 moreText.className = 'more-events';
                                 moreText.textContent = `+${dayEvents.length - 3}`;
-                                moreText.style.gridRow = 4;
+                                moreText.style.gridRow = 4;  // 네 번째 행에 위치
                                 eventContainer.appendChild(moreText);
                             }
                         }

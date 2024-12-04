@@ -3,7 +3,7 @@ from flask_mail import Mail, Message
 from mysql import *
 from datetime import timedelta
 from werkzeug.utils import secure_filename
-import bcrypt, os, tempfile, traceback, logging
+import bcrypt, os, tempfile, logging
 
 app = Flask(__name__)
 app.secret_key = 'D324F0D74B242A246857E8BF1DEAA2C92B2BE926C0ED1CD2C099A0DB3547BF8C'

@@ -26,6 +26,49 @@ document.addEventListener('DOMContentLoaded', function() {
     let tempDisplayDate = new Date();
     let selectedFullDate = null;
 
+    function getEventRows(events, startDate, endDate) {
+        // 이벤트들의 행 위치를 계산하는 함수
+        const rows = new Map(); // 날짜별 사용 중인 행을 추적
+        const eventPositions = new Map(); // 각 이벤트의 행 위치를 저장
+    
+        // 이벤트를 시작 시간 순으로 정렬
+        events.sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime));
+    
+        events.forEach(event => {
+            const start = new Date(event.start_datetime);
+            const end = new Date(event.end_datetime);
+            let rowIndex = 0;
+    
+            // 이벤트가 겹치지 않는 가장 낮은 행 찾기
+            let foundRow = false;
+            while (!foundRow) {
+                foundRow = true;
+                // 이벤트 기간 동안 각 날짜 확인
+                for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                    const dateStr = date.toISOString().split('T')[0];
+                    if (!rows.has(dateStr)) {
+                        rows.set(dateStr, new Set());
+                    }
+                    if (rows.get(dateStr).has(rowIndex)) {
+                        foundRow = false;
+                        rowIndex++;
+                        break;
+                    }
+                }
+            }
+    
+            // 찾은 행에 이벤트 배치
+            for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                const dateStr = date.toISOString().split('T')[0];
+                rows.get(dateStr).add(rowIndex);
+            }
+    
+            eventPositions.set(event.id, rowIndex);
+        });
+    
+        return eventPositions;
+    }
+    
     function renderEvents(calendarDays) {
         calendarDays.querySelectorAll('.event-container').forEach(container => {
             container.innerHTML = '';
@@ -38,7 +81,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.events) {
-                    // 날짜별로 이벤트를 그룹화하는 맵 생성
+                    // 모든 이벤트의 행 위치 계산
+                    const eventPositions = getEventRows(data.events, firstDay, lastDay);
+                    
+                    // 날짜별로 이벤트를 그룹화
                     const eventsByDay = new Map();
                     
                     data.events.forEach(event => {
@@ -51,8 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             const day = parseInt(dayNumber.textContent);
                             if (isNaN(day)) return;
-    
-                            // other-month 체크를 먼저 수행
+                            
                             const isOtherMonth = dayCell.classList.contains('other-month');
                             if (isOtherMonth) return;
                             
@@ -62,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
                             
                             if (cellDateOnly >= startDateOnly && cellDateOnly <= endDateOnly && 
-                                cellDate.getMonth() === currentDate.getMonth()) {  // 현재 월에 해당하는 날짜만 처리
+                                cellDate.getMonth() === currentDate.getMonth()) {
                                 const dateKey = cellDateOnly.toISOString();
                                 if (!eventsByDay.has(dateKey)) {
                                     eventsByDay.set(dateKey, []);
@@ -71,13 +116,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                     event,
                                     isStart: cellDateOnly.getTime() === startDateOnly.getTime(),
                                     isEnd: cellDateOnly.getTime() === endDateOnly.getTime(),
-                                    isSingleDay: startDateOnly.getTime() === endDateOnly.getTime()
+                                    isSingleDay: startDateOnly.getTime() === endDateOnly.getTime(),
+                                    rowIndex: eventPositions.get(event.id)
                                 });
                             }
                         });
                     });
     
-                    // 각 날짜 칸에 대해 이벤트 렌더링
+                    // 각 날짜 칸에 이벤트 렌더링
                     calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
                         const dayNumber = dayCell.querySelector('.day-number');
                         if (!dayNumber) return;
@@ -85,40 +131,72 @@ document.addEventListener('DOMContentLoaded', function() {
                         const day = parseInt(dayNumber.textContent);
                         if (isNaN(day)) return;
                         
-                        // other-month 체크
                         const isOtherMonth = dayCell.classList.contains('other-month');
                         if (isOtherMonth) return;
                         
                         const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
                         const dateKey = cellDate.toISOString();
-                        let dayEvents = eventsByDay.get(dateKey) || [];
+                        const dayEvents = eventsByDay.get(dateKey) || [];
     
-                        // 생성일시(created_at) 기준으로 정렬 (최신순)
-                        dayEvents.sort((a, b) => {
-                            const dateA = new Date(a.event.created_at);
-                            const dateB = new Date(b.event.created_at);
-                            return dateB - dateA;
-                        });
-                        
                         const eventContainer = dayCell.querySelector('.event-container');
                         if (eventContainer && dayEvents.length > 0) {
-                            // 최대 3개까지만 표시
-                            const visibleEvents = dayEvents.slice(0, 3);
-                            const remainingCount = dayEvents.length - 3;
+                            // 이벤트를 행 위치에 따라 정렬
+                            dayEvents.sort((a, b) => a.rowIndex - b.rowIndex);
     
-                            visibleEvents.forEach(({ event, isStart, isEnd, isSingleDay }) => {
-                                addEventBar(eventContainer, event, {
-                                    isStart,
-                                    isEnd,
-                                    isSingleDay,
-                                    title: event.title
+                            dayEvents.forEach(({ event, isStart, isEnd, isSingleDay, rowIndex }) => {
+                                const eventBar = document.createElement('div');
+                                eventBar.className = 'event-bar';
+                                eventBar.style.gridRow = rowIndex + 1;
+                                
+                                if (isSingleDay) {
+                                    eventBar.classList.add('single-day');
+                                    eventBar.textContent = event.title;
+                                } else {
+                                    if (isStart) {
+                                        eventBar.classList.add('start');
+                                        eventBar.textContent = event.title;
+                                    }
+                                    if (isEnd) {
+                                        eventBar.classList.add('end');
+                                    }
+                                }
+                                
+                                eventBar.dataset.eventId = event.id;
+                                
+                                eventBar.addEventListener('mouseenter', () => {
+                                    document.querySelectorAll(`.event-bar[data-event-id="${event.id}"]`)
+                                        .forEach(bar => bar.classList.add('hover'));
                                 });
+                                
+                                eventBar.addEventListener('mouseleave', () => {
+                                    document.querySelectorAll(`.event-bar[data-event-id="${event.id}"]`)
+                                        .forEach(bar => bar.classList.remove('hover'));
+                                });
+                                
+                                eventBar.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    const clickedDate = new Date(event.start_datetime);
+                                    const day = clickedDate.getDate();
+                                    
+                                    if (currentDate.getMonth() !== clickedDate.getMonth() || 
+                                        currentDate.getFullYear() !== clickedDate.getFullYear()) {
+                                        currentDate = new Date(clickedDate.getFullYear(), clickedDate.getMonth(), 1);
+                                        updateCurrentDate();
+                                        renderCalendar();
+                                    }
+                                    handleDateClick(day);
+                                    setTimeout(() => showEditEventModal(event), 100);
+                                });
+                                
+                                eventContainer.appendChild(eventBar);
                             });
-    
-                            if (remainingCount > 0) {
+                            
+                            // 3개 이상의 이벤트가 있을 경우 "+더보기" 표시
+                            if (dayEvents.length > 3) {
                                 const moreText = document.createElement('div');
                                 moreText.className = 'more-events';
-                                moreText.textContent = `+${remainingCount}`;
+                                moreText.textContent = `+${dayEvents.length - 3}`;
+                                moreText.style.gridRow = 4;
                                 eventContainer.appendChild(moreText);
                             }
                         }

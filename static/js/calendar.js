@@ -26,6 +26,95 @@ document.addEventListener('DOMContentLoaded', function() {
     let tempDisplayDate = new Date();
     let selectedFullDate = null;
 
+    function initNotifications() {
+        const notificationButton = document.querySelector('.notification-button');
+        const sideboardContent = document.querySelector('.sideboard-content');
+        let isNotificationActive = false;
+        let originalContent = null;
+    
+        function createNotificationPanel() {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'notification-content-wrapper';
+            
+            const tabs = document.createElement('div');
+            tabs.className = 'notification-tabs';
+            tabs.innerHTML = `
+                <div class="notification-tab active" data-tab="all">전체 알림</div>
+                <div class="notification-tab" data-tab="date">선택된 날짜</div>
+            `;
+    
+            const notificationList = document.createElement('div');
+            notificationList.className = 'notification-list';
+    
+            // 샘플 알림 데이터 - 실제 데이터로 교체 필요
+            const notifications = [
+                {
+                    title: "회의",
+                    date: "2024년 3월 21일",
+                    time: "오전 10:00"
+                },
+                {
+                    title: "프로젝트 마감",
+                    date: "2024년 3월 22일",
+                    time: "오후 3:00"
+                }
+            ];
+    
+            notifications.forEach(notif => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = 'notification-item';
+                notificationItem.innerHTML = `
+                    <div class="notification-title">${notif.title}</div>
+                    <div class="notification-time">${notif.date} ${notif.time}</div>
+                `;
+                notificationList.appendChild(notificationItem);
+            });
+    
+            wrapper.appendChild(tabs);
+            wrapper.appendChild(notificationList);
+    
+            // 탭 클릭 이벤트 처리
+            tabs.addEventListener('click', (e) => {
+                const tab = e.target.closest('.notification-tab');
+                if (!tab) return;
+    
+                tabs.querySelectorAll('.notification-tab').forEach(t => 
+                    t.classList.remove('active'));
+                tab.classList.add('active');
+    
+                // 여기에 탭에 따른 알림 필터링 로직 추가
+                const tabType = tab.dataset.tab;
+                if (tabType === 'date') {
+                    // 선택된 날짜의 알림만 표시하는 로직
+                    // 현재는 샘플 데이터만 표시
+                }
+            });
+    
+            return wrapper;
+        }
+    
+        notificationButton.addEventListener('click', () => {
+            isNotificationActive = !isNotificationActive;
+            notificationButton.classList.toggle('active', isNotificationActive);
+            
+            notificationButton.innerHTML = isNotificationActive ? 
+                '<i class="fa-solid fa-bell"></i>' : 
+                '<i class="fa-regular fa-bell"></i>';
+    
+            if (isNotificationActive) {
+                originalContent = sideboardContent.innerHTML;
+                const notificationPanel = createNotificationPanel();
+                sideboardContent.innerHTML = '';
+                sideboardContent.appendChild(notificationPanel);
+                notificationPanel.classList.add('active');
+            } else {
+                if (originalContent) {
+                    sideboardContent.innerHTML = originalContent;
+                }
+            }
+        });
+    }
+
     function getEventRows(events) {
         const rows = new Map();
         const eventPositions = new Map();
@@ -1350,6 +1439,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderCalendar();
         setupEventListeners();
         initSideboardEvents();
+        initNotifications();
         
         const eventForm = document.querySelector('.event-form');
         if (eventForm) {

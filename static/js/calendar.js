@@ -621,6 +621,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startTimeBtn.textContent = formatTimeButtonText(startDate);
         endTimeBtn.textContent = formatTimeButtonText(endDate);
         eventForm.dataset.eventId = event.id;
+        
         eventCreateOverlay.style.display = 'block';
         eventCreateModal.style.display = 'block';
         eventForm.querySelector('#eventTitle').focus();

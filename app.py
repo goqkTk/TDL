@@ -401,6 +401,78 @@ def calendar():
         return render_template('calendar.html', user_id=user_id)
     return render_template('comingsoon.html', user_id=user_id)
 
+@app.route('/get_notifications')
+def get_notifications():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+    
+    date = request.args.get('date')
+    try:
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        cursor = db.cursor(pymysql.cursors.DictCursor)
+        
+        if date:
+            sql = """
+                SELECT n.*, e.title as event_title 
+                FROM notifications n
+                JOIN calendar_events e ON n.event_id = e.id
+                WHERE n.user_id = %s 
+                AND DATE(n.notification_time) = DATE(%s)
+                ORDER BY n.notification_time DESC
+            """
+            cursor.execute(sql, (user_id, date))
+        else:
+            sql = """
+                SELECT n.*, e.title as event_title 
+                FROM notifications n
+                JOIN calendar_events e ON n.event_id = e.id
+                WHERE n.user_id = %s
+                ORDER BY n.notification_time DESC
+            """
+            cursor.execute(sql, (user_id,))
+            
+        notifications = cursor.fetchall()
+        return jsonify({
+            'success': True,
+            'notifications': notifications
+        })
+    except Exception as e:
+        print(f"알림 조회 오류: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '알림 조회에 실패했습니다.'
+        })
+    finally:
+        db.close()
+
+@app.route('/mark_notification_read', methods=['POST'])
+def mark_notification_read():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+        
+    data = request.json
+    notification_id = data.get('notification_id')
+    
+    try:
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        cursor = db.cursor()
+        
+        sql = "UPDATE notifications SET is_read = 1 WHERE id = %s AND user_id = %s"
+        cursor.execute(sql, (notification_id, user_id))
+        db.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"알림 읽음 처리 오류: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '알림 읽음 처리에 실패했습니다.'
+        })
+    finally:
+        db.close()
+
 @app.route('/update_event/<int:event_id>', methods=['PUT'])
 def update_event(event_id):
     user_id = session.get('user_id')
@@ -451,7 +523,9 @@ def save_event():
     try:
         data = request.json
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        cursor = db.cursor()
         
+        # 이벤트 저장
         event_data = {
             'user_id': user_id,
             'title': data.get('title'),
@@ -462,27 +536,67 @@ def save_event():
             'memo': data.get('memo')
         }
         
-        success, event_id = save_calendar_event(db, event_data)
-        db.close()
+        # 이벤트 저장
+        sql = """
+        INSERT INTO calendar_events 
+        (user_id, title, start_datetime, end_datetime, notification, url, memo) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (
+            event_data['user_id'],
+            event_data['title'],
+            event_data['start_datetime'],
+            event_data['end_datetime'],
+            event_data['notification'],
+            event_data['url'],
+            event_data['memo']
+        ))
+        event_id = cursor.lastrowid
         
-        if success:
-            return jsonify({
-                'success': True,
-                'message': '일정이 저장되었습니다.',
-                'event_id': event_id
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': '일정 저장에 실패했습니다.'
-            })
+        # 알림 설정이 있는 경우 알림 생성
+        notification_option = data.get('notification')
+        if notification_option and notification_option != 'none':
+            start_datetime = datetime.strptime(data.get('startDateTime'), '%Y-%m-%d %H:%M:%S')
+            
+            # 알림 시간 계산
+            if notification_option == '10min':
+                notification_time = start_datetime - timedelta(minutes=10)
+            elif notification_option == '30min':
+                notification_time = start_datetime - timedelta(minutes=30)
+            elif notification_option == '1hour':
+                notification_time = start_datetime - timedelta(hours=1)
+            elif notification_option == '1day':
+                notification_time = start_datetime - timedelta(days=1)
+            
+            # 알림 저장
+            sql = """
+            INSERT INTO notifications 
+            (user_id, event_id, title, notification_time) 
+            VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
+                user_id,
+                event_id,
+                event_data['title'],
+                notification_time
+            ))
+        
+        db.commit()
+        return jsonify({
+            'success': True,
+            'message': '일정이 저장되었습니다.',
+            'event_id': event_id
+        })
             
     except Exception as e:
         print(f"일정 저장 오류: {str(e)}")
+        db.rollback()
         return jsonify({
             'success': False,
             'message': '일정 저장 중 오류가 발생했습니다.'
         })
+    finally:
+        db.close()
 
 @app.route('/get_events')
 def get_events():

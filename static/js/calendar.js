@@ -26,6 +26,87 @@ document.addEventListener('DOMContentLoaded', function() {
     let tempDisplayDate = new Date();
     let selectedFullDate = null;
 
+    function fetchNotifications(selectedDate = null) {
+        const url = selectedDate ? 
+            `/get_notifications?date=${selectedDate.toISOString()}` : 
+            '/get_notifications';
+            
+        return fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    return data.notifications;
+                }
+                throw new Error(data.message || '알림을 불러오는데 실패했습니다.');
+            });
+    }
+
+    function renderNotifications(notifications) {
+        const notificationList = document.querySelector('.notification-list');
+        notificationList.innerHTML = '';
+    
+        if (notifications.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'empty-notification';
+            emptyMessage.textContent = '알림이 없습니다.';
+            notificationList.appendChild(emptyMessage);
+            return;
+        }
+    
+        notifications.forEach(notification => {
+            const notificationItem = document.createElement('div');
+            notificationItem.className = `notification-item${notification.is_read ? ' read' : ''}`;
+            
+            const eventTime = new Date(notification.notification_time);
+            const timeUntil = getTimeUntilEvent(eventTime);
+            
+            notificationItem.innerHTML = `
+                <div class="notification-title">
+                    ${notification.title}
+                    ${!notification.is_read ? '<span class="unread-badge"></span>' : ''}
+                </div>
+                <div class="notification-time">
+                    ${formatEventDate(notification.notification_time)} ${formatEventTime(notification.notification_time)}
+                    ${timeUntil ? `<span class="time-until">(${timeUntil})</span>` : ''}
+                </div>
+            `;
+            
+            notificationItem.addEventListener('click', () => {
+                markNotificationAsRead(notification.id);
+                notificationItem.classList.add('read');
+                showEventDetails(notification.event_id);
+            });
+            
+            notificationList.appendChild(notificationItem);
+        });
+    }
+
+    function getTimeUntilEvent(eventTime) {
+        const now = new Date();
+        const diff = eventTime - now;
+        
+        if (diff < 0) return '지남';
+        
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 60) return `${minutes}분 전`;
+        
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}시간 전`;
+        
+        const days = Math.floor(hours / 24);
+        return `${days}일 전`;
+    }
+
+    function markNotificationAsRead(notificationId) {
+        fetch('/mark_notification_read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ notification_id: notificationId })
+        });
+    }
+
     function initNotifications() {
         const notificationButton = document.querySelector('.notification-button');
         const sideboardContent = document.querySelector('.sideboard-content');
@@ -42,54 +123,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="notification-tab active" data-tab="all">전체 알림</div>
                 <div class="notification-tab" data-tab="date">선택된 날짜</div>
             `;
-    
+            
             const notificationList = document.createElement('div');
             notificationList.className = 'notification-list';
-    
-            // 샘플 알림 데이터 - 실제 데이터로 교체 필요
-            const notifications = [
-                {
-                    title: "회의",
-                    date: "2024년 3월 21일",
-                    time: "오전 10:00"
-                },
-                {
-                    title: "프로젝트 마감",
-                    date: "2024년 3월 22일",
-                    time: "오후 3:00"
-                }
-            ];
-    
-            notifications.forEach(notif => {
-                const notificationItem = document.createElement('div');
-                notificationItem.className = 'notification-item';
-                notificationItem.innerHTML = `
-                    <div class="notification-title">${notif.title}</div>
-                    <div class="notification-time">${notif.date} ${notif.time}</div>
-                `;
-                notificationList.appendChild(notificationItem);
-            });
-    
             wrapper.appendChild(tabs);
             wrapper.appendChild(notificationList);
-    
-            // 탭 클릭 이벤트 처리
+            
+            // 초기 알림 로드
+            fetchNotifications().then(renderNotifications);
+            
+            // 탭 클릭 이벤트
             tabs.addEventListener('click', (e) => {
                 const tab = e.target.closest('.notification-tab');
                 if (!tab) return;
-    
+                
                 tabs.querySelectorAll('.notification-tab').forEach(t => 
                     t.classList.remove('active'));
                 tab.classList.add('active');
-    
-                // 여기에 탭에 따른 알림 필터링 로직 추가
-                const tabType = tab.dataset.tab;
-                if (tabType === 'date') {
-                    // 선택된 날짜의 알림만 표시하는 로직
-                    // 현재는 샘플 데이터만 표시
+                
+                if (tab.dataset.tab === 'date' && selectedDate) {
+                    const date = new Date(currentDate.getFullYear(), 
+                                        currentDate.getMonth(), 
+                                        parseInt(selectedDate.split('-')[2]));
+                    fetchNotifications(date).then(renderNotifications);
+                } else {
+                    fetchNotifications().then(renderNotifications);
                 }
             });
-    
+            
             return wrapper;
         }
     

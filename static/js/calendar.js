@@ -75,43 +75,38 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.events) {
-                    const eventPositions = getEventRows(data.events, firstDay, lastDay);
+                    const eventPositions = getEventRows(data.events);
                     const eventsByDay = new Map();
+                    const hiddenEventIds = new Set();
                     
                     data.events.forEach(event => {
                         const startDate = new Date(event.start_datetime);
+                        startDate.setHours(0, 0, 0, 0);
                         const endDate = new Date(event.end_datetime);
+                        endDate.setHours(0, 0, 0, 0);
                         
-                        calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
-                            const dayNumber = dayCell.querySelector('.day-number');
-                            if (!dayNumber) return;
-                            
-                            const day = parseInt(dayNumber.textContent);
-                            if (isNaN(day)) return;
-                            
-                            const isOtherMonth = dayCell.classList.contains('other-month');
-                            if (isOtherMonth) return;
-                            
-                            const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                            const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-                            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-                            const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
-                            
-                            if (cellDateOnly >= startDateOnly && cellDateOnly <= endDateOnly && 
-                                cellDate.getMonth() === currentDate.getMonth()) {
-                                const dateKey = cellDateOnly.toISOString();
-                                if (!eventsByDay.has(dateKey)) {
-                                    eventsByDay.set(dateKey, []);
-                                }
-                                eventsByDay.get(dateKey).push({
-                                    event,
-                                    isStart: cellDateOnly.getTime() === startDateOnly.getTime(),
-                                    isEnd: cellDateOnly.getTime() === endDateOnly.getTime(),
-                                    isSingleDay: startDateOnly.getTime() === endDateOnly.getTime(),
-                                    rowIndex: eventPositions.get(event.id)
-                                });
+                        for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+                            const dateKey = date.toISOString().split('T')[0];
+                            if (!eventsByDay.has(dateKey)) {
+                                eventsByDay.set(dateKey, []);
                             }
-                        });
+                            
+                            eventsByDay.get(dateKey).push({
+                                event,
+                                isStart: date.getTime() === startDate.getTime(),
+                                isEnd: date.getTime() === endDate.getTime(),
+                                isSingleDay: startDate.getTime() === endDate.getTime(),
+                                rowIndex: eventPositions.get(event.id)
+                            });
+                        }
+                    });
+    
+                    eventsByDay.forEach((events) => {
+                        if (events.length > 3) {
+                            events.slice(3).forEach(({ event }) => {
+                                hiddenEventIds.add(event.id);
+                            });
+                        }
                     });
     
                     calendarDays.querySelectorAll('.calendar-day').forEach(dayCell => {
@@ -125,16 +120,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (isOtherMonth) return;
                         
                         const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                        const dateKey = cellDate.toISOString();
-                        const dayEvents = eventsByDay.get(dateKey) || [];
-    
+                        const dateKey = cellDate.toISOString().split('T')[0];
+                        let dayEvents = eventsByDay.get(dateKey) || [];
+                        
+                        const hiddenEvents = dayEvents.filter(({ event }) => hiddenEventIds.has(event.id));
+                        dayEvents = dayEvents.filter(({ event }) => !hiddenEventIds.has(event.id));
+                        
                         const eventContainer = dayCell.querySelector('.event-container');
-                        if (eventContainer && dayEvents.length > 0) {
-                            dayEvents.sort((a, b) => a.rowIndex - b.rowIndex);
-                            
-                            const eventsToShow = dayEvents.slice(0, 3);
-                            
-                            eventsToShow.forEach(({ event, isStart, isEnd, isSingleDay, rowIndex }) => {
+                        if (eventContainer) {
+                            dayEvents.slice(0, 3).forEach(({ event, isStart, isEnd, isSingleDay, rowIndex }) => {
                                 const eventBar = document.createElement('div');
                                 eventBar.className = 'event-bar';
                                 eventBar.style.gridRow = rowIndex + 1;
@@ -155,37 +149,27 @@ document.addEventListener('DOMContentLoaded', function() {
                                 eventBar.dataset.eventId = event.id;
                                 
                                 eventBar.addEventListener('mouseenter', () => {
-                                    document.querySelectorAll(`.event-bar[data-event-id="${event.id}"]`)
+                                    document.querySelectorAll(`[data-event-id="${event.id}"]`)
                                         .forEach(bar => bar.classList.add('hover'));
                                 });
                                 
                                 eventBar.addEventListener('mouseleave', () => {
-                                    document.querySelectorAll(`.event-bar[data-event-id="${event.id}"]`)
+                                    document.querySelectorAll(`[data-event-id="${event.id}"]`)
                                         .forEach(bar => bar.classList.remove('hover'));
                                 });
                                 
                                 eventBar.addEventListener('click', (e) => {
                                     e.stopPropagation();
-                                    const clickedDate = new Date(event.start_datetime);
-                                    const day = clickedDate.getDate();
-                                    
-                                    if (currentDate.getMonth() !== clickedDate.getMonth() || 
-                                        currentDate.getFullYear() !== clickedDate.getFullYear()) {
-                                        currentDate = new Date(clickedDate.getFullYear(), clickedDate.getMonth(), 1);
-                                        updateCurrentDate();
-                                        renderCalendar();
-                                    }
-                                    handleDateClick(day);
-                                    setTimeout(() => showEditEventModal(event), 100);
+                                    handleEventClick(event);
                                 });
                                 
                                 eventContainer.appendChild(eventBar);
                             });
-                            
-                            if (dayEvents.length > 3) {
+    
+                            if (hiddenEvents.length > 0) {
                                 const moreText = document.createElement('div');
                                 moreText.className = 'more-events';
-                                moreText.textContent = `+${dayEvents.length - 3}`;
+                                moreText.textContent = `+${hiddenEvents.length}`;
                                 moreText.style.gridRow = 4;
                                 eventContainer.appendChild(moreText);
                             }
@@ -194,6 +178,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => console.error('이벤트 로딩 오류:', error));
+    }
+
+    function handleEventClick(event) {
+        const clickedDate = new Date(event.start_datetime);
+        const day = clickedDate.getDate();
+        
+        if (currentDate.getMonth() !== clickedDate.getMonth() || 
+            currentDate.getFullYear() !== clickedDate.getFullYear()) {
+            currentDate = new Date(clickedDate.getFullYear(), clickedDate.getMonth(), 1);
+            updateCurrentDate();
+            renderCalendar();
+        }
+        handleDateClick(day);
+        setTimeout(() => showEditEventModal(event), 100);
     }
 
     function showFullDateSelectModal(button) {

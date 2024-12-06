@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const rows = new Map();
         const eventPositions = new Map();
     
-        events.sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime));
+        events.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     
         events.forEach(event => {
             const start = new Date(event.start_datetime);
@@ -1202,7 +1202,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const endDate = new Date(selectedDate);
         endDate.setHours(23, 59, 59, 999);
     
-        fetch(`/get_events?start=${startDate.toISOString()}&end=${endDate.toISOString()}`)
+        const start = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString();
+        const end = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000)).toISOString();
+    
+        fetch(`/get_events?start=${start}&end=${end}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -1215,9 +1218,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         const sortedEvents = data.events.sort((a, b) => {
-                            const dateA = new Date(a.created_at);
-                            const dateB = new Date(b.created_at);
-                            return dateB - dateA;
+                            const dateA = new Date(a.start_datetime);
+                            const dateB = new Date(b.start_datetime);
+                            return dateA - dateB;
                         });
                         
                         sortedEvents.forEach(event => {

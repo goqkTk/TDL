@@ -609,14 +609,22 @@ def get_events():
     
     try:
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-        events = get_calendar_events(db, user_id, start_date, end_date)
-        db.close()
+        cursor = db.cursor(pymysql.cursors.DictCursor)
+        
+        sql = """
+        SELECT * FROM calendar_events 
+        WHERE user_id = %s 
+        AND DATE(start_datetime) <= DATE(%s)
+        AND DATE(end_datetime) >= DATE(%s)
+        """
+        cursor.execute(sql, (user_id, end_date, start_date))
+        events = cursor.fetchall()
         
         for event in events:
             if isinstance(event['start_datetime'], datetime):
-                event['start_datetime'] = event['start_datetime'].isoformat()
+                event['start_datetime'] = event['start_datetime'].strftime('%Y-%m-%d %H:%M:%S')
             if isinstance(event['end_datetime'], datetime):
-                event['end_datetime'] = event['end_datetime'].isoformat()
+                event['end_datetime'] = event['end_datetime'].strftime('%Y-%m-%d %H:%M:%S')
                 
         return jsonify({
             'success': True,
@@ -629,6 +637,8 @@ def get_events():
             'message': '이벤트 조회에 실패했습니다.',
             'events': []
         })
+    finally:
+        db.close()
 
 @app.route('/delete_event', methods=['POST'])
 def delete_event():

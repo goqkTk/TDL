@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let tempDisplayDate = new Date();
     let selectedFullDate = null;
 
+    checkNotifications();
+    setInterval(checkNotifications, 60000);
+
     function fetchNotifications(selectedDate = null) {
         const url = selectedDate ? 
             `/get_notifications?date=${selectedDate.toISOString()}` : 
@@ -53,12 +56,25 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
     
+        notifications.sort((a, b) => new Date(b.notification_time) - new Date(a.notification_time));
+    
         notifications.forEach(notification => {
             const notificationItem = document.createElement('div');
             notificationItem.className = `notification-item${notification.is_read ? ' read' : ''}`;
             
-            const eventTime = new Date(notification.notification_time);
-            const timeUntil = getTimeUntilEvent(eventTime);
+            const notificationTime = new Date(notification.notification_time);
+            const eventStartTime = new Date(notification.event_start_time);
+            const currentTime = new Date();
+    
+            function formatTime(date) {
+                const hours = date.getHours();
+                const minutes = date.getMinutes();
+                const period = hours >= 12 ? '오후' : '오전';
+                const displayHours = hours % 12 || 12;
+                return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
+            }
+    
+            const minutesUntilEvent = Math.round((eventStartTime - currentTime) / (1000 * 60));
             
             notificationItem.innerHTML = `
                 <div class="notification-title">
@@ -66,8 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${!notification.is_read ? '<span class="unread-badge"></span>' : ''}
                 </div>
                 <div class="notification-time">
-                    ${formatEventDate(notification.notification_time)} ${formatEventTime(notification.notification_time)}
-                    ${timeUntil ? `<span class="time-until">(${timeUntil})</span>` : ''}
+                    <span class="time-received">${formatTime(notificationTime)}에 알림</span>
+                    "${notification.title}" 일정이 ${minutesUntilEvent}분 후에 시작됩니다.
                 </div>
             `;
             
@@ -80,28 +96,98 @@ document.addEventListener('DOMContentLoaded', function() {
             notificationList.appendChild(notificationItem);
         });
     }
+    
+    // 알림 시간 체크 함수
+    function isNotificationTime(notificationTime) {
+        const currentTime = new Date();
+        const diffInMinutes = Math.abs(notificationTime - currentTime) / (1000 * 60);
+        return diffInMinutes <= 1; // 1분 이내인 경우에만 true 반환
+    }
+    
+    // 주기적으로 알림을 체크하는 함수
+    function checkNotifications() {
+        fetch('/get_notifications')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const notifications = data.notifications;
+                    
+                    notifications.forEach(notification => {
+                        const notificationTime = new Date(notification.notification_time);
+                        
+                        // 알림 시간인 경우에만 팝업 표시
+                        if (!notification.is_read && isNotificationTime(notificationTime)) {
+                            showNotificationPopup(notification);
+                        }
+                    });
+                    
+                    // 알림 목록은 항상 업데이트
+                    renderNotifications(notifications);
+                }
+            })
+            .catch(error => console.error('알림 체크 오류:', error));
+    }
+    
+    // 브라우저 알림 표시 함수
+    function showNotificationPopup(notification) {
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        
+        if (Notification.permission === 'granted') {
+            const eventStartTime = new Date(notification.event_start_time);
+            const minutesUntilEvent = Math.round((eventStartTime - new Date()) / (1000 * 60));
+    
+            // 실제 알림 시간인 경우에만 알림 표시
+            new Notification(notification.title, {
+                body: `${notification.title} 일정이 ${minutesUntilEvent}분 후에 시작됩니다.`,
+                icon: '/path/to/your/icon.png'
+            });
+        }
+    }
 
     function getTimeUntilEvent(eventTime) {
         const now = new Date();
         const diff = eventTime - now;
         
         if (diff < 0) {
-            const pastDiff = Math.abs(diff);
-            const minutes = Math.floor(pastDiff / 60000);
-            
-            if (minutes < 60) return `${minutes}분 전`;
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return `${hours}시간 전`;
-            const days = Math.floor(hours / 24);
-            return `${days}일 전`;
+            return '지남';
         } else {
             const minutes = Math.floor(diff / 60000);
-            if (minutes < 60) return `${minutes}분 후`;
+            if (minutes < 60) return `${minutes}분 후에`;
             const hours = Math.floor(minutes / 60);
-            if (hours < 24) return `${hours}시간 후`;
+            if (hours < 24) return `${hours}시간 후에`;
             const days = Math.floor(hours / 24);
-            return `${days}일 후`;
+            return `${days}일 후에`;
         }
+    }
+
+    function createNotificationData(eventData) {
+        const startDateTime = new Date(eventData.startDateTime);
+        let notificationTime;
+        
+        switch (eventData.notification) {
+            case '10min':
+                notificationTime = new Date(startDateTime.getTime() - 10 * 60000);
+                break;
+            case '30min':
+                notificationTime = new Date(startDateTime.getTime() - 30 * 60000);
+                break;
+            case '1hour':
+                notificationTime = new Date(startDateTime.getTime() - 60 * 60000);
+                break;
+            case '1day':
+                notificationTime = new Date(startDateTime.getTime() - 24 * 60 * 60000);
+                break;
+            default:
+                return null;
+        }
+        
+        return {
+            title: eventData.title,
+            notification_time: notificationTime.toISOString(),
+            event_start_time: startDateTime.toISOString()
+        };
     }
 
     function markNotificationAsRead(notificationId) {

@@ -60,7 +60,7 @@ CREATE TABLE `calendar_events` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_user_dates` (`user_id`,`start_datetime`,`end_datetime`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -69,7 +69,7 @@ CREATE TABLE `calendar_events` (
 
 LOCK TABLES `calendar_events` WRITE;
 /*!40000 ALTER TABLE `calendar_events` DISABLE KEYS */;
-INSERT INTO `calendar_events` VALUES (1,'Admin','11111','2024-12-02 10:00:00','2024-12-03 11:00:00','none','','','2024-12-04 09:29:17'),(2,'Admin','22222','2024-12-05 10:00:00','2024-12-06 11:00:00','none','','','2024-12-04 09:29:30'),(3,'Admin','3333','2024-12-06 10:00:00','2024-12-07 11:00:00','none','','','2024-12-04 09:29:42'),(4,'Admin','11234','2024-12-12 10:00:00','2024-12-14 11:00:00','none','','','2024-12-04 10:05:01'),(5,'Admin','asdf','2024-12-13 10:00:00','2024-12-13 11:00:00','none','','','2024-12-04 10:08:35'),(6,'Admin','1','2024-12-16 10:00:00','2024-12-18 11:00:00','none','','','2024-12-04 10:18:42'),(7,'Admin','2','2024-12-17 10:00:00','2024-12-19 11:00:00','none','','','2024-12-04 10:18:55'),(9,'Admin','3','2024-12-19 10:00:00','2024-12-20 11:00:00','none','','','2024-12-04 11:47:29'),(11,'Admin','5','2024-12-17 10:00:00','2024-12-18 11:00:00','none','','','2024-12-04 11:47:56'),(12,'Admin','11','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:39'),(13,'Admin','22','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:41'),(14,'Admin','33','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:43'),(15,'Admin','44','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:45'),(17,'Admin','55','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:49:07'),(22,'Admin','4','2024-12-18 10:00:00','2024-12-20 11:00:00','none','','','2024-12-04 15:54:23'),(33,'Admin','알림','2024-12-08 20:35:00','2024-12-08 20:40:00','10min','','','2024-12-08 20:21:10');
+INSERT INTO `calendar_events` VALUES (1,'Admin','11111','2024-12-02 10:00:00','2024-12-03 11:00:00','none','','','2024-12-04 09:29:17'),(2,'Admin','22222','2024-12-05 10:00:00','2024-12-06 11:00:00','none','','','2024-12-04 09:29:30'),(3,'Admin','3333','2024-12-06 10:00:00','2024-12-07 11:00:00','none','','','2024-12-04 09:29:42'),(4,'Admin','11234','2024-12-12 10:00:00','2024-12-14 11:00:00','none','','','2024-12-04 10:05:01'),(5,'Admin','asdf','2024-12-13 10:00:00','2024-12-13 11:00:00','none','','','2024-12-04 10:08:35'),(6,'Admin','1','2024-12-16 10:00:00','2024-12-18 11:00:00','none','','','2024-12-04 10:18:42'),(7,'Admin','2','2024-12-17 10:00:00','2024-12-19 11:00:00','none','','','2024-12-04 10:18:55'),(9,'Admin','3','2024-12-19 10:00:00','2024-12-20 11:00:00','none','','','2024-12-04 11:47:29'),(11,'Admin','5','2024-12-17 10:00:00','2024-12-18 11:00:00','none','','','2024-12-04 11:47:56'),(12,'Admin','11','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:39'),(13,'Admin','22','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:41'),(14,'Admin','33','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:43'),(15,'Admin','44','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:48:45'),(17,'Admin','55','2024-12-08 10:00:00','2024-12-08 11:00:00','none','','','2024-12-04 11:49:07'),(22,'Admin','4','2024-12-18 10:00:00','2024-12-20 11:00:00','none','','','2024-12-04 15:54:23'),(42,'Admin','일정','2024-12-11 22:15:00','2024-12-11 22:20:00','10min','','','2024-12-11 22:02:07');
 /*!40000 ALTER TABLE `calendar_events` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -125,6 +125,36 @@ LOCK TABLES `email_verifications` WRITE;
 /*!40000 ALTER TABLE `email_verifications` DISABLE KEYS */;
 INSERT INTO `email_verifications` VALUES ('jty_419@naver.com','Wxjp2DNPrCOm9cRQl0RpPw9r0UH-jSmNL_eEggs3WM4','2024-09-11 01:03:18','2024-09-11 10:13:18',1),('tdlhelp02@gmail.com','nCpv_I-Vxzc8LOCcFNvNUFVvQIf-2t-V6O0TBqm-9FU','2024-09-11 01:04:21','2024-09-11 10:14:21',1),('simik1082@gmail.com','l1ENvkx2eN16xqFkxcHCJAO8UXTxnNv4wVp-8VQx_9s','2024-10-14 04:58:49','2024-10-14 14:08:49',1),('goqkTk1986@gmail.com','qbPl-PpSnWtXO8mxSUOolO8Q0XthU94JH13W0Wm_e8w','2024-11-17 05:13:13','2024-11-17 14:23:13',0),('goqkTk1986@gmail.com','J1DVZDHejcGIXlPJdhB9SI7Gpd-u4Vr4cHN3y8zFk1o','2024-11-17 05:25:55','2024-11-17 14:35:55',0),('goqkTk1986@gmail.com','L1lUCimQo8Ckv8yURZzPvuCoRJMTtGQSchMgF_MaVk0','2024-11-17 05:36:13','2024-11-17 14:46:13',1),('goqkTk1986@gmail.com','DeKXzhIieUbs_SravdDctHqBinLxCA_yZDrTQ1hzJcw','2024-11-17 05:43:33','2024-11-17 14:53:33',0),('goqkTk1986@gmail.com','LmQAg4NwHJlNnbFOO2EayPEjCnsKlrZf0je5DaY_Hts','2024-11-17 06:04:08','2024-11-17 15:14:08',0),('goqkTk1986@gmail.com','6nhUijLJn3cLj5Ykf2MJkt2U4P76GONzofxMgWDWcew','2024-11-17 06:16:34','2024-11-17 15:26:34',1);
 /*!40000 ALTER TABLE `email_verifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(50) DEFAULT NULL,
+  `event_id` int DEFAULT NULL,
+  `title` varchar(200) DEFAULT NULL,
+  `notification_time` datetime DEFAULT NULL,
+  `event_start_time` datetime DEFAULT NULL,
+  `is_read` tinyint DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,'Admin',38,'일정','2024-12-11 21:40:00','2024-12-11 21:50:00',0,'2024-12-11 21:39:18'),(2,'Admin',39,'일정','2024-12-11 21:45:00','2024-12-11 21:55:00',0,'2024-12-11 21:41:19'),(3,'Admin',40,'일정','2024-12-11 21:55:00','2024-12-11 22:05:00',0,'2024-12-11 21:54:12'),(4,'Admin',41,'일정','2024-12-11 22:00:00','2024-12-11 22:10:00',0,'2024-12-11 21:58:34'),(5,'Admin',42,'일정','2024-12-11 22:05:00','2024-12-11 22:15:00',1,'2024-12-11 22:02:07');
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -208,4 +238,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-12-08 20:26:04
+-- Dump completed on 2024-12-11 22:06:03

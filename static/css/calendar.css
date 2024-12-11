@@ -1354,9 +1354,18 @@ select.form-input {
     margin-bottom: 0.5rem;
 }
 
+.time-received {
+    color: #666;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+}
+
 .notification-time {
     font-size: 0.9rem;
-    color: #666;
+    color: #333;
+    line-height: 1.4;
 }
 
 .notification-content-wrapper {

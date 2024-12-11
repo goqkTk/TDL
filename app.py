@@ -407,32 +407,31 @@ def get_notifications():
     if not user_id:
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
     
-    date = request.args.get('date')
     try:
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor(pymysql.cursors.DictCursor)
         
-        if date:
-            sql = """
-                SELECT n.*, e.title as event_title 
-                FROM notifications n
-                JOIN calendar_events e ON n.event_id = e.id
-                WHERE n.user_id = %s 
-                AND DATE(n.notification_time) = DATE(%s)
-                ORDER BY n.notification_time DESC
-            """
-            cursor.execute(sql, (user_id, date))
-        else:
-            sql = """
-                SELECT n.*, e.title as event_title 
-                FROM notifications n
-                JOIN calendar_events e ON n.event_id = e.id
-                WHERE n.user_id = %s
-                ORDER BY n.notification_time DESC
-            """
-            cursor.execute(sql, (user_id,))
-            
+        # 알림 시간이 현재 시간과 가까운 알림만 조회
+        sql = """
+            SELECT n.*, e.title as event_title, e.start_datetime as event_start_time
+            FROM notifications n
+            JOIN calendar_events e ON n.event_id = e.id
+            WHERE n.user_id = %s 
+            AND n.notification_time >= NOW() - INTERVAL 1 MINUTE
+            AND n.notification_time <= NOW() + INTERVAL 1 MINUTE
+            AND e.start_datetime > NOW()  -- 시작 시간이 현재보다 미래인 일정만
+            ORDER BY n.notification_time DESC
+            LIMIT 10  -- 최근 10개만 조회
+        """
+        cursor.execute(sql, (user_id,))
         notifications = cursor.fetchall()
+        
+        # datetime 객체를 문자열로 변환
+        for notification in notifications:
+            notification['notification_time'] = notification['notification_time'].strftime('%Y-%m-%d %H:%M:%S')
+            if notification['event_start_time']:
+                notification['event_start_time'] = notification['event_start_time'].strftime('%Y-%m-%d %H:%M:%S')
+        
         return jsonify({
             'success': True,
             'notifications': notifications
@@ -568,17 +567,18 @@ def save_event():
             elif notification_option == '1day':
                 notification_time = start_datetime - timedelta(days=1)
             
-            # 알림 저장
+            # 알림 저장 - event_start_time 포함
             sql = """
             INSERT INTO notifications 
-            (user_id, event_id, title, notification_time) 
-            VALUES (%s, %s, %s, %s)
+            (user_id, event_id, title, notification_time, event_start_time) 
+            VALUES (%s, %s, %s, %s, %s)
             """
             cursor.execute(sql, (
                 user_id,
                 event_id,
                 event_data['title'],
-                notification_time
+                notification_time,
+                start_datetime
             ))
         
         db.commit()

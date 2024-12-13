@@ -401,6 +401,32 @@ def calendar():
         return render_template('calendar.html', user_id=user_id)
     return render_template('comingsoon.html', user_id=user_id)
 
+@app.route('/delete_notification', methods=['POST'])
+def delete_notification():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+        
+    notification_id = request.json.get('notification_id')
+    if not notification_id:
+        return jsonify({'success': False, 'message': '알림 ID가 필요합니다.'})
+    
+    try:
+        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        cursor = db.cursor()
+        
+        # 사용자의 알림인지 확인 후 삭제
+        sql = "DELETE FROM notifications WHERE id = %s AND user_id = %s"
+        cursor.execute(sql, (notification_id, user_id))
+        db.commit()
+        
+        return jsonify({'success': True, 'message': '알림이 삭제되었습니다.'})
+    except Exception as e:
+        print(f"알림 삭제 오류: {str(e)}")
+        return jsonify({'success': False, 'message': '알림 삭제에 실패했습니다.'})
+    finally:
+        db.close()
+
 @app.route('/get_notifications')
 def get_notifications():
     user_id = session.get('user_id')
@@ -411,17 +437,13 @@ def get_notifications():
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor(pymysql.cursors.DictCursor)
         
-        # 알림 시간이 현재 시간과 가까운 알림만 조회
+        # 시간 제한 없이 모든 알림을 가져옴
         sql = """
             SELECT n.*, e.title as event_title, e.start_datetime as event_start_time
             FROM notifications n
             JOIN calendar_events e ON n.event_id = e.id
             WHERE n.user_id = %s 
-            AND n.notification_time >= NOW() - INTERVAL 1 MINUTE
-            AND n.notification_time <= NOW() + INTERVAL 1 MINUTE
-            AND e.start_datetime > NOW()  -- 시작 시간이 현재보다 미래인 일정만
             ORDER BY n.notification_time DESC
-            LIMIT 10  -- 최근 10개만 조회
         """
         cursor.execute(sql, (user_id,))
         notifications = cursor.fetchall()

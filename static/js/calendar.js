@@ -77,15 +77,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const minutesUntilEvent = Math.round((eventStartTime - currentTime) / (1000 * 60));
             
             notificationItem.innerHTML = `
-                <div class="notification-title">
-                    ${notification.title}
-                    ${!notification.is_read ? '<span class="unread-badge"></span>' : ''}
+                <div class="notification-header">
+                    <div class="notification-title">
+                        ${notification.title}
+                        ${!notification.is_read ? '<span class="unread-badge"></span>' : ''}
+                    </div>
+                    <button class="delete-notification" title="알림 삭제">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
                 <div class="notification-time">
                     <span class="time-received">${formatTime(notificationTime)}에 알림</span>
                     "${notification.title}" 일정이 ${minutesUntilEvent}분 후에 시작됩니다.
                 </div>
             `;
+            
+            notificationItem.querySelector('.delete-notification').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteNotification(notification.id);
+            });
             
             notificationItem.addEventListener('click', () => {
                 markNotificationAsRead(notification.id);
@@ -95,6 +105,23 @@ document.addEventListener('DOMContentLoaded', function() {
             
             notificationList.appendChild(notificationItem);
         });
+    }
+
+    function deleteNotification(notificationId) {
+        fetch('/delete_notification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ notification_id: notificationId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                checkNotifications();
+            }
+        })
+        .catch(error => console.error('알림 삭제 오류:', error));
     }
     
     // 알림 시간 체크 함수
@@ -206,6 +233,94 @@ document.addEventListener('DOMContentLoaded', function() {
         let isNotificationActive = false;
         let originalContent = null;
     
+        // 원본 이벤트 리스너들을 저장할 맵
+        const originalEventListeners = new Map();
+        
+        function storeEventListeners() {
+            // 원본 요소들의 이벤트 리스너 저장
+            const addEventButton = sideboardContent.querySelector('.add-event-button');
+            const deleteButtons = sideboardContent.querySelectorAll('.delete-event');
+            const eventItems = sideboardContent.querySelectorAll('.event-item');
+            
+            if (addEventButton) {
+                originalEventListeners.set('addEvent', {
+                    element: addEventButton.cloneNode(true),
+                    listener: showEventModal
+                });
+            }
+            
+            deleteButtons.forEach((button, index) => {
+                const eventId = button.closest('.event-item').dataset.eventId;
+                originalEventListeners.set(`delete-${index}`, {
+                    element: button.cloneNode(true),
+                    listener: (e) => {
+                        e.stopPropagation();
+                        handleEventDelete(eventId);
+                    }
+                });
+            });
+    
+            eventItems.forEach((item, index) => {
+                const event = {
+                    id: item.dataset.eventId,
+                    // 필요한 다른 이벤트 데이터도 저장
+                };
+                originalEventListeners.set(`event-${index}`, {
+                    element: item.cloneNode(true),
+                    listener: () => showEditEventModal(event)
+                });
+            });
+        }
+    
+        function restoreEventListeners() {
+            // 저장된 이벤트 리스너들을 새로운 요소들에 다시 연결
+            const addEventButton = sideboardContent.querySelector('.add-event-button');
+            const deleteButtons = sideboardContent.querySelectorAll('.delete-event');
+            const eventItems = sideboardContent.querySelectorAll('.event-item');
+    
+            const addEventListener = originalEventListeners.get('addEvent');
+            if (addEventButton && addEventListener) {
+                addEventButton.addEventListener('click', addEventListener.listener);
+            }
+    
+            deleteButtons.forEach((button, index) => {
+                const listenerData = originalEventListeners.get(`delete-${index}`);
+                if (listenerData) {
+                    button.addEventListener('click', listenerData.listener);
+                }
+            });
+    
+            eventItems.forEach((item, index) => {
+                const listenerData = originalEventListeners.get(`event-${index}`);
+                if (listenerData) {
+                    item.addEventListener('click', listenerData.listener);
+                }
+            });
+        }
+    
+        // 특정 날짜의 알림을 가져오는 함수
+        function fetchDateNotifications(selectedDate) {
+            const startDate = new Date(selectedDate);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(selectedDate);
+            endDate.setHours(23, 59, 59, 999);
+            
+            fetch('/get_notifications')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 선택된 날짜의 이벤트에 해당하는 알림만 필터링
+                        const filteredNotifications = data.notifications.filter(notification => {
+                            const eventStartTime = new Date(notification.event_start_time);
+                            return eventStartTime >= startDate && eventStartTime <= endDate;
+                        });
+                        
+                        renderNotifications(filteredNotifications);
+                    }
+                })
+                .catch(error => console.error('알림 조회 오류:', error));
+        }
+    
         function createNotificationPanel() {
             const wrapper = document.createElement('div');
             wrapper.className = 'notification-content-wrapper';
@@ -222,25 +337,35 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper.appendChild(tabs);
             wrapper.appendChild(notificationList);
             
-            // 초기 알림 로드
-            fetchNotifications().then(renderNotifications);
+            // 초기 전체 알림 로드
+            fetchNotifications().then(notifications => {
+                renderNotifications(notifications);
+            });
             
             // 탭 클릭 이벤트
             tabs.addEventListener('click', (e) => {
                 const tab = e.target.closest('.notification-tab');
                 if (!tab) return;
                 
+                // 탭 활성화 상태 변경
                 tabs.querySelectorAll('.notification-tab').forEach(t => 
                     t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                if (tab.dataset.tab === 'date' && selectedDate) {
-                    const date = new Date(currentDate.getFullYear(), 
-                                        currentDate.getMonth(), 
-                                        parseInt(selectedDate.split('-')[2]));
-                    fetchNotifications(date).then(renderNotifications);
+                if (tab.dataset.tab === 'date') {
+                    if (selectedDate) {
+                        const selectedDateObj = new Date(currentDate.getFullYear(), 
+                            currentDate.getMonth(), 
+                            parseInt(selectedDate.split('-')[2]));
+                        
+                        fetchDateNotifications(selectedDateObj);
+                    } else {
+                        notificationList.innerHTML = '<div class="empty-notification">날짜를 선택해주세요.</div>';
+                    }
                 } else {
-                    fetchNotifications().then(renderNotifications);
+                    fetchNotifications().then(notifications => {
+                        renderNotifications(notifications);
+                    });
                 }
             });
             
@@ -256,6 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<i class="fa-regular fa-bell"></i>';
     
             if (isNotificationActive) {
+                storeEventListeners();  // 현재 이벤트 리스너들 저장
                 originalContent = sideboardContent.innerHTML;
                 const notificationPanel = createNotificationPanel();
                 sideboardContent.innerHTML = '';
@@ -264,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 if (originalContent) {
                     sideboardContent.innerHTML = originalContent;
+                    restoreEventListeners();  // 이벤트 리스너들 복원
                 }
             }
         });
@@ -685,6 +812,22 @@ document.addEventListener('DOMContentLoaded', function() {
             scrollToSelected(minuteSpinner, selectedMinute);
         }, 0);
     }
+
+    function formatTimeString(date) {
+        const hours = date.getHours();
+        const period = hours >= 12 ? '오후' : '오전';
+        const displayHours = hours % 12 || 12;
+        return `${period} ${displayHours}:00`;
+    }
+    
+    // 시간 문자열 파싱 함수
+    function parseTimeString(timeStr) {
+        const [period, time] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (period === '오후' && hours !== 12) hours += 12;
+        if (period === '오전' && hours === 12) hours = 0;
+        return { hours, minutes };
+    }
     
     function confirmTimeSelection() {
         if (!currentTimeButton) return;
@@ -700,8 +843,75 @@ document.addEventListener('DOMContentLoaded', function() {
         const displayHour = selectedHour;
         const timeString = `${period} ${displayHour}:${selectedMinute.toString().padStart(2, '0')}`;
         currentTimeButton.textContent = timeString;
+    
+        // 시작 시간이 변경되었을 때 종료 시간 자동 업데이트
+        if (currentTimeButton.id === 'startTimeButton') {
+            const endTimeBtn = document.getElementById('endTimeButton');
+            const startTime = parseTimeString(timeString);
+            const endDate = new Date();
+            endDate.setHours(startTime.hours + 1);
+            endDate.setMinutes(startTime.minutes);
+            endTimeBtn.textContent = formatTimeString(endDate);
+        }
+    
+        // 종료 시간이 시작 시간보다 빠른지 검사
+        validateTimeRange();
         
         hideTimeSelectModal();
+    }
+    
+    function validateTimeRange() {
+        const startTimeBtn = document.getElementById('startTimeButton');
+        const endTimeBtn = document.getElementById('endTimeButton');
+        const startTime = parseTimeString(startTimeBtn.textContent);
+        const endTime = parseTimeString(endTimeBtn.textContent);
+        
+        const startDate = document.getElementById('startDateButton').textContent;
+        const endDate = document.getElementById('endDateButton').textContent;
+        
+        // 시작일과 종료일이 같은 경우에만 시간 비교
+        if (startDate === endDate) {
+            const startMinutes = startTime.hours * 60 + startTime.minutes;
+            const endMinutes = endTime.hours * 60 + endTime.minutes;
+            
+            if (endMinutes <= startMinutes) {
+                showTimeWarningModal();
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    function showTimeWarningModal() {
+        // 경고 모달이 없다면 동적으로 생성
+        let warningModal = document.querySelector('.time-warning-modal');
+        if (!warningModal) {
+            warningModal = document.createElement('div');
+            warningModal.className = 'delete-confirm-modal time-warning-modal';
+            warningModal.innerHTML = `
+                <div class="delete-modal-content">
+                    <h3 class="delete-modal-title">시간 설정 오류</h3>
+                    <p>종료 시간은 시작 시간보다 이후여야 합니다.</p>
+                    <div class="delete-modal-footer">
+                        <button class="modal-confirm">확인</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(warningModal);
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'delete-confirm-overlay time-warning-overlay';
+            document.body.appendChild(overlay);
+            
+            // 경고 모달 닫기 이벤트
+            warningModal.querySelector('.modal-confirm').addEventListener('click', () => {
+                warningModal.style.display = 'none';
+                document.querySelector('.time-warning-overlay').style.display = 'none';
+            });
+        }
+        
+        warningModal.style.display = 'block';
+        document.querySelector('.time-warning-overlay').style.display = 'block';
     }
     
     function hideTimeSelectModal() {
@@ -720,16 +930,26 @@ document.addEventListener('DOMContentLoaded', function() {
         eventCreateOverlay.style.display = 'block';
         eventCreateModal.style.display = 'block';
         
-        const today = new Date(selectedDate);
+        const today = selectedDate ? new Date(currentDate.getFullYear(), currentDate.getMonth(), parseInt(selectedDate.split('-')[2])) : new Date();
         const startDateBtn = document.getElementById('startDateButton');
         const endDateBtn = document.getElementById('endDateButton');
         updateDateButtonText(startDateBtn, today);
         updateDateButtonText(endDateBtn, today);
         
+        // 시작 시간을 다음 정각으로 설정
+        const now = new Date();
+        const nextHour = new Date(now);
+        nextHour.setHours(now.getMinutes() >= 1 ? now.getHours() + 1 : now.getHours());
+        nextHour.setMinutes(0);
+        
+        // 종료 시간을 시작 시간 1시간 후로 설정
+        const endTime = new Date(nextHour);
+        endTime.setHours(nextHour.getHours() + 1);
+        
         const startTimeBtn = document.getElementById('startTimeButton');
         const endTimeBtn = document.getElementById('endTimeButton');
-        if (startTimeBtn) startTimeBtn.textContent = '오전 10:00';
-        if (endTimeBtn) endTimeBtn.textContent = '오전 11:00';
+        startTimeBtn.textContent = formatTimeString(nextHour);
+        endTimeBtn.textContent = formatTimeString(endTime);
         
         eventCreateModal.querySelector('#eventTitle').focus();
     }
@@ -802,10 +1022,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const memo = eventForm.querySelector('#eventMemo').value;
         const eventId = eventForm.dataset.eventId;
     
-        if (!title) {
-            alert('제목을 입력해주세요.');
-            return;
-        }
+        if (!validateTimeRange()) return;
     
         function parseDateTime(dateStr, timeStr) {
             const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);

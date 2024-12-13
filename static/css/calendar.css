@@ -1318,22 +1318,44 @@ select.form-input {
     cursor: pointer;
 }
 
+/* 기본 읽은 상태 스타일 */
+.notification-item.read {
+    opacity: 0.7;
+}
+
+/* 안읽은 알림 스타일 - hover 스타일과 동일하게 적용 */
+.notification-item:not(.read) {
+    transform: translateY(-2px);
+    border-color: #FF9800;
+    background-color: rgba(255, 152, 0, 0.1);
+    opacity: 1;
+}
+
+/* hover 스타일 */
 .notification-item:hover {
     transform: translateY(-2px);
     border-color: #FF9800;
     background-color: rgba(255, 152, 0, 0.1);
+    opacity: 1;
 }
 
-.notification-item.read { opacity: 0.7; }
+.notification-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
 
-.unread-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 8px;
-    height: 8px;
-    background-color: #FF9800;
-    border-radius: 50%;
+.notification-time {
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.4;
+}
+
+.time-received {
+    color: #666;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
 }
 
 .time-until {
@@ -1354,6 +1376,34 @@ select.form-input {
     margin-bottom: 0.5rem;
 }
 
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.delete-notification {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -4px;
+}
+
+.delete-notification:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+    color: #dc3545;
+}
+
 .time-received {
     color: #666;
     font-size: 0.85rem;
@@ -1368,12 +1418,27 @@ select.form-input {
     line-height: 1.4;
 }
 
-.notification-content-wrapper {
-    display: none;
+.notification-content-wrapper { display: none; }
+.notification-content-wrapper.active { display: block; }
+.time-warning-modal { z-index: 2010;  }
+.time-warning-overlay { z-index: 2009; }
+.time-warning-modal .delete-modal-content { text-align: center; }
+
+.time-warning-modal .modal-confirm {
+    background-color: #FF9800;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.notification-content-wrapper.active {
-    display: block;
+.time-warning-modal .modal-confirm:hover {
+    background-color: #F57C00;
+    transform: translateY(-1px);
 }
 
 @keyframes modalFadeIn {

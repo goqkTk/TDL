@@ -64,8 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const notificationTime = new Date(notification.notification_time);
             const eventStartTime = new Date(notification.event_start_time);
-            const currentTime = new Date();
-    
+            
             function formatTime(date) {
                 const hours = date.getHours();
                 const minutes = date.getMinutes();
@@ -73,8 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const displayHours = hours % 12 || 12;
                 return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
             }
-    
-            const minutesUntilEvent = Math.round((eventStartTime - currentTime) / (1000 * 60));
             
             notificationItem.innerHTML = `
                 <div class="notification-header">
@@ -88,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="notification-time">
                     <span class="time-received">${formatTime(notificationTime)}에 알림</span>
-                    "${notification.title}" 일정이 ${minutesUntilEvent}분 후에 시작됩니다.
+                    "${notification.title}" 일정이 ${getTimeUntilEvent(eventStartTime)}
                 </div>
             `;
             
@@ -177,16 +174,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const now = new Date();
         const diff = eventTime - now;
         
-        if (diff < 0) {
-            return '지남';
-        } else {
-            const minutes = Math.floor(diff / 60000);
-            if (minutes < 60) return `${minutes}분 후에`;
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return `${hours}시간 후에`;
-            const days = Math.floor(hours / 24);
-            return `${days}일 후에`;
+        // 현재 시간과 일정 시작 시간이 같은 경우 (1분 이내의 차이)
+        if (Math.abs(diff) < 60000) {
+            return '방금 시작됐습니다';
         }
+        
+        // 일정이 지난 경우
+        if (diff < 0) {
+            const passedMinutes = Math.floor(Math.abs(diff) / 60000);
+            if (passedMinutes < 60) {
+                return `${passedMinutes}분 전에 시작됐습니다`;
+            }
+            const passedHours = Math.floor(passedMinutes / 60);
+            if (passedHours < 24) {
+                return `${passedHours}시간 전에 시작됐습니다`;
+            }
+            const passedDays = Math.floor(passedHours / 24);
+            return `${passedDays}일 전에 시작됐습니다`;
+        }
+        
+        // 일정이 아직 시작하지 않은 경우
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 60) {
+            return `${minutes}분 후에 시작됩니다`;
+        }
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) {
+            return `${hours}시간 후에 시작됩니다`;
+        }
+        const days = Math.floor(hours / 24);
+        return `${days}일 후에 시작됩니다`;
     }
 
     function createNotificationData(eventData) {
@@ -232,8 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const sideboardContent = document.querySelector('.sideboard-content');
         let isNotificationActive = false;
         let originalContent = null;
-    
-        // 원본 이벤트 리스너들을 저장할 맵
         const originalEventListeners = new Map();
         
         function storeEventListeners() {
@@ -298,29 +313,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     
-        // 특정 날짜의 알림을 가져오는 함수
-        function fetchDateNotifications(selectedDate) {
-            const startDate = new Date(selectedDate);
-            startDate.setHours(0, 0, 0, 0);
-            const endDate = new Date(selectedDate);
-            endDate.setHours(23, 59, 59, 999);
-            
-            fetch('/get_notifications')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // 선택된 날짜의 이벤트에 해당하는 알림만 필터링
-                        const filteredNotifications = data.notifications.filter(notification => {
-                            const eventStartTime = new Date(notification.event_start_time);
-                            return eventStartTime >= startDate && eventStartTime <= endDate;
-                        });
-                        
-                        renderNotifications(filteredNotifications);
-                    }
-                })
-                .catch(error => console.error('알림 조회 오류:', error));
-        }
-    
         function createNotificationPanel() {
             const wrapper = document.createElement('div');
             wrapper.className = 'notification-content-wrapper';
@@ -347,7 +339,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const tab = e.target.closest('.notification-tab');
                 if (!tab) return;
                 
-                // 탭 활성화 상태 변경
                 tabs.querySelectorAll('.notification-tab').forEach(t => 
                     t.classList.remove('active'));
                 tab.classList.add('active');
@@ -381,16 +372,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<i class="fa-regular fa-bell"></i>';
     
             if (isNotificationActive) {
-                storeEventListeners();  // 현재 이벤트 리스너들 저장
+                storeEventListeners();
                 originalContent = sideboardContent.innerHTML;
                 const notificationPanel = createNotificationPanel();
                 sideboardContent.innerHTML = '';
                 sideboardContent.appendChild(notificationPanel);
+                
+                // 만약 날짜가 이미 선택되어 있고 '선택된 날짜' 탭이 활성화되어 있다면 바로 업데이트
+                if (selectedDate) {
+                    const selectedDateObj = new Date(currentDate.getFullYear(),
+                        currentDate.getMonth(),
+                        parseInt(selectedDate.split('-')[2]));
+                    const dateTab = notificationPanel.querySelector('.notification-tab[data-tab="date"]');
+                    
+                    if (dateTab.classList.contains('active')) {
+                        fetchDateNotifications(selectedDateObj);
+                    }
+                }
+                
                 notificationPanel.classList.add('active');
             } else {
                 if (originalContent) {
                     sideboardContent.innerHTML = originalContent;
-                    restoreEventListeners();  // 이벤트 리스너들 복원
+                    restoreEventListeners();
                 }
             }
         });
@@ -1672,6 +1676,47 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
         updateSideboardEvents(selectedDateObj);
+    
+        // 알림 관련 UI 업데이트
+        const notificationWrapper = document.querySelector('.notification-content-wrapper');
+        if (notificationWrapper) {
+            const dateTab = notificationWrapper.querySelector('.notification-tab[data-tab="date"]');
+            if (!dateTab.classList.contains('active')) {
+                const allTab = notificationWrapper.querySelector('.notification-tab[data-tab="all"]');
+                allTab.classList.remove('active');
+                dateTab.classList.add('active');
+            }
+            // 선택된 날짜에 대한 알림을 즉시 가져와서 표시
+            fetchDateNotifications(selectedDateObj);
+        }
+    }
+
+    function fetchDateNotifications(selectedDate) {
+        const startDate = new Date(selectedDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(selectedDate);
+        endDate.setHours(23, 59, 59, 999);
+        
+        fetch('/get_notifications')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const filteredNotifications = data.notifications.filter(notification => {
+                        const eventStartTime = new Date(notification.event_start_time);
+                        return eventStartTime >= startDate && eventStartTime <= endDate;
+                    });
+                    
+                    const notificationList = document.querySelector('.notification-list');
+                    if (notificationList) {
+                        if (filteredNotifications.length === 0) {
+                            notificationList.innerHTML = '<div class="empty-notification">이 날짜의 알림이 없습니다.</div>';
+                        } else {
+                            renderNotifications(filteredNotifications);
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('알림 조회 오류:', error));
     }
 
     function showSideboard(day) {

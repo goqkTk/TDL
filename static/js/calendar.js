@@ -29,21 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
     checkNotifications();
     setInterval(checkNotifications, 60000);
 
-    function fetchNotifications(selectedDate = null) {
-        const url = selectedDate ? 
-            `/get_notifications?date=${selectedDate.toISOString()}` : 
-            '/get_notifications';
-            
-        return fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    return data.notifications;
-                }
-                throw new Error(data.message || '알림을 불러오는데 실패했습니다.');
-            });
-    }
-
     function renderNotifications(notifications) {
         const notificationList = document.querySelector('.notification-list');
         notificationList.innerHTML = '';
@@ -128,25 +113,32 @@ document.addEventListener('DOMContentLoaded', function() {
         return diffInMinutes <= 1; // 1분 이내인 경우에만 true 반환
     }
     
-    // 주기적으로 알림을 체크하는 함수
     function checkNotifications() {
         fetch('/get_notifications')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     const notifications = data.notifications;
+                    const notificationList = document.querySelector('.notification-list');
+                    const dateTab = document.querySelector('.notification-tab[data-tab="date"]');
                     
+                    // 알림 팝업 처리
                     notifications.forEach(notification => {
                         const notificationTime = new Date(notification.notification_time);
-                        
-                        // 알림 시간인 경우에만 팝업 표시
                         if (!notification.is_read && isNotificationTime(notificationTime)) {
                             showNotificationPopup(notification);
                         }
                     });
-                    
-                    // 알림 목록은 항상 업데이트
-                    renderNotifications(notifications);
+    
+                    // 현재 활성화된 탭에 따라 알림 목록 업데이트
+                    if (dateTab?.classList.contains('active') && selectedDate) {
+                        const selectedDateObj = new Date(currentDate.getFullYear(),
+                            currentDate.getMonth(),
+                            parseInt(selectedDate.split('-')[2]));
+                        fetchDateNotifications(selectedDateObj);
+                    } else {
+                        renderNotifications(notifications);
+                    }
                 }
             })
             .catch(error => console.error('알림 체크 오류:', error));
@@ -315,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
         function createNotificationPanel() {
             const wrapper = document.createElement('div');
-            wrapper.className = 'notification-content-wrapper';
+            wrapper.className = 'notification-content-wrapper active';
             
             const tabs = document.createElement('div');
             tabs.className = 'notification-tabs';
@@ -330,9 +322,14 @@ document.addEventListener('DOMContentLoaded', function() {
             wrapper.appendChild(notificationList);
             
             // 초기 전체 알림 로드
-            fetchNotifications().then(notifications => {
-                renderNotifications(notifications);
-            });
+            fetch('/get_notifications')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderNotifications(data.notifications);
+                    }
+                })
+                .catch(error => console.error('알림 로딩 오류:', error));
             
             // 탭 클릭 이벤트
             tabs.addEventListener('click', (e) => {
@@ -348,15 +345,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         const selectedDateObj = new Date(currentDate.getFullYear(), 
                             currentDate.getMonth(), 
                             parseInt(selectedDate.split('-')[2]));
-                        
                         fetchDateNotifications(selectedDateObj);
                     } else {
                         notificationList.innerHTML = '<div class="empty-notification">날짜를 선택해주세요.</div>';
                     }
                 } else {
-                    fetchNotifications().then(notifications => {
-                        renderNotifications(notifications);
-                    });
+                    fetch('/get_notifications')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                renderNotifications(data.notifications);
+                            }
+                        })
+                        .catch(error => console.error('알림 로딩 오류:', error));
                 }
             });
             
@@ -1677,26 +1678,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
         updateSideboardEvents(selectedDateObj);
     
-        // 알림 관련 UI 업데이트
+        // 알림 패널 업데이트
         const notificationWrapper = document.querySelector('.notification-content-wrapper');
         if (notificationWrapper) {
             const dateTab = notificationWrapper.querySelector('.notification-tab[data-tab="date"]');
+            // 날짜 탭으로 자동 전환 및 알림 업데이트
             if (!dateTab.classList.contains('active')) {
-                const allTab = notificationWrapper.querySelector('.notification-tab[data-tab="all"]');
-                allTab.classList.remove('active');
+                notificationWrapper.querySelectorAll('.notification-tab').forEach(tab => 
+                    tab.classList.remove('active'));
                 dateTab.classList.add('active');
             }
-            // 선택된 날짜에 대한 알림을 즉시 가져와서 표시
+            // 해당 날짜의 알림 즉시 업데이트
             fetchDateNotifications(selectedDateObj);
         }
     }
-
+    
     function fetchDateNotifications(selectedDate) {
+        if (!selectedDate) return;
+        
         const startDate = new Date(selectedDate);
         startDate.setHours(0, 0, 0, 0);
         const endDate = new Date(selectedDate);
         endDate.setHours(23, 59, 59, 999);
         
+        // 알림 데이터 가져오기
         fetch('/get_notifications')
             .then(response => response.json())
             .then(data => {

@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const noBtn = document.getElementById('no');
     const fixButtons = document.querySelectorAll('#fix');
     const detailButtons = document.querySelectorAll('.detail-group');
-    const donateOptions = document.querySelectorAll('.chocolate, .pocari');
+    const donateOptions = document.querySelectorAll('.netflix, .cycle');
     const qrOverlay = document.querySelector('.qr-overlay');
     const qrImage = qrOverlay.querySelector('.qr-image');
     const backButton = qrOverlay.querySelector('.back-button');
@@ -919,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     donateOptions.forEach(option => {
         option.addEventListener('click', function() {
-          const qrSrc = this.classList.contains('chocolate') ? 'chocolate-QR.jpg' : 'pocari-QR.jpg';
+          const qrSrc = this.classList.contains('netflix') ? 'netflix-QR.jpg' : 'cycle-QR.jpg';
           qrImage.src = `/static/img/${qrSrc}`;
           qrOverlay.style.display = 'flex';
         });

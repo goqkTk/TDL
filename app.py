@@ -401,34 +401,8 @@ def calendar():
         return render_template('calendar.html', user_id=user_id)
     return render_template('comingsoon.html', user_id=user_id)
 
-@app.route('/delete_notification', methods=['POST'])
-def delete_notification():
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
-        
-    notification_id = request.json.get('notification_id')
-    if not notification_id:
-        return jsonify({'success': False, 'message': '알림 ID가 필요합니다.'})
-    
-    try:
-        db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-        cursor = db.cursor()
-        
-        # 사용자의 알림인지 확인 후 삭제
-        sql = "DELETE FROM notifications WHERE id = %s AND user_id = %s"
-        cursor.execute(sql, (notification_id, user_id))
-        db.commit()
-        
-        return jsonify({'success': True, 'message': '알림이 삭제되었습니다.'})
-    except Exception as e:
-        print(f"알림 삭제 오류: {str(e)}")
-        return jsonify({'success': False, 'message': '알림 삭제에 실패했습니다.'})
-    finally:
-        db.close()
-
-@app.route('/get_notifications')
-def get_notifications():
+@app.route('/check_notifications')
+def check_notifications():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
@@ -437,32 +411,71 @@ def get_notifications():
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor(pymysql.cursors.DictCursor)
         
-        # 시간 제한 없이 모든 알림을 가져옴
+        # 현재 시간에 보여줘야 할 알림 조회
+        current_time = datetime.now()
         sql = """
-            SELECT n.*, e.title as event_title, e.start_datetime as event_start_time
-            FROM notifications n
-            JOIN calendar_events e ON n.event_id = e.id
-            WHERE n.user_id = %s 
-            ORDER BY n.notification_time DESC
+        SELECT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
+        FROM notifications n
+        JOIN calendar_events e ON n.event_id = e.id
+        WHERE n.user_id = %s 
+        AND n.notification_time <= %s
+        AND n.is_read = 0
         """
-        cursor.execute(sql, (user_id,))
+        cursor.execute(sql, (user_id, current_time))
         notifications = cursor.fetchall()
         
-        # datetime 객체를 문자열로 변환
+        # 아직 이메일을 보내지 않은 알림에 대해 이메일 발송
         for notification in notifications:
-            notification['notification_time'] = notification['notification_time'].strftime('%Y-%m-%d %H:%M:%S')
-            if notification['event_start_time']:
-                notification['event_start_time'] = notification['event_start_time'].strftime('%Y-%m-%d %H:%M:%S')
+            if not notification.get('email_sent'):
+                try:
+                    # 이메일 발송
+                    user_email = get_user_email(user_id)
+                    if user_email:
+                        notification_html = """
+                        <h2>일정 알림</h2>
+                        <p><strong>일정:</strong> {{ event_title }}</p>
+                        <p><strong>시작 시간:</strong> {{ event_start_time }}</p>
+                        {% if event_url %}
+                        <p><strong>URL:</strong> <a href="{{ event_url }}">{{ event_url }}</a></p>
+                        {% endif %}
+                        {% if event_memo %}
+                        <p><strong>메모:</strong></p>
+                        <p>{{ event_memo }}</p>
+                        {% endif %}
+                        """
+                        
+                        msg = Message(
+                            f"일정 알림: {notification['event_title']}",
+                            recipients=[user_email]
+                        )
+                        msg.html = render_template_string(
+                            notification_html,
+                            event_title=notification['event_title'],
+                            event_start_time=notification['event_start_time'].strftime('%Y년 %m월 %d일 %H시 %M분'),
+                            event_url=notification.get('event_url'),
+                            event_memo=notification.get('event_memo')
+                        )
+                        mail.send(msg)
+                        
+                        # 이메일 발송 상태 업데이트
+                        cursor.execute(
+                            "UPDATE notifications SET email_sent = 1 WHERE id = %s",
+                            (notification['id'],)
+                        )
+                        db.commit()
+                except Exception as e:
+                    print(f"이메일 발송 오류: {str(e)}")
         
         return jsonify({
             'success': True,
             'notifications': notifications
         })
+        
     except Exception as e:
-        print(f"알림 조회 오류: {str(e)}")
+        print(f"알림 확인 오류: {str(e)}")
         return jsonify({
             'success': False,
-            'message': '알림 조회에 실패했습니다.'
+            'message': '알림 확인 중 오류가 발생했습니다.'
         })
     finally:
         db.close()
@@ -487,10 +500,7 @@ def mark_notification_read():
         return jsonify({'success': True})
     except Exception as e:
         print(f"알림 읽음 처리 오류: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': '알림 읽음 처리에 실패했습니다.'
-        })
+        return jsonify({'success': False, 'message': '알림 처리 중 오류가 발생했습니다.'})
     finally:
         db.close()
 

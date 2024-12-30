@@ -1257,25 +1257,6 @@ select.form-input {
     margin: -0.5rem;
 }
 
-.notification-button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #666;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-.notification-button:hover {
-    color: #FF9800;
-}
-
-.notification-button.active {
-    color: #FF9800;
-}
-
 .notification-tabs {
     display: flex;
     justify-content: space-evenly;

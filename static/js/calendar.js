@@ -26,379 +26,106 @@ document.addEventListener('DOMContentLoaded', function() {
     let tempDisplayDate = new Date();
     let selectedFullDate = null;
 
-    checkNotifications();
-    setInterval(checkNotifications, 60000);
-
-    function renderNotifications(notifications) {
-        const notificationList = document.querySelector('.notification-list');
-        notificationList.innerHTML = '';
-    
-        if (notifications.length === 0) {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.className = 'empty-notification';
-            emptyMessage.textContent = '알림이 없습니다.';
-            notificationList.appendChild(emptyMessage);
-            return;
-        }
-    
-        notifications.sort((a, b) => new Date(b.notification_time) - new Date(a.notification_time));
-    
-        notifications.forEach(notification => {
-            const notificationItem = document.createElement('div');
-            notificationItem.className = `notification-item${notification.is_read ? ' read' : ''}`;
-            
-            const notificationTime = new Date(notification.notification_time);
-            const eventStartTime = new Date(notification.event_start_time);
-            
-            function formatTime(date) {
-                const hours = date.getHours();
-                const minutes = date.getMinutes();
-                const period = hours >= 12 ? '오후' : '오전';
-                const displayHours = hours % 12 || 12;
-                return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
-            }
-            
-            notificationItem.innerHTML = `
-                <div class="notification-header">
-                    <div class="notification-title">
-                        ${notification.title}
-                        ${!notification.is_read ? '<span class="unread-badge"></span>' : ''}
-                    </div>
-                    <button class="delete-notification" title="알림 삭제">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-                <div class="notification-time">
-                    <span class="time-received">${formatTime(notificationTime)}에 알림</span>
-                    "${notification.title}" 일정이 ${getTimeUntilEvent(eventStartTime)}
-                </div>
-            `;
-            
-            notificationItem.querySelector('.delete-notification').addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteNotification(notification.id);
-            });
-            
-            notificationItem.addEventListener('click', () => {
-                markNotificationAsRead(notification.id);
-                notificationItem.classList.add('read');
-                showEventDetails(notification.event_id);
-            });
-            
-            notificationList.appendChild(notificationItem);
-        });
-    }
-
-    function deleteNotification(notificationId) {
-        fetch('/delete_notification', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ notification_id: notificationId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                checkNotifications();
-            }
-        })
-        .catch(error => console.error('알림 삭제 오류:', error));
-    }
-    
-    // 알림 시간 체크 함수
-    function isNotificationTime(notificationTime) {
-        const currentTime = new Date();
-        const diffInMinutes = Math.abs(notificationTime - currentTime) / (1000 * 60);
-        return diffInMinutes <= 1; // 1분 이내인 경우에만 true 반환
-    }
-    
-    function checkNotifications() {
-        fetch('/get_notifications')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const notifications = data.notifications;
-                    const notificationList = document.querySelector('.notification-list');
-                    const dateTab = document.querySelector('.notification-tab[data-tab="date"]');
-                    
-                    // 알림 팝업 처리
-                    notifications.forEach(notification => {
-                        const notificationTime = new Date(notification.notification_time);
-                        if (!notification.is_read && isNotificationTime(notificationTime)) {
-                            showNotificationPopup(notification);
+    function initNotifications() {
+        // 1초마다 새로운 알림이 있는지 체크
+        const checkNotifications = async () => {
+            try {
+                const response = await fetch('/check_notifications');
+                const data = await response.json();
+                
+                if (data.success && data.notifications.length > 0) {
+                    data.notifications.forEach(notification => {
+                        if (!notification.is_read) {
+                            showNotification(notification);
+                            markNotificationAsRead(notification.id);
                         }
                     });
-    
-                    // 현재 활성화된 탭에 따라 알림 목록 업데이트
-                    if (dateTab?.classList.contains('active') && selectedDate) {
-                        const selectedDateObj = new Date(currentDate.getFullYear(),
-                            currentDate.getMonth(),
-                            parseInt(selectedDate.split('-')[2]));
-                        fetchDateNotifications(selectedDateObj);
-                    } else {
-                        renderNotifications(notifications);
-                    }
                 }
-            })
-            .catch(error => console.error('알림 체크 오류:', error));
-    }
-    
-    // 브라우저 알림 표시 함수
-    function showNotificationPopup(notification) {
-        if (Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
-        
-        if (Notification.permission === 'granted') {
-            const eventStartTime = new Date(notification.event_start_time);
-            const minutesUntilEvent = Math.round((eventStartTime - new Date()) / (1000 * 60));
-    
-            // 실제 알림 시간인 경우에만 알림 표시
-            new Notification(notification.title, {
-                body: `${notification.title} 일정이 ${minutesUntilEvent}분 후에 시작됩니다.`,
-                icon: '/path/to/your/icon.png'
-            });
-        }
-    }
-
-    function getTimeUntilEvent(eventTime) {
-        const now = new Date();
-        const diff = eventTime - now;
-        
-        // 현재 시간과 일정 시작 시간이 같은 경우 (1분 이내의 차이)
-        if (Math.abs(diff) < 60000) {
-            return '방금 시작됐습니다';
-        }
-        
-        // 일정이 지난 경우
-        if (diff < 0) {
-            const passedMinutes = Math.floor(Math.abs(diff) / 60000);
-            if (passedMinutes < 60) {
-                return `${passedMinutes}분 전에 시작됐습니다`;
+            } catch (error) {
+                console.error('알림 확인 중 오류 발생:', error);
             }
-            const passedHours = Math.floor(passedMinutes / 60);
-            if (passedHours < 24) {
-                return `${passedHours}시간 전에 시작됐습니다`;
-            }
-            const passedDays = Math.floor(passedHours / 24);
-            return `${passedDays}일 전에 시작됐습니다`;
-        }
-        
-        // 일정이 아직 시작하지 않은 경우
-        const minutes = Math.floor(diff / 60000);
-        if (minutes < 60) {
-            return `${minutes}분 후에 시작됩니다`;
-        }
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) {
-            return `${hours}시간 후에 시작됩니다`;
-        }
-        const days = Math.floor(hours / 24);
-        return `${days}일 후에 시작됩니다`;
-    }
-
-    function createNotificationData(eventData) {
-        const startDateTime = new Date(eventData.startDateTime);
-        let notificationTime;
-        
-        switch (eventData.notification) {
-            case '10min':
-                notificationTime = new Date(startDateTime.getTime() - 10 * 60000);
-                break;
-            case '30min':
-                notificationTime = new Date(startDateTime.getTime() - 30 * 60000);
-                break;
-            case '1hour':
-                notificationTime = new Date(startDateTime.getTime() - 60 * 60000);
-                break;
-            case '1day':
-                notificationTime = new Date(startDateTime.getTime() - 24 * 60 * 60000);
-                break;
-            default:
-                return null;
-        }
-        
-        return {
-            title: eventData.title,
-            notification_time: notificationTime.toISOString(),
-            event_start_time: startDateTime.toISOString()
         };
-    }
-
-    function markNotificationAsRead(notificationId) {
-        fetch('/mark_notification_read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ notification_id: notificationId })
-        });
-    }
-
-    function initNotifications() {
-        const notificationButton = document.querySelector('.notification-button');
-        const sideboardContent = document.querySelector('.sideboard-content');
-        let isNotificationActive = false;
-        let originalContent = null;
-        const originalEventListeners = new Map();
-        
-        function storeEventListeners() {
-            // 원본 요소들의 이벤트 리스너 저장
-            const addEventButton = sideboardContent.querySelector('.add-event-button');
-            const deleteButtons = sideboardContent.querySelectorAll('.delete-event');
-            const eventItems = sideboardContent.querySelectorAll('.event-item');
-            
-            if (addEventButton) {
-                originalEventListeners.set('addEvent', {
-                    element: addEventButton.cloneNode(true),
-                    listener: showEventModal
-                });
-            }
-            
-            deleteButtons.forEach((button, index) => {
-                const eventId = button.closest('.event-item').dataset.eventId;
-                originalEventListeners.set(`delete-${index}`, {
-                    element: button.cloneNode(true),
-                    listener: (e) => {
-                        e.stopPropagation();
-                        handleEventDelete(eventId);
-                    }
-                });
-            });
     
-            eventItems.forEach((item, index) => {
-                const event = {
-                    id: item.dataset.eventId,
-                    // 필요한 다른 이벤트 데이터도 저장
-                };
-                originalEventListeners.set(`event-${index}`, {
-                    element: item.cloneNode(true),
-                    listener: () => showEditEventModal(event)
-                });
-            });
-        }
+        // 매 초마다 알림 체크
+        setInterval(checkNotifications, 1000);
     
-        function restoreEventListeners() {
-            // 저장된 이벤트 리스너들을 새로운 요소들에 다시 연결
-            const addEventButton = sideboardContent.querySelector('.add-event-button');
-            const deleteButtons = sideboardContent.querySelectorAll('.delete-event');
-            const eventItems = sideboardContent.querySelectorAll('.event-item');
-    
-            const addEventListener = originalEventListeners.get('addEvent');
-            if (addEventButton && addEventListener) {
-                addEventButton.addEventListener('click', addEventListener.listener);
+        function showNotification(notification) {
+            // 알림 컨테이너가 없으면 생성
+            let notificationContainer = document.querySelector('.notification-container');
+            if (!notificationContainer) {
+                notificationContainer = document.createElement('div');
+                notificationContainer.className = 'notification-container';
+                notificationContainer.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                `;
+                document.body.appendChild(notificationContainer);
             }
     
-            deleteButtons.forEach((button, index) => {
-                const listenerData = originalEventListeners.get(`delete-${index}`);
-                if (listenerData) {
-                    button.addEventListener('click', listenerData.listener);
-                }
-            });
-    
-            eventItems.forEach((item, index) => {
-                const listenerData = originalEventListeners.get(`event-${index}`);
-                if (listenerData) {
-                    item.addEventListener('click', listenerData.listener);
-                }
-            });
-        }
-    
-        function createNotificationPanel() {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'notification-content-wrapper active';
-            
-            const tabs = document.createElement('div');
-            tabs.className = 'notification-tabs';
-            tabs.innerHTML = `
-                <div class="notification-tab active" data-tab="all">전체 알림</div>
-                <div class="notification-tab" data-tab="date">선택된 날짜</div>
+            // 알림 요소 생성
+            const notificationElement = document.createElement('div');
+            notificationElement.className = 'notification-toast';
+            notificationElement.style.cssText = `
+                background-color: white;
+                border-left: 4px solid #FF9800;
+                border-radius: 4px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                padding: 16px;
+                margin-top: 8px;
+                min-width: 300px;
+                max-width: 400px;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
             `;
-            
-            const notificationList = document.createElement('div');
-            notificationList.className = 'notification-list';
-            wrapper.appendChild(tabs);
-            wrapper.appendChild(notificationList);
-            
-            // 초기 전체 알림 로드
-            fetch('/get_notifications')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        renderNotifications(data.notifications);
-                    }
-                })
-                .catch(error => console.error('알림 로딩 오류:', error));
-            
-            // 탭 클릭 이벤트
-            tabs.addEventListener('click', (e) => {
-                const tab = e.target.closest('.notification-tab');
-                if (!tab) return;
-                
-                tabs.querySelectorAll('.notification-tab').forEach(t => 
-                    t.classList.remove('active'));
-                tab.classList.add('active');
-                
-                if (tab.dataset.tab === 'date') {
-                    if (selectedDate) {
-                        const selectedDateObj = new Date(currentDate.getFullYear(), 
-                            currentDate.getMonth(), 
-                            parseInt(selectedDate.split('-')[2]));
-                        fetchDateNotifications(selectedDateObj);
-                    } else {
-                        notificationList.innerHTML = '<div class="empty-notification">날짜를 선택해주세요.</div>';
-                    }
-                } else {
-                    fetch('/get_notifications')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                renderNotifications(data.notifications);
-                            }
-                        })
-                        .catch(error => console.error('알림 로딩 오류:', error));
-                }
-            });
-            
-            return wrapper;
+    
+            // 알림 내용 설정
+            const startTime = new Date(notification.event_start_time);
+            const timeUntil = Math.round((startTime - new Date()) / 60000); // 분 단위로 계산
+    
+            notificationElement.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 8px;">
+                    ${notification.event_title}
+                </div>
+                <div style="color: #666;">
+                    ${timeUntil}분 후 시작
+                </div>
+            `;
+    
+            // 알림을 컨테이너에 추가
+            notificationContainer.appendChild(notificationElement);
+    
+            // 애니메이션 효과를 위해 약간의 지연 후 스타일 변경
+            setTimeout(() => {
+                notificationElement.style.opacity = '1';
+                notificationElement.style.transform = 'translateX(0)';
+            }, 100);
+    
+            // 10초 후 알림 제거
+            setTimeout(() => {
+                notificationElement.style.opacity = '0';
+                notificationElement.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    notificationContainer.removeChild(notificationElement);
+                }, 300);
+            }, 10000);
         }
     
-        notificationButton.addEventListener('click', () => {
-            isNotificationActive = !isNotificationActive;
-            notificationButton.classList.toggle('active', isNotificationActive);
-            
-            notificationButton.innerHTML = isNotificationActive ? 
-                '<i class="fa-solid fa-bell"></i>' : 
-                '<i class="fa-regular fa-bell"></i>';
-    
-            if (isNotificationActive) {
-                storeEventListeners();
-                originalContent = sideboardContent.innerHTML;
-                const notificationPanel = createNotificationPanel();
-                sideboardContent.innerHTML = '';
-                sideboardContent.appendChild(notificationPanel);
-                
-                // 만약 날짜가 이미 선택되어 있고 '선택된 날짜' 탭이 활성화되어 있다면 바로 업데이트
-                if (selectedDate) {
-                    const selectedDateObj = new Date(currentDate.getFullYear(),
-                        currentDate.getMonth(),
-                        parseInt(selectedDate.split('-')[2]));
-                    const dateTab = notificationPanel.querySelector('.notification-tab[data-tab="date"]');
-                    
-                    if (dateTab.classList.contains('active')) {
-                        fetchDateNotifications(selectedDateObj);
-                    }
-                }
-                
-                notificationPanel.classList.add('active');
-            } else {
-                if (originalContent) {
-                    sideboardContent.innerHTML = originalContent;
-                    restoreEventListeners();
-                }
+        async function markNotificationAsRead(notificationId) {
+            try {
+                await fetch('/mark_notification_read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ notification_id: notificationId })
+                });
+            } catch (error) {
+                console.error('알림 읽음 처리 중 오류 발생:', error);
             }
-        });
+        }
     }
 
     function getEventRows(events) {
@@ -1691,37 +1418,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // 해당 날짜의 알림 즉시 업데이트
             fetchDateNotifications(selectedDateObj);
         }
-    }
-    
-    function fetchDateNotifications(selectedDate) {
-        if (!selectedDate) return;
-        
-        const startDate = new Date(selectedDate);
-        startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(selectedDate);
-        endDate.setHours(23, 59, 59, 999);
-        
-        // 알림 데이터 가져오기
-        fetch('/get_notifications')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const filteredNotifications = data.notifications.filter(notification => {
-                        const eventStartTime = new Date(notification.event_start_time);
-                        return eventStartTime >= startDate && eventStartTime <= endDate;
-                    });
-                    
-                    const notificationList = document.querySelector('.notification-list');
-                    if (notificationList) {
-                        if (filteredNotifications.length === 0) {
-                            notificationList.innerHTML = '<div class="empty-notification">이 날짜의 알림이 없습니다.</div>';
-                        } else {
-                            renderNotifications(filteredNotifications);
-                        }
-                    }
-                }
-            })
-            .catch(error => console.error('알림 조회 오류:', error));
     }
 
     function showSideboard(day) {

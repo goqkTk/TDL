@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 document.body.appendChild(notificationContainer);
             }
-    
+        
             // 알림 요소 생성
             const notificationElement = document.createElement('div');
             notificationElement.className = 'notification-toast';
@@ -79,38 +79,90 @@ document.addEventListener('DOMContentLoaded', function() {
                 opacity: 0;
                 transform: translateX(100%);
                 transition: all 0.3s ease;
+                position: relative;
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
             `;
-    
-            // 알림 내용 설정
+        
+            // 시간 계산 - 정확한 분 계산
             const startTime = new Date(notification.event_start_time);
-            const timeUntil = Math.round((startTime - new Date()) / 60000); // 분 단위로 계산
-    
-            notificationElement.innerHTML = `
+            const now = new Date();
+            let timeUntil = Math.round((startTime - now) / 60000); // 분 단위로 계산
+            
+            // 시간을 시간과 분으로 변환
+            let timeDisplay;
+            if (timeUntil >= 60) {
+                const hours = Math.floor(timeUntil / 60);
+                const minutes = timeUntil % 60;
+                if (minutes > 0) {
+                    timeDisplay = `${hours}시간 ${minutes}분 후 시작`;
+                } else {
+                    timeDisplay = `${hours}시간 후 시작`;
+                }
+            } else {
+                timeDisplay = `${timeUntil}분 후 시작`;
+            }
+        
+            // 알림 내용을 담을 div
+            const contentDiv = document.createElement('div');
+            contentDiv.style.flex = '1';
+            contentDiv.innerHTML = `
                 <div style="font-weight: bold; margin-bottom: 8px;">
                     ${notification.event_title}
                 </div>
                 <div style="color: #666;">
-                    ${timeUntil}분 후 시작
+                    ${timeDisplay}
                 </div>
             `;
-    
-            // 알림을 컨테이너에 추가
-            notificationContainer.appendChild(notificationElement);
-    
-            // 애니메이션 효과를 위해 약간의 지연 후 스타일 변경
-            setTimeout(() => {
-                notificationElement.style.opacity = '1';
-                notificationElement.style.transform = 'translateX(0)';
-            }, 100);
-    
-            // 10초 후 알림 제거
-            setTimeout(() => {
+        
+            // 닫기 버튼 생성
+            const closeButton = document.createElement('button');
+            closeButton.innerHTML = '×';
+            closeButton.style.cssText = `
+                background: none;
+                border: none;
+                color: #666;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0 0 0 10px;
+                margin: 0;
+                line-height: 1;
+            `;
+        
+            // 닫기 버튼 클릭 이벤트
+            closeButton.onclick = () => {
                 notificationElement.style.opacity = '0';
                 notificationElement.style.transform = 'translateX(100%)';
                 setTimeout(() => {
                     notificationContainer.removeChild(notificationElement);
                 }, 300);
-            }, 10000);
+            };
+        
+            // 요소들을 알림에 추가
+            notificationElement.appendChild(contentDiv);
+            notificationElement.appendChild(closeButton);
+        
+            // 알림을 컨테이너에 추가
+            notificationContainer.appendChild(notificationElement);
+        
+            // 애니메이션 효과를 위해 약간의 지연 후 스타일 변경
+            setTimeout(() => {
+                notificationElement.style.opacity = '1';
+                notificationElement.style.transform = 'translateX(0)';
+            }, 100);
+        
+            // 10분(600000ms) 후 자동으로 알림 제거
+            setTimeout(() => {
+                // 알림이 아직 존재하는 경우에만 제거
+                if (notificationContainer.contains(notificationElement)) {
+                    notificationElement.style.opacity = '0';
+                    notificationElement.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        notificationContainer.removeChild(notificationElement);
+                    }, 300);
+                }
+            }, 600000); // 10분
         }
     
         async function markNotificationAsRead(notificationId) {

@@ -119,6 +119,54 @@ register_html = """
 </html>
 """
 
+notification_html = """
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정 알림</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; margin: 0; padding: 0; background-color: #ffffff;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+            <td align="center">
+                <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px;">
+                    <tr>
+                        <td style="padding: 20px;">
+                            <p style="text-align: center; font-size: 18px; margin: 0 0 10px;">TDL</p>
+                            <h1 style="color: #4285F4; margin: 0 0 15px; text-align: center; font-size: 24px;">일정 알림</h1>
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
+                            <div style="margin-bottom: 20px;">
+                                <p style="font-size: 16px; margin: 0 0 10px;">
+                                    <strong>일정:</strong> {{ event_title }}
+                                </p>
+                                <p style="font-size: 16px; margin: 0 0 10px;">
+                                    <strong>시작 시간:</strong> {{ event_start_time }}
+                                </p>
+                                {% if event_url %}
+                                <p style="font-size: 16px; margin: 0 0 10px;">
+                                    <strong>URL:</strong> <a href="{{ event_url }}" style="color: #4285F4; text-decoration: none;">{{ event_url }}</a>
+                                </p>
+                                {% endif %}
+                                {% if event_memo %}
+                                <p style="font-size: 16px; margin: 0 0 10px;"><strong>메모:</strong></p>
+                                <p style="font-size: 16px; margin: 0 0 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">{{ event_memo }}</p>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <p style="text-align: center; font-size: 12px; color: #777; margin-top: 10px;">
+                    © 2024 TDL. All rights reserved.
+                </p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+"""
+
 @app.route('/', methods=['GET', 'POST'])
 def main():
     user_id = session.get('user_id')
@@ -411,43 +459,30 @@ def check_notifications():
     
         current_time = datetime.now()
         send_sql = """
-        SELECT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
+        SELECT DISTINCT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
         FROM notifications n
         JOIN calendar_events e ON n.event_id = e.id
         WHERE n.user_id = %s 
         AND n.notification_time <= %s
         AND n.is_read = 0
         AND n.email_sent = 0
-        AND n.id IN (
+        AND n.id = (
             SELECT MIN(id)
-            FROM notifications
-            WHERE user_id = %s 
-            AND notification_time <= %s
-            AND is_read = 0
-            AND email_sent = 0
-            GROUP BY event_id
+            FROM notifications n2
+            WHERE n2.user_id = n.user_id 
+            AND n2.event_id = n.event_id
+            AND n2.notification_time <= %s
+            AND n2.is_read = 0
+            AND n2.email_sent = 0
         )
         """
-        cursor.execute(send_sql, (user_id, current_time, user_id, current_time))
+        cursor.execute(send_sql, (user_id, current_time, current_time))
         to_send_notifications = cursor.fetchall()
         
         for notification in to_send_notifications:
             try:
                 user_email = get_user_email(user_id)
                 if user_email:
-                    notification_html = """
-                    <h2>일정 알림</h2>
-                    <p><strong>일정:</strong> {{ event_title }}</p>
-                    <p><strong>시작 시간:</strong> {{ event_start_time }}</p>
-                    {% if event_url %}
-                    <p><strong>URL:</strong> <a href="{{ event_url }}">{{ event_url }}</a></p>
-                    {% endif %}
-                    {% if event_memo %}
-                    <p><strong>메모:</strong></p>
-                    <p>{{ event_memo }}</p>
-                    {% endif %}
-                    """
-                    
                     msg = Message(
                         f"일정 알림: {notification['event_title']}",
                         recipients=[user_email]
@@ -461,6 +496,7 @@ def check_notifications():
                     )
                     mail.send(msg)
                     
+                    # 이메일 발송 후 상태 업데이트
                     cursor.execute(
                         "UPDATE notifications SET email_sent = 1 WHERE id = %s",
                         (notification['id'],)
@@ -470,23 +506,24 @@ def check_notifications():
                 print(f"이메일 발송 오류: {str(e)}")
                 continue
         
+        # 화면에 표시할 알림 조회
         display_sql = """
-        SELECT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
+        SELECT DISTINCT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
         FROM notifications n
         JOIN calendar_events e ON n.event_id = e.id
         WHERE n.user_id = %s 
         AND n.notification_time <= %s
         AND n.is_read = 0
-        AND n.id IN (
+        AND n.id = (
             SELECT MIN(id)
-            FROM notifications
-            WHERE user_id = %s 
-            AND notification_time <= %s
-            AND is_read = 0
-            GROUP BY event_id
+            FROM notifications n2
+            WHERE n2.user_id = n.user_id 
+            AND n2.event_id = n.event_id
+            AND n2.notification_time <= %s
+            AND n2.is_read = 0
         )
         """
-        cursor.execute(display_sql, (user_id, current_time, user_id, current_time))
+        cursor.execute(display_sql, (user_id, current_time, current_time))
         display_notifications = cursor.fetchall()
         
         return jsonify({

@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (existingNotification) {
                 return;
             }
-
+        
             let notificationContainer = document.querySelector('.notification-container');
             if (!notificationContainer) {
                 notificationContainer = document.createElement('div');
@@ -93,33 +93,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 align-items: start;
             `;
         
-            const startTime = new Date(notification.event_start_time);
-            const now = new Date();
-            let timeUntil = Math.round((startTime - now) / 60000);
-            
-            let timeDisplay;
-            if (timeUntil >= 60) {
-                const hours = Math.floor(timeUntil / 60);
-                const minutes = timeUntil % 60;
-                if (minutes > 0) {
-                    timeDisplay = `${hours}시간 ${minutes}분 후 시작`;
-                } else {
-                    timeDisplay = `${hours}시간 후 시작`;
-                }
-            } else {
-                timeDisplay = `${timeUntil}분 후 시작`;
-            }
-        
             const contentDiv = document.createElement('div');
             contentDiv.style.flex = '1';
-            contentDiv.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 8px;">
-                    ${notification.event_title}
-                </div>
-                <div style="color: #666;">
-                    ${timeDisplay}
-                </div>
-            `;
+            
+            function updateTimeDisplay() {
+                // 서버로부터 받은 event_start_time을 KST Date 객체로 변환
+                const eventStartTime = new Date(notification.event_start_time);
+                const now = new Date();
+                
+                // UTC 시간과 한국 시간의 차이 (9시간) 보정
+                const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로 변환
+                const kstEventStartTime = new Date(eventStartTime.getTime() + kstOffset);
+                const kstNow = new Date(now.getTime() + kstOffset);
+        
+                // 현재 시간과 이벤트 시작 시간의 차이를 분 단위로 계산
+                const minutesDiff = Math.round((eventStartTime - now) / (1000 * 60));
+                
+                let timeDisplay;
+                if (minutesDiff <= 0) {
+                    timeDisplay = "곧 시작";
+                } else if (minutesDiff < 60) {
+                    timeDisplay = `${minutesDiff}분 후 시작`;
+                } else if (minutesDiff < 1440) {
+                    const hours = Math.floor(minutesDiff / 60);
+                    const minutes = minutesDiff % 60;
+                    timeDisplay = `${hours}시간 ${minutes > 0 ? minutes + '분 ' : ''}후 시작`;
+                } else {
+                    const days = Math.floor(minutesDiff / 1440);
+                    timeDisplay = `${days}일 후 시작`;
+                }
+        
+                contentDiv.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 8px;">
+                        ${notification.event_title}
+                    </div>
+                    <div style="color: #666;">
+                        ${timeDisplay}
+                    </div>
+                `;
+            }
+        
+            // 초기 시간 표시
+            updateTimeDisplay();
+        
+            // 1분마다 시간 표시 업데이트
+            const timeUpdateInterval = setInterval(updateTimeDisplay, 60000);
         
             const closeButton = document.createElement('button');
             closeButton.innerHTML = '×';
@@ -135,6 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         
             closeButton.onclick = () => {
+                clearInterval(timeUpdateInterval);
                 notificationElement.style.opacity = '0';
                 notificationElement.style.transform = 'translateX(100%)';
                 setTimeout(() => {
@@ -153,13 +172,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
             setTimeout(() => {
                 if (notificationContainer.contains(notificationElement)) {
+                    clearInterval(timeUpdateInterval);
                     notificationElement.style.opacity = '0';
                     notificationElement.style.transform = 'translateX(100%)';
                     setTimeout(() => {
                         notificationContainer.removeChild(notificationElement);
                     }, 300);
                 }
-            }, 600000);
+            }, 600000); // 10분 후 자동으로 닫힘
         }
     
         async function markNotificationAsRead(notificationId) {

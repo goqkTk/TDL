@@ -28,11 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initNotifications() {
         let lastCheckedTime = Date.now();
-        
-        // 1초마다 새로운 알림이 있는지 체크
         const checkNotifications = async () => {
             const currentTime = Date.now();
-            // 마지막 체크로부터 최소 5초가 지났는지 확인
             if (currentTime - lastCheckedTime < 5000) {
                 return;
             }
@@ -54,18 +51,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('알림 확인 중 오류 발생:', error);
             }
         };
-    
-        // 1초마다 알림 체크
         setInterval(checkNotifications, 1000);
     
         function showNotification(notification) {
-            // 이미 표시된 알림인지 확인
             const existingNotification = document.querySelector(`.notification-toast[data-event-id="${notification.event_id}"]`);
             if (existingNotification) {
-                return; // 이미 표시된 알림이면 무시
+                return;
             }
-        
-            // 알림 컨테이너가 없으면 생성
+
             let notificationContainer = document.querySelector('.notification-container');
             if (!notificationContainer) {
                 notificationContainer = document.createElement('div');
@@ -79,7 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.appendChild(notificationContainer);
             }
         
-            // 알림 요소 생성
             const notificationElement = document.createElement('div');
             notificationElement.className = 'notification-toast';
             notificationElement.dataset.eventId = notification.event_id;
@@ -101,12 +93,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 align-items: start;
             `;
         
-            // 시간 계산 - 정확한 분 계산
             const startTime = new Date(notification.event_start_time);
             const now = new Date();
-            let timeUntil = Math.round((startTime - now) / 60000); // 분 단위로 계산
+            let timeUntil = Math.round((startTime - now) / 60000);
             
-            // 시간을 시간과 분으로 변환
             let timeDisplay;
             if (timeUntil >= 60) {
                 const hours = Math.floor(timeUntil / 60);
@@ -120,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeDisplay = `${timeUntil}분 후 시작`;
             }
         
-            // 알림 내용을 담을 div
             const contentDiv = document.createElement('div');
             contentDiv.style.flex = '1';
             contentDiv.innerHTML = `
@@ -132,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         
-            // 닫기 버튼 생성
             const closeButton = document.createElement('button');
             closeButton.innerHTML = '×';
             closeButton.style.cssText = `
@@ -146,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 line-height: 1;
             `;
         
-            // 닫기 버튼 클릭 이벤트
             closeButton.onclick = () => {
                 notificationElement.style.opacity = '0';
                 notificationElement.style.transform = 'translateX(100%)';
@@ -155,22 +142,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 300);
             };
         
-            // 요소들을 알림에 추가
             notificationElement.appendChild(contentDiv);
             notificationElement.appendChild(closeButton);
-        
-            // 알림을 컨테이너에 추가
             notificationContainer.appendChild(notificationElement);
         
-            // 애니메이션 효과를 위해 약간의 지연 후 스타일 변경
             setTimeout(() => {
                 notificationElement.style.opacity = '1';
                 notificationElement.style.transform = 'translateX(0)';
             }, 100);
         
-            // 10분(600000ms) 후 자동으로 알림 제거
             setTimeout(() => {
-                // 알림이 아직 존재하는 경우에만 제거
                 if (notificationContainer.contains(notificationElement)) {
                     notificationElement.style.opacity = '0';
                     notificationElement.style.transform = 'translateX(100%)';
@@ -178,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         notificationContainer.removeChild(notificationElement);
                     }, 300);
                 }
-            }, 600000); // 10분
+            }, 600000);
         }
     
         async function markNotificationAsRead(notificationId) {
@@ -238,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = '';
         });
         
-        // 현재 달력에 표시된 모든 날짜의 범위를 가져오기
         const firstDayCell = calendarDays.querySelector('.calendar-day');
         const lastDayCell = calendarDays.querySelector('.calendar-day:last-child');
         
@@ -249,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!firstDayNumber || !lastDayNumber) return;
         
-        // 첫 날과 마지막 날의 전체 날짜 구하기 (이전 달과 다음 달 포함)
         const firstDate = new Date(currentDate.getFullYear(), 
             firstDayCell.classList.contains('other-month') ? currentDate.getMonth() - 1 : currentDate.getMonth(), 
             parseInt(firstDayNumber.textContent));
@@ -258,7 +237,6 @@ document.addEventListener('DOMContentLoaded', function() {
             lastDayCell.classList.contains('other-month') ? currentDate.getMonth() + 1 : currentDate.getMonth(),
             parseInt(lastDayNumber.textContent));
     
-        // 날짜가 연도를 넘어가는 경우 처리
         if (firstDate.getMonth() === 11 && lastDate.getMonth() === 0) {
             lastDate.setFullYear(firstDate.getFullYear() + 1);
         }
@@ -277,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         const endDate = new Date(event.end_datetime);
                         endDate.setHours(0, 0, 0, 0);
                         
-                        // startDate부터 endDate까지의 모든 날짜에 이벤트 추가
                         for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
                             const dateKey = date.toISOString().split('T')[0];
                             if (!eventsByDay.has(dateKey)) {
@@ -311,20 +288,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         const isOtherMonth = dayCell.classList.contains('other-month');
                         
-                        // 현재 셀의 날짜 계산
                         let cellDate;
                         if (isOtherMonth) {
-                            // 이전 달 또는 다음 달의 날짜인 경우
-                            if (day > 20) {  // 이전 달의 날짜
+                            if (day > 20) {
                                 cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, day);
-                            } else {  // 다음 달의 날짜
+                            } else {
                                 cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, day);
                             }
                         } else {
                             cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
                         }
     
-                        // 연도가 바뀌는 경우 처리
                         if (cellDate.getMonth() === 11 && currentDate.getMonth() === 0) {
                             cellDate.setFullYear(currentDate.getFullYear() - 1);
                         } else if (cellDate.getMonth() === 0 && currentDate.getMonth() === 11) {
@@ -661,7 +635,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${period} ${displayHours}:00`;
     }
     
-    // 시간 문자열 파싱 함수
     function parseTimeString(timeStr) {
         const [period, time] = timeStr.split(' ');
         let [hours, minutes] = time.split(':').map(Number);
@@ -685,7 +658,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const timeString = `${period} ${displayHour}:${selectedMinute.toString().padStart(2, '0')}`;
         currentTimeButton.textContent = timeString;
     
-        // 시작 시간이 변경되었을 때 종료 시간 자동 업데이트
         if (currentTimeButton.id === 'startTimeButton') {
             const endTimeBtn = document.getElementById('endTimeButton');
             const startTime = parseTimeString(timeString);
@@ -694,10 +666,7 @@ document.addEventListener('DOMContentLoaded', function() {
             endDate.setMinutes(startTime.minutes);
             endTimeBtn.textContent = formatTimeString(endDate);
         }
-    
-        // 종료 시간이 시작 시간보다 빠른지 검사
         validateTimeRange();
-        
         hideTimeSelectModal();
     }
     
@@ -710,7 +679,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const startDate = document.getElementById('startDateButton').textContent;
         const endDate = document.getElementById('endDateButton').textContent;
         
-        // 시작일과 종료일이 같은 경우에만 시간 비교
         if (startDate === endDate) {
             const startMinutes = startTime.hours * 60 + startTime.minutes;
             const endMinutes = endTime.hours * 60 + endTime.minutes;
@@ -724,7 +692,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showTimeWarningModal() {
-        // 경고 모달이 없다면 동적으로 생성
         let warningModal = document.querySelector('.time-warning-modal');
         if (!warningModal) {
             warningModal = document.createElement('div');
@@ -744,7 +711,6 @@ document.addEventListener('DOMContentLoaded', function() {
             overlay.className = 'delete-confirm-overlay time-warning-overlay';
             document.body.appendChild(overlay);
             
-            // 경고 모달 닫기 이벤트
             warningModal.querySelector('.modal-confirm').addEventListener('click', () => {
                 warningModal.style.display = 'none';
                 document.querySelector('.time-warning-overlay').style.display = 'none';
@@ -777,13 +743,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDateButtonText(startDateBtn, today);
         updateDateButtonText(endDateBtn, today);
         
-        // 시작 시간을 다음 정각으로 설정
         const now = new Date();
         const nextHour = new Date(now);
         nextHour.setHours(now.getMinutes() >= 1 ? now.getHours() + 1 : now.getHours());
         nextHour.setMinutes(0);
         
-        // 종료 시간을 시작 시간 1시간 후로 설정
         const endTime = new Date(nextHour);
         endTime.setHours(nextHour.getHours() + 1);
         
@@ -1514,17 +1478,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedDateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
         updateSideboardEvents(selectedDateObj);
     
-        // 알림 패널 업데이트
         const notificationWrapper = document.querySelector('.notification-content-wrapper');
         if (notificationWrapper) {
             const dateTab = notificationWrapper.querySelector('.notification-tab[data-tab="date"]');
-            // 날짜 탭으로 자동 전환 및 알림 업데이트
             if (!dateTab.classList.contains('active')) {
                 notificationWrapper.querySelectorAll('.notification-tab').forEach(tab => 
                     tab.classList.remove('active'));
                 dateTab.classList.add('active');
             }
-            // 해당 날짜의 알림 즉시 업데이트
             fetchDateNotifications(selectedDateObj);
         }
     }

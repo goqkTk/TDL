@@ -137,6 +137,7 @@ DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` varchar(50) DEFAULT NULL,
+  `event_id` int DEFAULT NULL,
   `title` varchar(200) DEFAULT NULL,
   `notification_time` datetime DEFAULT NULL,
   `event_start_time` datetime DEFAULT NULL,

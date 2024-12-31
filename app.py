@@ -329,8 +329,6 @@ def update_fix():
     is_fixed = data.get('is_fixed')
     user_id = session.get('user_id')
 
-    print(f"Received request - todo_id: {todo_id}, is_fixed: {is_fixed}, user_id: {user_id}")  # 디버깅용
-
     if todo_id is None or is_fixed is None or user_id is None:
         return jsonify({"success": False, "message": "Invalid data"}), 400
 
@@ -410,8 +408,7 @@ def check_notifications():
     try:
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor(pymysql.cursors.DictCursor)
-        
-        # 발송할 알림 조회 (미발송 알림만)
+    
         current_time = datetime.now()
         send_sql = """
         SELECT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
@@ -434,7 +431,6 @@ def check_notifications():
         cursor.execute(send_sql, (user_id, current_time, user_id, current_time))
         to_send_notifications = cursor.fetchall()
         
-        # 알림 발송 및 상태 업데이트
         for notification in to_send_notifications:
             try:
                 user_email = get_user_email(user_id)
@@ -465,7 +461,6 @@ def check_notifications():
                     )
                     mail.send(msg)
                     
-                    # 알림 상태 즉시 업데이트
                     cursor.execute(
                         "UPDATE notifications SET email_sent = 1 WHERE id = %s",
                         (notification['id'],)
@@ -552,19 +547,14 @@ def update_event(event_id):
             'memo': data.get('memo')
         }
 
-        # 이벤트 업데이트
         success = update_calendar_event(db, event_id, event_data)
         
         if success:
-            # 기존 알림 삭제
             cursor.execute("DELETE FROM notifications WHERE event_id = %s", (event_id,))
-            
-            # 새로운 알림 설정이 있는 경우 새 알림 생성
             notification_option = data.get('notification')
             if notification_option and notification_option != 'none':
                 start_datetime = datetime.strptime(data.get('startDateTime'), '%Y-%m-%d %H:%M:%S')
                 
-                # 알림 시간 계산
                 if notification_option == '10min':
                     notification_time = start_datetime - timedelta(minutes=10)
                 elif notification_option == '30min':
@@ -574,7 +564,6 @@ def update_event(event_id):
                 elif notification_option == '1day':
                     notification_time = start_datetime - timedelta(days=1)
                 
-                # 새 알림 저장
                 sql = """
                 INSERT INTO notifications 
                 (user_id, event_id, title, notification_time, event_start_time, is_read, email_sent) 
@@ -620,7 +609,6 @@ def save_event():
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor()
         
-        # 이벤트 저장
         event_data = {
             'user_id': user_id,
             'title': data.get('title'),
@@ -631,7 +619,6 @@ def save_event():
             'memo': data.get('memo')
         }
         
-        # 이벤트 저장
         sql = """
         INSERT INTO calendar_events 
         (user_id, title, start_datetime, end_datetime, notification, url, memo) 
@@ -648,12 +635,10 @@ def save_event():
         ))
         event_id = cursor.lastrowid
         
-        # 알림 설정이 있는 경우 알림 생성
         notification_option = data.get('notification')
         if notification_option and notification_option != 'none':
             start_datetime = datetime.strptime(data.get('startDateTime'), '%Y-%m-%d %H:%M:%S')
             
-            # 알림 시간 계산
             if notification_option == '10min':
                 notification_time = start_datetime - timedelta(minutes=10)
             elif notification_option == '30min':
@@ -663,7 +648,6 @@ def save_event():
             elif notification_option == '1day':
                 notification_time = start_datetime - timedelta(days=1)
             
-            # 알림 저장 - event_start_time 포함
             sql = """
             INSERT INTO notifications 
             (user_id, event_id, title, notification_time, event_start_time) 

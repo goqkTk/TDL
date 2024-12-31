@@ -411,66 +411,93 @@ def check_notifications():
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor(pymysql.cursors.DictCursor)
         
-        # 현재 시간에 보여줘야 할 알림 조회
+        # 발송할 알림 조회 (미발송 알림만)
         current_time = datetime.now()
-        sql = """
+        send_sql = """
         SELECT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
         FROM notifications n
         JOIN calendar_events e ON n.event_id = e.id
         WHERE n.user_id = %s 
         AND n.notification_time <= %s
         AND n.is_read = 0
+        AND n.email_sent = 0
+        AND n.id IN (
+            SELECT MIN(id)
+            FROM notifications
+            WHERE user_id = %s 
+            AND notification_time <= %s
+            AND is_read = 0
+            AND email_sent = 0
+            GROUP BY event_id
+        )
         """
-        cursor.execute(sql, (user_id, current_time))
-        notifications = cursor.fetchall()
+        cursor.execute(send_sql, (user_id, current_time, user_id, current_time))
+        to_send_notifications = cursor.fetchall()
         
-        # 아직 이메일을 보내지 않은 알림에 대해 이메일 발송
-        for notification in notifications:
-            if not notification.get('email_sent'):
-                try:
-                    # 이메일 발송
-                    user_email = get_user_email(user_id)
-                    if user_email:
-                        notification_html = """
-                        <h2>일정 알림</h2>
-                        <p><strong>일정:</strong> {{ event_title }}</p>
-                        <p><strong>시작 시간:</strong> {{ event_start_time }}</p>
-                        {% if event_url %}
-                        <p><strong>URL:</strong> <a href="{{ event_url }}">{{ event_url }}</a></p>
-                        {% endif %}
-                        {% if event_memo %}
-                        <p><strong>메모:</strong></p>
-                        <p>{{ event_memo }}</p>
-                        {% endif %}
-                        """
-                        
-                        msg = Message(
-                            f"일정 알림: {notification['event_title']}",
-                            recipients=[user_email]
-                        )
-                        msg.html = render_template_string(
-                            notification_html,
-                            event_title=notification['event_title'],
-                            event_start_time=notification['event_start_time'].strftime('%Y년 %m월 %d일 %H시 %M분'),
-                            event_url=notification.get('event_url'),
-                            event_memo=notification.get('event_memo')
-                        )
-                        mail.send(msg)
-                        
-                        # 이메일 발송 상태 업데이트
-                        cursor.execute(
-                            "UPDATE notifications SET email_sent = 1 WHERE id = %s",
-                            (notification['id'],)
-                        )
-                        db.commit()
-                except Exception as e:
-                    print(f"이메일 발송 오류: {str(e)}")
+        # 알림 발송 및 상태 업데이트
+        for notification in to_send_notifications:
+            try:
+                user_email = get_user_email(user_id)
+                if user_email:
+                    notification_html = """
+                    <h2>일정 알림</h2>
+                    <p><strong>일정:</strong> {{ event_title }}</p>
+                    <p><strong>시작 시간:</strong> {{ event_start_time }}</p>
+                    {% if event_url %}
+                    <p><strong>URL:</strong> <a href="{{ event_url }}">{{ event_url }}</a></p>
+                    {% endif %}
+                    {% if event_memo %}
+                    <p><strong>메모:</strong></p>
+                    <p>{{ event_memo }}</p>
+                    {% endif %}
+                    """
+                    
+                    msg = Message(
+                        f"일정 알림: {notification['event_title']}",
+                        recipients=[user_email]
+                    )
+                    msg.html = render_template_string(
+                        notification_html,
+                        event_title=notification['event_title'],
+                        event_start_time=notification['event_start_time'].strftime('%Y년 %m월 %d일 %H시 %M분'),
+                        event_url=notification.get('event_url'),
+                        event_memo=notification.get('event_memo')
+                    )
+                    mail.send(msg)
+                    
+                    # 알림 상태 즉시 업데이트
+                    cursor.execute(
+                        "UPDATE notifications SET email_sent = 1 WHERE id = %s",
+                        (notification['id'],)
+                    )
+                    db.commit()
+            except Exception as e:
+                print(f"이메일 발송 오류: {str(e)}")
+                continue
+        
+        display_sql = """
+        SELECT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
+        FROM notifications n
+        JOIN calendar_events e ON n.event_id = e.id
+        WHERE n.user_id = %s 
+        AND n.notification_time <= %s
+        AND n.is_read = 0
+        AND n.id IN (
+            SELECT MIN(id)
+            FROM notifications
+            WHERE user_id = %s 
+            AND notification_time <= %s
+            AND is_read = 0
+            GROUP BY event_id
+        )
+        """
+        cursor.execute(display_sql, (user_id, current_time, user_id, current_time))
+        display_notifications = cursor.fetchall()
         
         return jsonify({
             'success': True,
-            'notifications': notifications
+            'notifications': display_notifications
         })
-        
     except Exception as e:
         print(f"알림 확인 오류: {str(e)}")
         return jsonify({
@@ -513,6 +540,7 @@ def update_event(event_id):
     try:
         data = request.json
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
+        cursor = db.cursor()
         
         event_data = {
             'user_id': user_id,
@@ -523,11 +551,44 @@ def update_event(event_id):
             'url': data.get('url'),
             'memo': data.get('memo')
         }
-        
+
+        # 이벤트 업데이트
         success = update_calendar_event(db, event_id, event_data)
-        db.close()
         
         if success:
+            # 기존 알림 삭제
+            cursor.execute("DELETE FROM notifications WHERE event_id = %s", (event_id,))
+            
+            # 새로운 알림 설정이 있는 경우 새 알림 생성
+            notification_option = data.get('notification')
+            if notification_option and notification_option != 'none':
+                start_datetime = datetime.strptime(data.get('startDateTime'), '%Y-%m-%d %H:%M:%S')
+                
+                # 알림 시간 계산
+                if notification_option == '10min':
+                    notification_time = start_datetime - timedelta(minutes=10)
+                elif notification_option == '30min':
+                    notification_time = start_datetime - timedelta(minutes=30)
+                elif notification_option == '1hour':
+                    notification_time = start_datetime - timedelta(hours=1)
+                elif notification_option == '1day':
+                    notification_time = start_datetime - timedelta(days=1)
+                
+                # 새 알림 저장
+                sql = """
+                INSERT INTO notifications 
+                (user_id, event_id, title, notification_time, event_start_time, is_read, email_sent) 
+                VALUES (%s, %s, %s, %s, %s, 0, 0)
+                """
+                cursor.execute(sql, (
+                    user_id,
+                    event_id,
+                    event_data['title'],
+                    notification_time,
+                    start_datetime
+                ))
+            
+            db.commit()
             return jsonify({
                 'success': True,
                 'message': '일정이 수정되었습니다.'
@@ -540,10 +601,13 @@ def update_event(event_id):
             
     except Exception as e:
         print(f"일정 수정 오류: {str(e)}")
+        db.rollback()
         return jsonify({
             'success': False,
             'message': '일정 수정 중 오류가 발생했습니다.'
         })
+    finally:
+        db.close()
 
 @app.route('/save_event', methods=['POST'])
 def save_event():

@@ -60,7 +60,7 @@ CREATE TABLE `calendar_events` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_user_dates` (`user_id`,`start_datetime`,`end_datetime`)
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -125,6 +125,36 @@ LOCK TABLES `email_verifications` WRITE;
 /*!40000 ALTER TABLE `email_verifications` DISABLE KEYS */;
 INSERT INTO `email_verifications` VALUES ('jty_419@naver.com','Wxjp2DNPrCOm9cRQl0RpPw9r0UH-jSmNL_eEggs3WM4','2024-09-11 01:03:18','2024-09-11 10:13:18',1),('tdlhelp02@gmail.com','nCpv_I-Vxzc8LOCcFNvNUFVvQIf-2t-V6O0TBqm-9FU','2024-09-11 01:04:21','2024-09-11 10:14:21',1),('simik1082@gmail.com','l1ENvkx2eN16xqFkxcHCJAO8UXTxnNv4wVp-8VQx_9s','2024-10-14 04:58:49','2024-10-14 14:08:49',1),('goqkTk1986@gmail.com','qbPl-PpSnWtXO8mxSUOolO8Q0XthU94JH13W0Wm_e8w','2024-11-17 05:13:13','2024-11-17 14:23:13',0),('goqkTk1986@gmail.com','J1DVZDHejcGIXlPJdhB9SI7Gpd-u4Vr4cHN3y8zFk1o','2024-11-17 05:25:55','2024-11-17 14:35:55',0),('goqkTk1986@gmail.com','L1lUCimQo8Ckv8yURZzPvuCoRJMTtGQSchMgF_MaVk0','2024-11-17 05:36:13','2024-11-17 14:46:13',1),('goqkTk1986@gmail.com','DeKXzhIieUbs_SravdDctHqBinLxCA_yZDrTQ1hzJcw','2024-11-17 05:43:33','2024-11-17 14:53:33',0),('goqkTk1986@gmail.com','LmQAg4NwHJlNnbFOO2EayPEjCnsKlrZf0je5DaY_Hts','2024-11-17 06:04:08','2024-11-17 15:14:08',0),('goqkTk1986@gmail.com','6nhUijLJn3cLj5Ykf2MJkt2U4P76GONzofxMgWDWcew','2024-11-17 06:16:34','2024-11-17 15:26:34',1);
 /*!40000 ALTER TABLE `email_verifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(50) DEFAULT NULL,
+  `title` varchar(200) DEFAULT NULL,
+  `notification_time` datetime DEFAULT NULL,
+  `event_start_time` datetime DEFAULT NULL,
+  `is_read` tinyint DEFAULT '0',
+  `email_sent` tinyint DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,'Admin',52,'알림 텟트','2024-12-30 11:00:00','2024-12-30 11:10:00',1,1,'2024-12-30 10:57:49'),(2,'Admin',53,'일정 ㅅㄷㄴㅅ','2024-12-30 11:30:00','2024-12-30 11:40:00',1,1,'2024-12-30 11:27:43'),(3,'Admin',54,'ㅅㄷㄴㅅ1','2024-12-30 11:40:00','2024-12-30 11:50:00',1,1,'2024-12-30 11:36:38'),(4,'Admin',55,'ㅅㄷㄴㅅ2','2024-12-30 11:40:00','2024-12-30 11:50:00',1,1,'2024-12-30 11:36:59'),(5,'Admin',56,'ㅅㄷㄴㅅ3','2024-12-30 11:40:00','2024-12-30 11:50:00',1,1,'2024-12-30 11:37:15'),(6,'Admin',57,'ㅅㄷㄴㅅ4','2024-12-30 11:40:00','2024-12-30 11:50:00',1,1,'2024-12-30 11:37:26'),(7,'Admin',58,'ㅓ','2024-12-30 11:55:00','2024-12-30 12:05:00',1,1,'2024-12-30 11:51:57'),(8,'Admin',59,'ㅁㄹㄴㅇㄴㄹㅇ','2024-12-30 13:30:00','2024-12-30 13:40:00',1,1,'2024-12-30 13:29:21'),(9,'Admin',60,'ㅇㄻㄴ','2024-12-30 13:35:00','2024-12-30 13:45:00',1,1,'2024-12-30 13:32:43'),(10,'Admin',61,'2211212','2024-12-30 13:45:00','2024-12-30 13:55:00',1,1,'2024-12-30 13:42:14'),(11,'Admin',62,'11111','2024-12-30 13:55:00','2024-12-30 14:05:00',1,1,'2024-12-30 13:51:48'),(12,'Admin',63,'222222','2024-12-30 13:55:00','2024-12-30 14:05:00',1,1,'2024-12-30 13:51:58'),(15,'Admin',66,'알림 뜨기 전 수정','2024-12-31 08:45:00','2024-12-31 08:55:00',1,1,'2024-12-31 08:38:46'),(16,'Admin',64,'알림 뜬 후 수정','2024-12-31 08:45:00','2024-12-31 08:55:00',1,1,'2024-12-31 08:41:43'),(18,'Admin',68,'후','2024-12-31 08:55:00','2024-12-31 09:05:00',0,1,'2024-12-31 08:50:46'),(19,'Admin',67,'전','2024-12-31 09:00:00','2024-12-31 09:10:00',0,0,'2024-12-31 08:50:53'),(22,'Admin',69,'전','2024-12-31 09:05:00','2024-12-31 09:15:00',1,1,'2024-12-31 08:59:29'),(23,'Admin',70,'후','2024-12-31 09:05:00','2024-12-31 09:15:00',1,1,'2024-12-31 09:00:15');
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -208,4 +238,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-12-30 10:51:11
+-- Dump completed on 2024-12-31  9:09:13

@@ -27,8 +27,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedFullDate = null;
 
     function initNotifications() {
+        let lastCheckedTime = Date.now();
+        
         // 1초마다 새로운 알림이 있는지 체크
         const checkNotifications = async () => {
+            const currentTime = Date.now();
+            // 마지막 체크로부터 최소 5초가 지났는지 확인
+            if (currentTime - lastCheckedTime < 5000) {
+                return;
+            }
+            lastCheckedTime = currentTime;
+            
             try {
                 const response = await fetch('/check_notifications');
                 const data = await response.json();
@@ -46,10 +55,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
     
-        // 매 초마다 알림 체크
+        // 1초마다 알림 체크
         setInterval(checkNotifications, 1000);
     
         function showNotification(notification) {
+            // 이미 표시된 알림인지 확인
+            const existingNotification = document.querySelector(`.notification-toast[data-event-id="${notification.event_id}"]`);
+            if (existingNotification) {
+                return; // 이미 표시된 알림이면 무시
+            }
+        
             // 알림 컨테이너가 없으면 생성
             let notificationContainer = document.querySelector('.notification-container');
             if (!notificationContainer) {
@@ -67,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 알림 요소 생성
             const notificationElement = document.createElement('div');
             notificationElement.className = 'notification-toast';
+            notificationElement.dataset.eventId = notification.event_id;
             notificationElement.style.cssText = `
                 background-color: white;
                 border-left: 4px solid #FF9800;
@@ -222,10 +238,32 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = '';
         });
         
-        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        // 현재 달력에 표시된 모든 날짜의 범위를 가져오기
+        const firstDayCell = calendarDays.querySelector('.calendar-day');
+        const lastDayCell = calendarDays.querySelector('.calendar-day:last-child');
         
-        fetch(`/get_events?start=${firstDay.toISOString()}&end=${lastDay.toISOString()}`)
+        if (!firstDayCell || !lastDayCell) return;
+        
+        const firstDayNumber = firstDayCell.querySelector('.day-number');
+        const lastDayNumber = lastDayCell.querySelector('.day-number');
+        
+        if (!firstDayNumber || !lastDayNumber) return;
+        
+        // 첫 날과 마지막 날의 전체 날짜 구하기 (이전 달과 다음 달 포함)
+        const firstDate = new Date(currentDate.getFullYear(), 
+            firstDayCell.classList.contains('other-month') ? currentDate.getMonth() - 1 : currentDate.getMonth(), 
+            parseInt(firstDayNumber.textContent));
+            
+        const lastDate = new Date(currentDate.getFullYear(),
+            lastDayCell.classList.contains('other-month') ? currentDate.getMonth() + 1 : currentDate.getMonth(),
+            parseInt(lastDayNumber.textContent));
+    
+        // 날짜가 연도를 넘어가는 경우 처리
+        if (firstDate.getMonth() === 11 && lastDate.getMonth() === 0) {
+            lastDate.setFullYear(firstDate.getFullYear() + 1);
+        }
+        
+        fetch(`/get_events?start=${firstDate.toISOString()}&end=${lastDate.toISOString()}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.events) {
@@ -239,6 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const endDate = new Date(event.end_datetime);
                         endDate.setHours(0, 0, 0, 0);
                         
+                        // startDate부터 endDate까지의 모든 날짜에 이벤트 추가
                         for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
                             const dateKey = date.toISOString().split('T')[0];
                             if (!eventsByDay.has(dateKey)) {
@@ -271,9 +310,27 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (isNaN(day)) return;
                         
                         const isOtherMonth = dayCell.classList.contains('other-month');
-                        if (isOtherMonth) return;
                         
-                        const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                        // 현재 셀의 날짜 계산
+                        let cellDate;
+                        if (isOtherMonth) {
+                            // 이전 달 또는 다음 달의 날짜인 경우
+                            if (day > 20) {  // 이전 달의 날짜
+                                cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, day);
+                            } else {  // 다음 달의 날짜
+                                cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, day);
+                            }
+                        } else {
+                            cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                        }
+    
+                        // 연도가 바뀌는 경우 처리
+                        if (cellDate.getMonth() === 11 && currentDate.getMonth() === 0) {
+                            cellDate.setFullYear(currentDate.getFullYear() - 1);
+                        } else if (cellDate.getMonth() === 0 && currentDate.getMonth() === 11) {
+                            cellDate.setFullYear(currentDate.getFullYear() + 1);
+                        }
+                        
                         const dateKey = cellDate.toISOString().split('T')[0];
                         let dayEvents = eventsByDay.get(dateKey) || [];
                         

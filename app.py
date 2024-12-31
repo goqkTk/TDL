@@ -458,6 +458,7 @@ def check_notifications():
         cursor = db.cursor(pymysql.cursors.DictCursor)
     
         current_time = datetime.now()
+        # 이메일을 보내지 않은 알림만 선택
         send_sql = """
         SELECT DISTINCT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
         FROM notifications n
@@ -466,17 +467,8 @@ def check_notifications():
         AND n.notification_time <= %s
         AND n.is_read = 0
         AND n.email_sent = 0
-        AND n.id = (
-            SELECT MIN(id)
-            FROM notifications n2
-            WHERE n2.user_id = n.user_id 
-            AND n2.event_id = n.event_id
-            AND n2.notification_time <= %s
-            AND n2.is_read = 0
-            AND n2.email_sent = 0
-        )
         """
-        cursor.execute(send_sql, (user_id, current_time, current_time))
+        cursor.execute(send_sql, (user_id, current_time))
         to_send_notifications = cursor.fetchall()
         
         for notification in to_send_notifications:
@@ -496,7 +488,7 @@ def check_notifications():
                     )
                     mail.send(msg)
                     
-                    # 이메일 발송 후 상태 업데이트
+                    # 이메일 전송 후 바로 상태 업데이트
                     cursor.execute(
                         "UPDATE notifications SET email_sent = 1 WHERE id = %s",
                         (notification['id'],)
@@ -506,7 +498,7 @@ def check_notifications():
                 print(f"이메일 발송 오류: {str(e)}")
                 continue
         
-        # 화면에 표시할 알림 조회
+        # 표시할 알림 가져오기 (이메일 전송 여부와 관계없이)
         display_sql = """
         SELECT DISTINCT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
         FROM notifications n
@@ -514,16 +506,8 @@ def check_notifications():
         WHERE n.user_id = %s 
         AND n.notification_time <= %s
         AND n.is_read = 0
-        AND n.id = (
-            SELECT MIN(id)
-            FROM notifications n2
-            WHERE n2.user_id = n.user_id 
-            AND n2.event_id = n.event_id
-            AND n2.notification_time <= %s
-            AND n2.is_read = 0
-        )
         """
-        cursor.execute(display_sql, (user_id, current_time, current_time))
+        cursor.execute(display_sql, (user_id, current_time))
         display_notifications = cursor.fetchall()
         
         return jsonify({
@@ -573,6 +557,9 @@ def update_event(event_id):
         data = request.json
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor()
+        
+        # SET time_zone = '+09:00' 쿼리 실행
+        cursor.execute("SET time_zone = '+09:00'")
         
         event_data = {
             'user_id': user_id,
@@ -646,15 +633,19 @@ def save_event():
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor()
         
+        # 클라이언트에서 받은 시간을 그대로 사용
         event_data = {
             'user_id': user_id,
             'title': data.get('title'),
-            'start_datetime': data.get('startDateTime'),
-            'end_datetime': data.get('endDateTime'),
+            'start_datetime': data.get('startDateTime'),  # 클라이언트 시간을 그대로 사용
+            'end_datetime': data.get('endDateTime'),      # 클라이언트 시간을 그대로 사용
             'notification': data.get('notification'),
             'url': data.get('url'),
             'memo': data.get('memo')
         }
+        
+        # SET time_zone = '+09:00' 쿼리 실행으로 timezone 설정
+        cursor.execute("SET time_zone = '+09:00'")
         
         sql = """
         INSERT INTO calendar_events 
@@ -666,9 +657,9 @@ def save_event():
             event_data['title'],
             event_data['start_datetime'],
             event_data['end_datetime'],
-            event_data['notification'],
-            event_data['url'],
-            event_data['memo']
+            event_data.get('notification'),
+            event_data.get('url'),
+            event_data.get('memo')
         ))
         event_id = cursor.lastrowid
         

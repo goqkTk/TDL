@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 def update_calendar_event(db, event_id, event_data):
     cursor = db.cursor()
     try:
+        cursor.execute("SET time_zone = '+09:00'")
+        
         sql = """
         UPDATE calendar_events 
         SET title = %s, 

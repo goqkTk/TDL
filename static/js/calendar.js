@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(checkNotifications, 1000);
     
         function showNotification(notification) {
+            // 기존 알림이 있는지 확인
             const existingNotification = document.querySelector(`.notification-toast[data-event-id="${notification.event_id}"]`);
             if (existingNotification) {
                 return;
@@ -95,49 +96,62 @@ document.addEventListener('DOMContentLoaded', function() {
         
             const contentDiv = document.createElement('div');
             contentDiv.style.flex = '1';
-            
+        
             function updateTimeDisplay() {
-                // 서버로부터 받은 event_start_time을 KST Date 객체로 변환
-                const eventStartTime = new Date(notification.event_start_time);
-                const now = new Date();
-                
-                // UTC 시간과 한국 시간의 차이 (9시간) 보정
-                const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로 변환
-                const kstEventStartTime = new Date(eventStartTime.getTime() + kstOffset);
-                const kstNow = new Date(now.getTime() + kstOffset);
+                try {
+                    // 시간 파싱
+                    const [_, day, month, year, time] = notification.event_start_time.match(/\w+, (\d+) (\w+) (\d+) (\d+:\d+):\d+ GMT/);
+                    
+                    // 월 이름을 숫자로 변환
+                    const months = {
+                        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                    };
+                    
+                    // 시간 파싱
+                    const [hours, minutes] = time.split(':').map(Number);
+                    
+                    // UTC 기준으로 Date 객체 생성
+                    const eventStartTime = new Date(year, months[month], day, hours, minutes);
+                    const now = new Date();
         
-                // 현재 시간과 이벤트 시작 시간의 차이를 분 단위로 계산
-                const minutesDiff = Math.round((eventStartTime - now) / (1000 * 60));
-                
-                let timeDisplay;
-                if (minutesDiff <= 0) {
-                    timeDisplay = "곧 시작";
-                } else if (minutesDiff < 60) {
-                    timeDisplay = `${minutesDiff}분 후 시작`;
-                } else if (minutesDiff < 1440) {
-                    const hours = Math.floor(minutesDiff / 60);
-                    const minutes = minutesDiff % 60;
-                    timeDisplay = `${hours}시간 ${minutes > 0 ? minutes + '분 ' : ''}후 시작`;
-                } else {
-                    const days = Math.floor(minutesDiff / 1440);
-                    timeDisplay = `${days}일 후 시작`;
+                    // 이벤트 시작까지 남은 시간을 분 단위로 계산
+                    const minutesDiff = Math.round((eventStartTime - now) / (1000 * 60));
+                    
+                    let timeDisplay;
+                    if (minutesDiff <= 1) {
+                        // 1분 이하면 바로 팝업 닫기
+                        notificationElement.style.opacity = '0';
+                        notificationElement.style.transform = 'translateX(100%)';
+                        setTimeout(() => {
+                            if (notificationElement.parentNode) {
+                                notificationElement.parentNode.removeChild(notificationElement);
+                            }
+                        }, 300);
+                        return;
+                    } else if (minutesDiff < 60) {
+                        timeDisplay = `${minutesDiff}분 후 시작`;
+                    } else if (minutesDiff < 1440) {
+                        const hours = Math.floor(minutesDiff / 60);
+                        const minutes = minutesDiff % 60;
+                        timeDisplay = `${hours}시간 ${minutes > 0 ? minutes + '분 ' : ''}후 시작`;
+                    } else {
+                        const days = Math.floor(minutesDiff / 1440);
+                        timeDisplay = `${days}일 후 시작`;
+                    }
+        
+                    contentDiv.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 8px;">
+                            ${notification.event_title}
+                        </div>
+                        <div style="color: #666;">
+                            ${timeDisplay}
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Error:', error);
                 }
-        
-                contentDiv.innerHTML = `
-                    <div style="font-weight: bold; margin-bottom: 8px;">
-                        ${notification.event_title}
-                    </div>
-                    <div style="color: #666;">
-                        ${timeDisplay}
-                    </div>
-                `;
             }
-        
-            // 초기 시간 표시
-            updateTimeDisplay();
-        
-            // 1분마다 시간 표시 업데이트
-            const timeUpdateInterval = setInterval(updateTimeDisplay, 60000);
         
             const closeButton = document.createElement('button');
             closeButton.innerHTML = '×';
@@ -153,11 +167,12 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         
             closeButton.onclick = () => {
-                clearInterval(timeUpdateInterval);
                 notificationElement.style.opacity = '0';
                 notificationElement.style.transform = 'translateX(100%)';
                 setTimeout(() => {
-                    notificationContainer.removeChild(notificationElement);
+                    if (notificationElement.parentNode) {
+                        notificationElement.parentNode.removeChild(notificationElement);
+                    }
                 }, 300);
             };
         
@@ -165,21 +180,31 @@ document.addEventListener('DOMContentLoaded', function() {
             notificationElement.appendChild(closeButton);
             notificationContainer.appendChild(notificationElement);
         
+            // 초기 시간 표시 업데이트
+            updateTimeDisplay();
+        
+            // 1분마다 시간 표시 업데이트
+            const updateInterval = setInterval(updateTimeDisplay, 60000);
+        
+            // 10분 후 자동으로 닫힘
+            setTimeout(() => {
+                clearInterval(updateInterval);
+                if (notificationContainer.contains(notificationElement)) {
+                    notificationElement.style.opacity = '0';
+                    notificationElement.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (notificationElement.parentNode) {
+                            notificationElement.parentNode.removeChild(notificationElement);
+                        }
+                    }, 300);
+                }
+            }, 600000);
+        
+            // 팝업 표시 애니메이션
             setTimeout(() => {
                 notificationElement.style.opacity = '1';
                 notificationElement.style.transform = 'translateX(0)';
             }, 100);
-        
-            setTimeout(() => {
-                if (notificationContainer.contains(notificationElement)) {
-                    clearInterval(timeUpdateInterval);
-                    notificationElement.style.opacity = '0';
-                    notificationElement.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        notificationContainer.removeChild(notificationElement);
-                    }, 300);
-                }
-            }, 600000); // 10분 후 자동으로 닫힘
         }
     
         async function markNotificationAsRead(notificationId) {
@@ -850,10 +875,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!validateTimeRange()) return;
     
         function parseDateTime(dateStr, timeStr) {
+            // 날짜 파싱 (YYYY년 MM월 DD일 형식)
             const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);
+            
+            // 시간 파싱 (오전/오후 HH:MM 형식)
             const [period, hourMin] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
             const [hours, minutes] = hourMin.split(':').map(num => parseInt(num));
             
+            // 24시간 형식으로 변환
             let hour = parseInt(hours);
             if (period === '오후' && hour !== 12) {
                 hour += 12;
@@ -861,6 +890,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 hour = 0;
             }
     
+            // MySQL datetime 형식으로 변환 (YYYY-MM-DD HH:MM:SS)
             return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
         }
     

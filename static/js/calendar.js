@@ -774,13 +774,63 @@ document.addEventListener('DOMContentLoaded', function() {
         currentTimeButton = null;
     }
 
+    function updateNotificationState(isAllDay) {
+        const notificationSelect = document.getElementById('eventNotification');
+        if (isAllDay) {
+            notificationSelect.value = 'none';
+            notificationSelect.disabled = true;
+            notificationSelect.style.opacity = '0.5';
+            notificationSelect.style.cursor = 'not-allowed';
+        } else {
+            notificationSelect.disabled = false;
+            notificationSelect.style.opacity = '1';
+            notificationSelect.style.cursor = 'pointer';
+        }
+    }
+
+    function applyAllDayState(isAllDay) {
+        const allDayCheckbox = document.getElementById('allDayEvent');
+        const datetimeStart = document.querySelector('.datetime-start');
+        const datetimeEnd = document.querySelector('.datetime-end');
+        
+        if (allDayCheckbox) {
+            allDayCheckbox.checked = isAllDay;
+            
+            if (isAllDay) {
+                datetimeStart.classList.add('disabled');
+                datetimeEnd.classList.add('disabled');
+                
+                const startDate = new Date(getDateFromButton('startDateButton'));
+                startDate.setHours(0, 0, 0);
+                document.getElementById('startTimeButton').textContent = '오전 12:00';
+                
+                const endDate = new Date(getDateFromButton('endDateButton'));
+                endDate.setHours(23, 59, 0);
+                document.getElementById('endTimeButton').textContent = '오후 11:59';
+            } else {
+                datetimeStart.classList.remove('disabled');
+                datetimeEnd.classList.remove('disabled');
+                
+                document.getElementById('startTimeButton').textContent = '오전 10:00';
+                document.getElementById('endTimeButton').textContent = '오전 11:00';
+            }
+            updateNotificationState(isAllDay);
+        }
+    }
+
     function showEventModal() {
         hideAllModals();
         
         const eventCreateOverlay = document.querySelector('.event-create-overlay');
         const eventCreateModal = document.querySelector('.event-create-modal');
-        eventCreateOverlay.style.display = 'block';
-        eventCreateModal.style.display = 'block';
+        const eventForm = eventCreateModal?.querySelector('.event-form');
+        
+        if (eventForm) {
+            eventForm.reset();
+            delete eventForm.dataset.eventId;
+        }
+        
+        eventCreateModal.querySelector('.event-modal-title').textContent = '새로운 일정';
         
         const today = selectedDate ? new Date(currentDate.getFullYear(), currentDate.getMonth(), parseInt(selectedDate.split('-')[2])) : new Date();
         const startDateBtn = document.getElementById('startDateButton');
@@ -788,19 +838,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateDateButtonText(startDateBtn, today);
         updateDateButtonText(endDateBtn, today);
         
-        const now = new Date();
-        const nextHour = new Date(now);
-        nextHour.setHours(now.getMinutes() >= 1 ? now.getHours() + 1 : now.getHours());
-        nextHour.setMinutes(0);
+        applyAllDayState(false);
         
-        const endTime = new Date(nextHour);
-        endTime.setHours(nextHour.getHours() + 1);
-        
-        const startTimeBtn = document.getElementById('startTimeButton');
-        const endTimeBtn = document.getElementById('endTimeButton');
-        startTimeBtn.textContent = formatTimeString(nextHour);
-        endTimeBtn.textContent = formatTimeString(endTime);
-        
+        eventCreateOverlay.style.display = 'block';
+        eventCreateModal.style.display = 'block';
         eventCreateModal.querySelector('#eventTitle').focus();
     }
 
@@ -830,7 +871,7 @@ document.addEventListener('DOMContentLoaded', function() {
         eventForm.querySelector('#eventUrl').value = event.url || '';
         eventForm.querySelector('#eventMemo').value = event.memo || '';
         eventForm.querySelector('#eventNotification').value = event.notification || 'none';
-    
+        
         const startDate = new Date(event.start_datetime);
         const endDate = new Date(event.end_datetime);
         
@@ -844,8 +885,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         startTimeBtn.textContent = formatTimeButtonText(startDate);
         endTimeBtn.textContent = formatTimeButtonText(endDate);
-        eventForm.dataset.eventId = event.id;
         
+        const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 &&
+                        endDate.getHours() === 23 && endDate.getMinutes() === 59;
+        applyAllDayState(isAllDay);
+        
+        eventForm.dataset.eventId = event.id;
         eventCreateOverlay.style.display = 'block';
         eventCreateModal.style.display = 'block';
         eventForm.querySelector('#eventTitle').focus();
@@ -859,6 +904,25 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
     }
 
+    function initAllDayCheckbox() {
+        const allDayCheckbox = document.getElementById('allDayEvent');
+        
+        if (allDayCheckbox) {
+            allDayCheckbox.addEventListener('change', function() {
+                applyAllDayState(this.checked);
+            });
+        }
+    }
+    
+    function getDateFromButton(buttonId) {
+        const buttonText = document.getElementById(buttonId).textContent;
+        const matches = buttonText.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/);
+        if (matches) {
+            return new Date(matches[1], parseInt(matches[2]) - 1, matches[3]);
+        }
+        return new Date();
+    }
+
     function createEvent(e) {
         e.preventDefault();
         const eventForm = document.querySelector('.event-form');
@@ -867,30 +931,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const startTime = document.getElementById('startTimeButton').textContent;
         const endDate = document.getElementById('endDateButton').textContent;
         const endTime = document.getElementById('endTimeButton').textContent;
-        const notification = eventForm.querySelector('#eventNotification').value;
+        const isAllDay = document.getElementById('allDayEvent').checked;
         const url = eventForm.querySelector('#eventUrl').value;
         const memo = eventForm.querySelector('#eventMemo').value;
         const eventId = eventForm.dataset.eventId;
+        const notification = isAllDay ? 'none' : eventForm.querySelector('#eventNotification').value;
     
         if (!validateTimeRange()) return;
     
         function parseDateTime(dateStr, timeStr) {
-            // 날짜 파싱 (YYYY년 MM월 DD일 형식)
             const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);
-            
-            // 시간 파싱 (오전/오후 HH:MM 형식)
             const [period, hourMin] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
             const [hours, minutes] = hourMin.split(':').map(num => parseInt(num));
             
-            // 24시간 형식으로 변환
             let hour = parseInt(hours);
             if (period === '오후' && hour !== 12) {
                 hour += 12;
             } else if (period === '오전' && hour === 12) {
                 hour = 0;
             }
-    
-            // MySQL datetime 형식으로 변환 (YYYY-MM-DD HH:MM:SS)
             return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
         }
     
@@ -903,7 +962,8 @@ document.addEventListener('DOMContentLoaded', function() {
             endDateTime: endDateTime,
             notification,
             url,
-            memo
+            memo,
+            isAllDay
         };
     
         function refreshCalendarAndSideboard() {
@@ -1681,6 +1741,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setupEventListeners();
         initSideboardEvents();
         initNotifications();
+        initAllDayCheckbox();
         
         const eventForm = document.querySelector('.event-form');
         if (eventForm) {

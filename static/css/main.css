@@ -727,26 +727,16 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     border-radius: 50%;
 }
 
-input:checked + .toggle-slider {
-    background-color: #BDD971;
-}
-
-input:checked + .toggle-slider:before {
-    transform: translateX(20px);
-}
+input:checked + .toggle-slider { background-color: #BDD971; }
+input:checked + .toggle-slider:before { transform: translateX(20px); }
 
 .setting-item.disabled {
     opacity: 0.5;
     pointer-events: none;
 }
 
-.setting-item.disabled .setting-description {
-    color: var(--text-secondary);
-}
-
-.setting-modal::-webkit-scrollbar {
-    width: 8px;
-}
+.setting-item.disabled .setting-description { color: var(--text-secondary); }
+.setting-modal::-webkit-scrollbar { width: 8px; }
 
 .setting-modal::-webkit-scrollbar-track {
     background: var(--bg-secondary);
@@ -758,77 +748,80 @@ input:checked + .toggle-slider:before {
     border-radius: 4px;
 }
 
-.setting-modal::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
+.setting-modal::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+#edit-delete i { font-size: calc(var(--category-btn-size) - 2px); }
 
 .confirm-modal {
-    width: 300px;
-    padding: 20px;
+    width: 400px;
+    max-width: 95vw;
+    padding: 2rem;
     background-color: var(--todo-bg);
     color: var(--text-primary);
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     position: relative;
     z-index: 10000;
     animation: modalFadeIn 0.3s ease-out;
+    text-align: center;
 }
 
 .confirm-modal h3 {
-    white-space: pre-line;
-    text-align: center;
-    font-size: 19px;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: #333;
-    line-height: 1.4;
+    margin-bottom: 1rem;
 }
 
 .confirm-modal p {
-    color: red;
-    font-size: 13px;
-    margin-top: -7px;
+    margin-bottom: 0;
 }
-
-#yes {
-    width: 60px;
-    height: 35px;
-    background: rgb(249, 33, 33);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.35);
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-    margin-right: 30px;
-}
-
-#no {
-    width: 60px;
-    height: 35px;
-    background: rgb(223, 223, 223);
-    border: none;
-    border-radius: 5px;
-    box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.2s ease;
-    cursor: pointer;
-}
-
-#yes:hover {
-    background: rgb(215, 28, 28);
-    color: white;
-}
-
-#no:hover { background: rgb(204, 204, 204); }
-#edit-delete i { font-size: calc(var(--category-btn-size) - 2px); }
 
 .confirm-modal .between {
     display: flex;
     justify-content: center;
-    align-items: center;
-    margin-top: 20px;
+    gap: 1rem;
+    margin-top: 2rem;
 }
+
+#yes {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: auto;
+    height: auto;
+    margin: 0;
+    box-shadow: none;
+}
+
+#yes:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+#no {
+    background-color: white;
+    color: #666;
+    border: 1px solid #ddd;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: auto;
+    height: auto;
+    margin: 0;
+    box-shadow: none;
+}
+
+#no:hover { background-color: #f5f5f5; }
 
 .search-modal {
     background-color: var(--todo-bg);
@@ -980,6 +973,125 @@ input:checked + .toggle-slider:before {
     line-height: 1.4;
 }
 
+.date-select-section {
+    width: 90%;
+    margin-bottom: 20px;
+}
+
+.date-select-button {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+}
+
+.date-select-button:hover {
+    background-color: var(--todo-hover);
+    border-color: #aaa;
+}
+
+.date-select-button i {
+    color: #666;
+}
+
+.date-selection-panel {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--todo-bg);
+}
+
+.date-inputs {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.all-day-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.all-day-toggle .toggle-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider { background-color: #4CAF50; }
+input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+.all-day-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+#todo-date,
+#todo-time {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: inherit;
+    background-color: var(--todo-bg);
+    color: var(--text-primary);
+}
+
+#todo-date:focus,
+#todo-time:focus {
+    outline: none;
+    border-color: #03A9F4;
+}
+
 .add-category-modal,
 .edit-category-modal {
     background-color: var(--todo-bg);
@@ -1073,6 +1185,85 @@ input:checked + .toggle-slider:before {
 #add-category-input.error,
 #edit-category-input.error {
     border-color: red;
+}
+
+.time-select-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 2003;
+    width: 420px;
+    padding: 1.5rem;
+    display: none;
+}
+
+.full-date-select-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 2005;
+    width: 360px;
+    padding: 1.5rem;
+    display: none;
+}
+
+.full-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.datetime-start,
+.datetime-end {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.datetime-start.disabled button,
+.datetime-end.disabled button {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.datetime-inputs {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.add-modal .datetime-group {
+    width: 90%;
+    margin-bottom: 15px;
+}
+
+.add-modal .date-select-button,
+.add-modal .time-select-button {
+    flex: 1;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.add-modal .date-select-button:hover,
+.add-modal .time-select-button:hover {
+    background-color: #f5f5f5;
+    border-color: #4CAF50;
 }
 
 .add-modal, .edit-modal {

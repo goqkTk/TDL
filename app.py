@@ -458,7 +458,6 @@ def check_notifications():
         cursor = db.cursor(pymysql.cursors.DictCursor)
     
         current_time = datetime.now()
-        # 이메일을 보내지 않은 알림만 선택
         send_sql = """
         SELECT DISTINCT n.*, e.title as event_title, e.url as event_url, e.memo as event_memo 
         FROM notifications n

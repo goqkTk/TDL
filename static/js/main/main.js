@@ -53,6 +53,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const themeDropdown = document.querySelector('.theme-dropdown');
     const themedropdownItems = document.querySelectorAll('.theme-dropdown-item');
     const container = document.querySelector('.container');
+    const dateSelectToggle = document.getElementById('date-select-toggle');
+    const dateSelectionPanel = document.querySelector('.date-selection-panel');
+    const todoDate = document.getElementById('todo-date');
+    const todoTime = document.getElementById('todo-time');
+    const allDayCheckbox = document.getElementById('all-day');
 
     let draggedItem = null;
     let placeholder = null;
@@ -69,6 +74,41 @@ document.addEventListener('DOMContentLoaded', function() {
     let wasSelected = false;
 
     checkForHighlight();
+    initDateTimeFeatures();
+
+    const fullDateSelectOverlay = document.querySelector('.full-date-select-overlay');
+    const confirmDateBtn = document.querySelector('.full-date-select-confirm');
+    const todayBtn = document.querySelector('.full-date-select-today');
+    const prevMonthBtn = document.querySelector('.prev-month-btn');
+    const nextMonthBtn = document.querySelector('.next-month-btn');
+    
+    fullDateSelectOverlay?.addEventListener('click', hideFullDateSelectModal);
+    confirmDateBtn?.addEventListener('click', confirmDateSelection);
+    todayBtn?.addEventListener('click', () => {
+        const today = new Date();
+        selectedYear = today.getFullYear();
+        selectedMonth = today.getMonth() + 1;
+        selectedDay = today.getDate();
+        updateFullCalendar();
+    });
+    
+    prevMonthBtn?.addEventListener('click', () => {
+        selectedMonth--;
+        if (selectedMonth < 1) {
+            selectedMonth = 12;
+            selectedYear--;
+        }
+        updateFullCalendar();
+    });
+    
+    nextMonthBtn?.addEventListener('click', () => {
+        selectedMonth++;
+        if (selectedMonth > 12) {
+            selectedMonth = 1;
+            selectedYear++;
+        }
+        updateFullCalendar();
+    });
 
     const weekBtn = document.querySelector('.week-selector-btn');
     const weekDropdown = document.querySelector('.week-dropdown');
@@ -1109,8 +1149,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const infoContainer = todoItem.querySelector('.info-container');
                         if (infoContainer) {
                             infoContainer.innerHTML = `
-                                <p>생성일: ${data.created_at}</p>
-                                <p>수정일: ${data.updated_at}</p>
+                                <p><span><i class="fa-regular fa-calendar-plus"></i> 생성일</span><span> ${data.created_at}</span></p>
+                                <p><span><i class="fa-solid fa-pen"></i> 수정일</span><span> ${data.updated_at}</span></p>
                             `;
                             console.log('Updated info container:', infoContainer.innerHTML);
                         } else {
@@ -1405,17 +1445,107 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    if (dateSelectToggle) {
+        dateSelectToggle.addEventListener('click', function() {
+            if (dateSelectionPanel.style.display === 'none' || !dateSelectionPanel.style.display) {
+                dateSelectionPanel.style.display = 'block';
+            } else {
+                dateSelectionPanel.style.display = 'none';
+            }
+        });
+    }
+
+    // 종일 체크박스 이벤트
+    if (allDayCheckbox) {
+        allDayCheckbox.addEventListener('change', function() {
+            todoTime.style.display = this.checked ? 'none' : 'block';
+        });
+    }
+
+    function initDateTimeFeatures() {
+        const startDateBtn = document.getElementById('startDateButton');
+        const endDateBtn = document.getElementById('endDateButton');
+        const startTimeBtn = document.getElementById('startTimeButton');
+        const endTimeBtn = document.getElementById('endTimeButton');
+        const allDayCheckbox = document.getElementById('allDayEvent');
+        
+        // 날짜 버튼 이벤트
+        startDateBtn?.addEventListener('click', () => showFullDateSelectModal(startDateBtn));
+        endDateBtn?.addEventListener('click', () => showFullDateSelectModal(endDateBtn));
+        
+        // 시간 버튼 이벤트
+        startTimeBtn?.addEventListener('click', () => showTimeSelectModal(startTimeBtn));
+        endTimeBtn?.addEventListener('click', () => showTimeSelectModal(endTimeBtn));
+        
+        // 종일 체크박스 이벤트
+        if (allDayCheckbox) {
+            allDayCheckbox.addEventListener('change', function() {
+                const datetimeStart = document.querySelector('.datetime-start');
+                const datetimeEnd = document.querySelector('.datetime-end');
+                
+                if (this.checked) {
+                    datetimeStart.classList.add('disabled');
+                    datetimeEnd.classList.add('disabled');
+                    
+                    const startDate = new Date();
+                    startDate.setHours(0, 0, 0);
+                    startTimeBtn.textContent = '오전 12:00';
+                    
+                    endDate.setHours(23, 59, 0);
+                    endTimeBtn.textContent = '오후 11:59';
+                } else {
+                    datetimeStart.classList.remove('disabled');
+                    datetimeEnd.classList.remove('disabled');
+                    
+                    startTimeBtn.textContent = '오전 10:00';
+                    endTimeBtn.textContent = '오전 11:00';
+                }
+            });
+        }
+    
+        // 초기 날짜/시간 설정
+        if (startDateBtn && endDateBtn) {
+            const today = new Date();
+            updateDateButtonText(startDateBtn, today);
+            updateDateButtonText(endDateBtn, today);
+        }
+    }
+
     if (addBtn) {
         addBtn.addEventListener('click', function() {
-            const title = titleInput ? titleInput.value : '';
-            const detail = detailInput ? detailInput.value : '';
-            const categoryIdElement = document.getElementById('category-id');
-            const categoryId = categoryIdElement ? categoryIdElement.value : null;
+            const title = document.getElementById('title').value;
+            const detail = document.getElementById('detail').value;
+            const isAllDay = document.getElementById('allDayEvent').checked;
             
             if (!title.trim()) {
-                setupErrorMessage(titleInput, '할 일을 입력해주세요');
+                setupErrorMessage(document.getElementById('title'), '할 일을 입력해주세요');
                 return;
             }
+    
+            // 날짜/시간 정보 가져오기
+            const startDate = document.getElementById('startDateButton').textContent;
+            const startTime = document.getElementById('startTimeButton').textContent;
+            const endDate = document.getElementById('endDateButton').textContent;
+            const endTime = document.getElementById('endTimeButton').textContent;
+    
+            // 날짜/시간 파싱
+            function parseDateTime(dateStr, timeStr) {
+                const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);
+                const [period, hourMin] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
+                const [hours, minutes] = hourMin.split(':').map(num => parseInt(num));
+                
+                let hour = parseInt(hours);
+                if (period === '오후' && hour !== 12) {
+                    hour += 12;
+                } else if (period === '오전' && hour === 12) {
+                    hour = 0;
+                }
+                
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+            }
+    
+            const startDateTime = parseDateTime(startDate, startTime);
+            const endDateTime = parseDateTime(endDate, endTime);
     
             fetch('/add_todo', {
                 method: 'POST',
@@ -1425,20 +1555,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     title: title,
                     detail: detail,
-                    category_id: categoryId
+                    startDateTime: startDateTime,
+                    endDateTime: endDateTime,
+                    isAllDay: isAllDay
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    if (addmodalBackground) addmodalBackground.style.display = 'none';
-                    const currentCategoryId = document.getElementById('category-id') ? document.getElementById('category-id').value : null;
-                    if ((!currentCategoryId && !data.todo.category_id) || (currentCategoryId && data.todo.category_id == currentCategoryId)) {
-                        addTodoToDOM(data.todo);
-                    }
-                    checkEmptyMain();
+                    addmodalBackground.style.display = 'none';
                     if (titleInput) titleInput.value = '';
                     if (detailInput) detailInput.value = '';
+                    location.reload();
                 } else {
                     setupErrorMessage(titleInput, data.message || '할 일 추가에 실패했습니다.');
                 }
@@ -1448,6 +1576,98 @@ document.addEventListener('DOMContentLoaded', function() {
                 setupErrorMessage(titleInput, '오류가 발생했습니다.');
             });
         });
+    }
+
+    function updateDateButtonText(button, date) {
+        button.textContent = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
+    
+    function showFullDateSelectModal(button) {
+        const modal = document.querySelector('.full-date-select-modal');
+        const overlay = document.querySelector('.full-date-select-overlay');
+        currentDateButton = button;
+        
+        const date = new Date();
+        selectedYear = date.getFullYear();
+        selectedMonth = date.getMonth() + 1;
+        selectedDay = date.getDate();
+        
+        updateFullCalendar();
+        modal.style.display = 'block';
+        overlay.style.display = 'block';
+    }
+    
+    function updateFullCalendar() {
+        const currentMonth = document.querySelector('.current-month');
+        const calendarDays = document.querySelector('.full-calendar-days');
+        
+        currentMonth.textContent = `${selectedYear}년 ${selectedMonth}월`;
+        calendarDays.innerHTML = '';
+        
+        const firstDay = new Date(selectedYear, selectedMonth - 1, 1);
+        const lastDay = new Date(selectedYear, selectedMonth, 0);
+        const startOffset = firstDay.getDay();
+        
+        // 이전 달의 날짜들
+        const prevMonthLastDay = new Date(selectedYear, selectedMonth - 1, 0).getDate();
+        for (let i = startOffset - 1; i >= 0; i--) {
+            createCalendarDay(prevMonthLastDay - i, true);
+        }
+        
+        // 현재 달의 날짜들
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            createCalendarDay(day, false);
+        }
+        
+        // 다음 달의 날짜들
+        const remainingDays = 42 - calendarDays.children.length;
+        for (let day = 1; day <= remainingDays; day++) {
+            createCalendarDay(day, true);
+        }
+    }
+    
+    function createCalendarDay(day, isOtherMonth) {
+        const calendarDays = document.querySelector('.full-calendar-days');
+        const dayElement = document.createElement('div');
+        dayElement.textContent = day;
+        
+        const isToday = !isOtherMonth &&
+            day === new Date().getDate() &&
+            selectedMonth === new Date().getMonth() + 1 &&
+            selectedYear === new Date().getFullYear();
+        
+        const isSelected = !isOtherMonth &&
+            day === selectedDay &&
+            selectedMonth === currentMonth &&
+            selectedYear === currentYear;
+        
+        dayElement.className = `full-calendar-day${isOtherMonth ? ' other-month' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}`;
+        
+        if (!isOtherMonth) {
+            dayElement.addEventListener('click', () => {
+                document.querySelectorAll('.full-calendar-day').forEach(el => el.classList.remove('selected'));
+                dayElement.classList.add('selected');
+                selectedDay = day;
+            });
+        }
+        
+        calendarDays.appendChild(dayElement);
+    }
+    
+    function hideFullDateSelectModal() {
+        const modal = document.querySelector('.full-date-select-modal');
+        const overlay = document.querySelector('.full-date-select-overlay');
+        modal.style.display = 'none';
+        overlay.style.display = 'none';
+        currentDateButton = null;
+    }
+    
+    function confirmDateSelection() {
+        if (currentDateButton && selectedYear && selectedMonth && selectedDay) {
+            const selectedDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
+            updateDateButtonText(currentDateButton, selectedDate);
+        }
+        hideFullDateSelectModal();
     }
 
     document.querySelectorAll('.remove-group').forEach(btn => {

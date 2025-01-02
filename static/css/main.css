@@ -1016,6 +1016,13 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     flex-wrap: wrap;
 }
 
+.form-group.datetime-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 90%;
+}
+
 .all-day-toggle {
     display: flex;
     justify-content: space-between;
@@ -1023,7 +1030,7 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     margin-bottom: 0.5rem;
 }
 
-.all-day-toggle .toggle-label {
+.toggle-label {
     font-size: 0.9rem;
     font-weight: 600;
     color: #666;
@@ -1063,6 +1070,13 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     background-color: white;
     transition: .4s;
     border-radius: 50%;
+}
+
+.datetime-start.disabled button,
+.datetime-end.disabled button {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
 }
 
 input:checked + .toggle-slider { background-color: #4CAF50; }
@@ -1187,7 +1201,21 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     border-color: red;
 }
 
-.time-select-modal {
+.time-select-overlay,
+.full-date-select-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2002;
+}
+
+.time-select-modal,
+.full-date-select-modal {
+    display: none;
     position: fixed;
     top: 50%;
     left: 50%;
@@ -1198,7 +1226,13 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     z-index: 2003;
     width: 420px;
     padding: 1.5rem;
-    display: none;
+}
+
+.weekday {
+    padding: 0.5rem;
+    text-align: center;
+    font-weight: 500;
+    color: #666;
 }
 
 .full-date-select-modal {
@@ -1215,11 +1249,59 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     display: none;
 }
 
+.full-calendar {
+    width: 100%;
+}
+
 .full-calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+}
+
+.full-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.full-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.full-calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+.full-calendar-day:hover {
+    background-color: #f0f0f0;
+}
+
+.full-calendar-day.other-month {
+    color: #ccc;
+}
+
+.full-calendar-day.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.full-calendar-day.today {
+    border: 2px solid #4CAF50;
 }
 
 .datetime-start,
@@ -1246,8 +1328,8 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     margin-bottom: 15px;
 }
 
-.add-modal .date-select-button,
-.add-modal .time-select-button {
+.date-select-button,
+.time-select-button {
     flex: 1;
     background: white;
     border: 1px solid #ddd;
@@ -1260,10 +1342,85 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     text-align: center;
 }
 
-.add-modal .date-select-button:hover,
-.add-modal .time-select-button:hover {
+.date-select-button:hover,
+.time-select-button:hover {
     background-color: #f5f5f5;
     border-color: #4CAF50;
+}
+
+.time-select-header,
+.full-date-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.time-select-title,
+.full-date-select-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.time-select-content {
+    display: flex;
+    gap: 1rem;
+}
+
+.period-select,
+.hour-select,
+.minute-select {
+    flex: 1;
+    position: relative;
+    height: 240px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f8f8f8;
+}
+
+.spinner-wrapper {
+    height: 100%;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 100px 0;
+}
+
+.spinner-wrapper::-webkit-scrollbar { display: none; }
+
+.spinner-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #666;
+    scroll-snap-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.spinner-item:hover { color: #4CAF50; }
+.spinner-item.selected {
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.selection-indicator {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-20px);
+    height: 40px;
+    background: rgba(76, 175, 80, 0.08);
+    border: 2px solid rgba(76, 175, 80, 0.3);
+    border-radius: 6px;
+    pointer-events: none;
 }
 
 .add-modal, .edit-modal {

@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const addBtn = document.getElementById('add');
     const detailInput = document.getElementById('detail');
     const addmodalBackground = document.querySelector('.add-modal-background');
+    const addCloseButton = document.querySelector('#add-close');
     const editmodalBackground = document.querySelector('.edit-modal-background');
     const addContentBtn = document.getElementById('add-content');
     const editContentBtn = document.querySelector('.edit-group');
@@ -55,10 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('.container');
     const dateSelectToggle = document.getElementById('date-select-toggle');
     const dateSelectionPanel = document.querySelector('.date-selection-panel');
-    const todoDate = document.getElementById('todo-date');
     const todoTime = document.getElementById('todo-time');
     const allDayCheckbox = document.getElementById('all-day');
+    const calendarLink = document.querySelector('.calendar-link');
+    const datetimeGroup = document.querySelector('.datetime-group');
 
+    let isCalendarLinked = false;
     let draggedItem = null;
     let placeholder = null;
     let isDragging = false;
@@ -81,6 +84,62 @@ document.addEventListener('DOMContentLoaded', function() {
 
     checkForHighlight();
     initDateTimeFeatures();
+
+    function resetModal() {
+        if (calendarLink) calendarLink.style.display = 'block';
+        if (datetimeGroup) datetimeGroup.style.display = 'none';
+        isCalendarLinked = false;
+        
+        const titleInput = document.getElementById('title');
+        const detailInput = document.getElementById('detail');
+        if (titleInput) titleInput.value = '';
+        if (detailInput) detailInput.value = '';
+        
+        const allDayCheckbox = document.getElementById('allDayEvent');
+        if (allDayCheckbox) allDayCheckbox.checked = false;
+        
+        const now = new Date();
+        const startDateBtn = document.getElementById('startDateButton');
+        const endDateBtn = document.getElementById('endDateButton');
+        if (startDateBtn) startDateBtn.textContent = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+        if (endDateBtn) endDateBtn.textContent = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+        
+        const startTimeBtn = document.getElementById('startTimeButton');
+        const endTimeBtn = document.getElementById('endTimeButton');
+        if (startTimeBtn) startTimeBtn.textContent = '오전 10:00';
+        if (endTimeBtn) endTimeBtn.textContent = '오전 11:00';
+    }
+
+    if (calendarLink) {
+        calendarLink.addEventListener('click', function() {
+            isCalendarLinked = true;
+            this.style.display = 'none';
+            datetimeGroup.style.display = 'flex';
+        });
+    }
+
+    if (addCloseButton) {
+        addCloseButton.addEventListener('click', function() {
+            addmodalBackground.style.display = 'none';
+            resetModal();
+        });
+    }
+
+    if (addmodalBackground) {
+        addmodalBackground.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+                resetModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && addmodalBackground.style.display === 'flex') {
+            addmodalBackground.style.display = 'none';
+            resetModal();
+        }
+    });
 
     const fullDateSelectOverlay = document.querySelector('.full-date-select-overlay');
     const confirmDateBtn = document.querySelector('.full-date-select-confirm');
@@ -1573,54 +1632,67 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.addEventListener('click', hideFullDateSelectModal);
     }
 
+    if (calendarLink) {
+        calendarLink.addEventListener('click', function() {
+            isCalendarLinked = true;
+            this.style.display = 'none';
+            datetimeGroup.style.display = 'flex';
+        });
+    }
+
     if (addBtn) {
         addBtn.addEventListener('click', function() {
             const title = document.getElementById('title').value;
             const detail = document.getElementById('detail').value;
-            const isAllDay = document.getElementById('allDayEvent').checked;
             
             if (!title.trim()) {
                 setupErrorMessage(document.getElementById('title'), '할 일을 입력해주세요');
                 return;
             }
-    
-            // 날짜/시간 정보 가져오기
-            const startDate = document.getElementById('startDateButton').textContent;
-            const startTime = document.getElementById('startTimeButton').textContent;
-            const endDate = document.getElementById('endDateButton').textContent;
-            const endTime = document.getElementById('endTimeButton').textContent;
-    
-            // 날짜/시간 파싱
-            function parseDateTime(dateStr, timeStr) {
-                const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);
-                const [period, hourMin] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
-                const [hours, minutes] = hourMin.split(':').map(num => parseInt(num));
-                
-                let hour = parseInt(hours);
-                if (period === '오후' && hour !== 12) {
-                    hour += 12;
-                } else if (period === '오전' && hour === 12) {
-                    hour = 0;
+
+            const todoData = {
+                title: title,
+                detail: detail
+            };
+
+            if (isCalendarLinked) {
+                const isAllDay = document.getElementById('allDayEvent').checked;
+                const startDate = document.getElementById('startDateButton').textContent;
+                const startTime = document.getElementById('startTimeButton').textContent;
+                const endDate = document.getElementById('endDateButton').textContent;
+                const endTime = document.getElementById('endTimeButton').textContent;
+
+                function parseDateTime(dateStr, timeStr) {
+                    const [year, month, day] = dateStr.match(/(\d{4})년\s+(\d{1,2})월\s+(\d{1,2})일/).slice(1);
+                    const [period, hourMin] = timeStr.match(/(오전|오후)\s+(\d{1,2}:\d{2})/).slice(1);
+                    const [hours, minutes] = hourMin.split(':').map(num => parseInt(num));
+                    
+                    let hour = parseInt(hours);
+                    if (period === '오후' && hour !== 12) {
+                        hour += 12;
+                    } else if (period === '오전' && hour === 12) {
+                        hour = 0;
+                    }
+                    
+                    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
                 }
-                
-                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+
+                const startDateTime = parseDateTime(startDate, startTime);
+                const endDateTime = parseDateTime(endDate, endTime);
+
+                Object.assign(todoData, {
+                    startDateTime: startDateTime,
+                    endDateTime: endDateTime,
+                    isAllDay: isAllDay
+                });
             }
-    
-            const startDateTime = parseDateTime(startDate, startTime);
-            const endDateTime = parseDateTime(endDate, endTime);
-    
+
             fetch('/add_todo', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    title: title,
-                    detail: detail,
-                    startDateTime: startDateTime,
-                    endDateTime: endDateTime,
-                    isAllDay: isAllDay
-                })
+                body: JSON.stringify(todoData)
             })
             .then(response => response.json())
             .then(data => {

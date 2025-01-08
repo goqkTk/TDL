@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateSelectToggle = document.getElementById('date-select-toggle');
     const dateSelectionPanel = document.querySelector('.date-selection-panel');
     const todoTime = document.getElementById('todo-time');
-    const allDayCheckbox = document.getElementById('all-day');
+    const allDayCheckbox = document.getElementById('allDayEvent');
     const calendarLink = document.querySelector('.calendar-link');
     const datetimeGroup = document.querySelector('.datetime-group');
 
@@ -106,8 +106,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const startTimeBtn = document.getElementById('startTimeButton');
         const endTimeBtn = document.getElementById('endTimeButton');
-        if (startTimeBtn) startTimeBtn.textContent = '오전 10:00';
-        if (endTimeBtn) endTimeBtn.textContent = '오전 11:00';
+        
+        if (startTimeBtn) {
+            startTimeBtn.textContent = '오전 10:00';
+            startTimeBtn.classList.remove('disabled');
+        }
+        if (endTimeBtn) {
+            endTimeBtn.textContent = '오전 11:00';
+            endTimeBtn.classList.remove('disabled');
+        }
     }
 
     if (calendarLink) {
@@ -1520,7 +1527,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 종일 체크박스 이벤트
     if (allDayCheckbox) {
         allDayCheckbox.addEventListener('change', function() {
             todoTime.style.display = this.checked ? 'none' : 'block';
@@ -1554,17 +1560,15 @@ document.addEventListener('DOMContentLoaded', function() {
             endTimeBtn.addEventListener('click', () => showTimeSelectModal('end'));
         }
     
-        // 종일 체크박스 이벤트
         if (allDayCheckbox) {
             allDayCheckbox.addEventListener('change', function() {
                 const timeButtons = document.querySelectorAll('.time-select-button');
                 timeButtons.forEach(btn => {
+                    btn.classList.toggle('disabled', this.checked);
                     if (this.checked) {
-                        btn.style.display = 'none';
                         startTimeBtn.textContent = '오전 12:00';
                         endTimeBtn.textContent = '오후 11:59';
                     } else {
-                        btn.style.display = 'block';
                         startTimeBtn.textContent = '오전 10:00';
                         endTimeBtn.textContent = '오전 11:00';
                     }

@@ -710,7 +710,7 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--border-color);
+    background-color: #ccc;
     transition: .4s;
     border-radius: 24px;
 }
@@ -727,7 +727,7 @@ body.dragging .sidebar #menu_btn:hover { background: none; }
     border-radius: 50%;
 }
 
-input:checked + .toggle-slider { background-color: #BDD971; }
+input:checked + .toggle-slider { background-color: #03A9F4; }
 input:checked + .toggle-slider:before { transform: translateX(20px); }
 
 .setting-item.disabled {
@@ -1264,16 +1264,15 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
 }
 
 .all-day-toggle {
+    padding-bottom: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
 }
 
 .toggle-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #666;
+    font-size: 14px;
+    color: var(--text-primary);
 }
 
 .toggle-switch {
@@ -1322,9 +1321,7 @@ input:checked + .toggle-slider:before {
 
 .datetime-start,
 .datetime-end {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    margin-bottom: 20px;
 }
 
 .datetime-start.disabled,
@@ -1333,35 +1330,197 @@ input:checked + .toggle-slider:before {
     pointer-events: none;
 }
 
+.datetime-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.datetime-select {
+    width: 86.5%;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--todo-bg);
+    cursor: pointer;
+    padding: 0 40px 0 15px;
+    min-height: 42px;
+    transition: all 0.3s ease-in-out;
+}
+
+.datetime-select.expanded {
+    min-height: 270px;
+}
+
+.datetime-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 42px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.datetime-content {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    padding: 0 15px;
+}
+
+.datetime-select.expanded .datetime-content {
+    opacity: 1;
+    max-height: 260px;
+    padding: 15px;
+}
+
+.datetime-toggle {
+    position: absolute;
+    right: 15px;
+    top: 18px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    transition: transform 0.3s ease;
+}
+
+.datetime-select.expanded .datetime-toggle {
+    transform: rotate(180deg);
+}
+
+.all-day-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+}
+
 .datetime-inputs {
     display: flex;
-    gap: 0.8rem;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.datetime-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.datetime-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.datetime-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.datetime-button {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--todo-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.datetime-button:hover {
+    border-color: #03A9F4;
+    background-color: rgba(3, 169, 244, 0.05);
+}
+
+#datetime-select:focus {
+    border-color: #03A9F4;
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(3, 169, 244, 0.1);
+}
+
+.datetime-toggle.active {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.datetime-expanded {
+    background-color: var(--todo-bg);
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.datetime-expanded {
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.3s ease-out, 
+                opacity 0.2s ease-out, 
+                padding 0.3s ease-out,
+                transform 0.3s ease-out;
+    padding-top: 0;
+    padding-bottom: 0;
+    transform: translateY(-10px);
+}
+
+.datetime-expanded.show {
+    max-height: 300px;
+    opacity: 1;
+    padding: 15px;
+    transform: translateY(0);
+}
+
+.label-datetime {
+    position: absolute;
+    background: var(--todo-bg);
+    margin: 11.5px 10px;
+    padding: 0 5px;
+    transition: all 0.2s ease;
+    top: 10px;
+    z-index: 1;
+    pointer-events: none;
+    font-size: var(--detail-size);
+}
+
+#datetime-select:focus + .label-datetime,
+#datetime-select:not(:placeholder-shown) + .label-datetime {
+    color: #03A9F4;
+    height: 30px;
+    line-height: 30px;
+    transform: translate(-6px, -35px) scale(0.88);
+    z-index: 3;
+}
+
+.datetime-inputs {
+    display: flex;
+    gap: 8px;
 }
 
 .form-label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #666;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
 }
 
 .date-select-button,
 .time-select-button {
-    background: white;
-    border: 2px solid #eee;
-    border-radius: 8px;
-    padding: 0.8rem 1rem;
-    font-size: 1rem;
-    color: #333;
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: var(--todo-bg);
     cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    text-align: center;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+    font-size: 14px;
 }
 
 .date-select-button:hover,
 .time-select-button:hover {
-    background-color: rgba(255, 152, 0, 0.1);
-    border-color: #FF9800;
+    border-color: #03A9F4;
+    background-color: rgba(3, 169, 244, 0.05);
 }
 
 .time-select-button.disabled {
@@ -1569,7 +1728,7 @@ input:checked + .toggle-slider:before {
 }
 
 .add-modal input,
-.add-modal button,
+.add-modal #add,
 .edit-modal input,
 .edit-modal button {
     width: 90%;
@@ -2090,4 +2249,8 @@ input:checked + .toggle-slider:before {
     .full-date-select-confirm {
         width: 100px;
     }
+
+    .datetime-select.expanded { min-height: 400px; }
+    .datetime-select.expanded .datetime-content { max-height: 340px; }
+    .datetime-buttons { flex-direction: column; }
 }

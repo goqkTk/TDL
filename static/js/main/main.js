@@ -56,10 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('.container');
     const dateSelectToggle = document.getElementById('date-select-toggle');
     const dateSelectionPanel = document.querySelector('.date-selection-panel');
-    const todoTime = document.getElementById('todo-time');
-    const allDayCheckbox = document.getElementById('allDayEvent');
     const calendarLink = document.querySelector('.calendar-link');
     const datetimeGroup = document.querySelector('.datetime-group');
+    const datetimeSelect = document.querySelector('.datetime-select');
+    const datetimeToggle = document.querySelector('.datetime-toggle');
+    const allDayCheckbox = document.getElementById('allDayEvent');
+    const timeButtons = document.querySelectorAll('.datetime-button');
 
     let isCalendarLinked = false;
     let draggedItem = null;
@@ -77,13 +79,50 @@ document.addEventListener('DOMContentLoaded', function() {
     let wasSelected = false;
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth() + 1;
-    let selectedDate = new Date();
-    let selectedStartDate = new Date();
-    let selectedEndDate = new Date();
     let currentDateButton = null;
 
     checkForHighlight();
     initDateTimeFeatures();
+
+    datetimeToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleDatetimeSelect();
+    });
+
+    datetimeSelect.addEventListener('click', function(e) {
+        if (e.target.closest('.datetime-button') || e.target.closest('.toggle-switch')) {
+            return;
+        }
+        toggleDatetimeSelect();
+    });
+
+    // 외부 클릭 시 닫기
+    document.addEventListener('click', function(e) {
+        if (!datetimeSelect.contains(e.target)) {
+            datetimeSelect.classList.remove('expanded');
+        }
+    });
+
+    // 종일 체크박스 이벤트
+    allDayCheckbox.addEventListener('change', function() {
+        timeButtons.forEach(btn => {
+            if (btn.id.includes('Time')) {
+                btn.classList.toggle('disabled', this.checked);
+            }
+        });
+        
+        if (this.checked) {
+            document.getElementById('startTimeButton').textContent = '오전 12:00';
+            document.getElementById('endTimeButton').textContent = '오후 11:59';
+        } else {
+            document.getElementById('startTimeButton').textContent = '오전 10:00';
+            document.getElementById('endTimeButton').textContent = '오전 11:00';
+        }
+    });
+
+    function toggleDatetimeSelect() {
+        datetimeSelect.classList.toggle('expanded');
+    }
 
     function resetModal() {
         if (calendarLink) calendarLink.style.display = 'block';
@@ -244,6 +283,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem('settingModalOpen') === 'true') {
             document.querySelector('.setting-modal-background').style.display = 'flex';
             localStorage.removeItem('settingModalOpen');
+        }
+    }
+
+    function handleAutoHideSuccess() {
+        document.querySelectorAll('.todo-item.active').forEach(item => {
+            item.style.display = 'none';
+        });
+    
+        const todoItems = document.querySelectorAll('.todo-item');
+        const visibleItems = Array.from(todoItems).filter(item => item.style.display !== 'none');
+        
+        if (visibleItems.length === 0) {
+            const autoHideMessage = document.createElement('div');
+            autoHideMessage.className = 'auto-hide-message';
+            autoHideMessage.innerHTML = `
+                <p>완료된 할 일이 모두 숨겨져 있어요</p>
+                <p>설정에서 자동 숨김을 해제할 수 있어요</p>
+            `;
+            document.querySelector('.contents').appendChild(autoHideMessage);
         }
     }
 
@@ -1527,12 +1585,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (allDayCheckbox) {
-        allDayCheckbox.addEventListener('change', function() {
-            todoTime.style.display = this.checked ? 'none' : 'block';
-        });
-    }
-
     function initDateTimeFeatures() {
         const startDateBtn = document.getElementById('startDateButton');
         const endDateBtn = document.getElementById('endDateButton');
@@ -1565,14 +1617,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 const timeButtons = document.querySelectorAll('.time-select-button');
                 timeButtons.forEach(btn => {
                     btn.classList.toggle('disabled', this.checked);
-                    if (this.checked) {
-                        startTimeBtn.textContent = '오전 12:00';
-                        endTimeBtn.textContent = '오후 11:59';
-                    } else {
-                        startTimeBtn.textContent = '오전 10:00';
-                        endTimeBtn.textContent = '오전 11:00';
-                    }
                 });
+                
+                if (this.checked) {
+                    const startTimeBtn = document.getElementById('startTimeButton');
+                    const endTimeBtn = document.getElementById('endTimeButton');
+                    if (startTimeBtn) startTimeBtn.textContent = '오전 12:00';
+                    if (endTimeBtn) endTimeBtn.textContent = '오후 11:59';
+                } else {
+                    const startTimeBtn = document.getElementById('startTimeButton');
+                    const endTimeBtn = document.getElementById('endTimeButton');
+                    if (startTimeBtn) startTimeBtn.textContent = '오전 10:00';
+                    if (endTimeBtn) endTimeBtn.textContent = '오전 11:00';
+                }
             });
         }
     

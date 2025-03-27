@@ -5,210 +5,107 @@ from datetime import timedelta
 from werkzeug.utils import secure_filename
 import bcrypt, os, tempfile, logging
 
+# 상수 정의
+SECRET_KEY = 'D324F0D74B242A246857E8BF1DEAA2C92B2BE926C0ED1CD2C099A0DB3547BF8C'
+MAIL_CONFIG = {
+    'MAIL_SERVER': 'smtp.gmail.com',
+    'MAIL_PORT': 587,
+    'MAIL_USE_TLS': True,
+    'MAIL_USERNAME': 'tdlhelp02@gmail.com',
+    'MAIL_PASSWORD': 'ivfg ftay ddel oqoc',
+    'MAIL_DEFAULT_SENDER': 'tdlhelp02@gmail.com'
+}
+ADMIN_EMAIL = 'tdlhelp02@gmail.com'
+
+# Flask 앱 초기화
 app = Flask(__name__)
-app.secret_key = 'D324F0D74B242A246857E8BF1DEAA2C92B2BE926C0ED1CD2C099A0DB3547BF8C'
+app.secret_key = SECRET_KEY
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'tdlhelp02@gmail.com'
-app.config['MAIL_PASSWORD'] = 'ivfg ftay ddel oqoc'
-app.config['MAIL_DEFAULT_SENDER'] = 'tdlhelp02@gmail.com'
-admin_email = 'tdlhelp02@gmail.com'
+# 메일 설정
+for key, value in MAIL_CONFIG.items():
+    app.config[key] = value
+mail = Mail(app)
+
+# 로깅 설정
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-mail = Mail(app)
+# HTML 템플릿 문자열들을 별도 파일로 분리
+with open('templates/email/verify_code.html', 'r', encoding='utf-8') as f:
+    verify_code_html = f.read()
 
-verify_code_html = """
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>비밀번호 재설정 인증 코드</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; margin: 0; padding: 0; background-color: #ffffff;">
-    <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-            <td align="center">
-                <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px;">
-                    <tr>
-                        <td style="padding: 20px;">
-                            <p style="text-align: center; font-size: 18px; margin: 0 0 10px;">TDL</p>
-                            <h1 style="color: #4285F4; margin: 0 0 15px; text-align: center; font-size: 24px;">비밀번호 재설정 인증 코드</h1>
-                            <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
-                            <p style="font-size: 16px; margin: 0 0 10px;">귀하의 계정에 대한 비밀번호 재설정 요청을 받았습니다.</p>
-                            <p style="font-size: 16px; margin: 0 0 10px;">이 코드를 사용하여 비밀번호를 변경하세요.</p>
-                            <div style="background-color: #4285F4; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 15px; margin: 20px 0;">
-                                {{ verification_code }}
-                            </div>
-                            <p style="font-size: 16px; margin: 0 0 10px;">이 코드는 10분 뒤에 만료됩니다.</p>
-                            <p style="font-size: 16px; margin: 0;">본인이 요청하지 않았다면 이 이메일을 무시하셔도 됩니다.</p>
-                        </td>
-                    </tr>
-                </table>
-                <p style="text-align: center; font-size: 12px; color: #777; margin-top: 10px;">
-                    © 2024 TDL. All rights reserved.
-                </p>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-"""
+with open('templates/email/help.html', 'r', encoding='utf-8') as f:
+    help_html = f.read()
 
-help_html = """
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TDL 문의 내용</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; margin: 0; padding: 0; background-color: #ffffff;">
-    <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-            <td align="center">
-                <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px;">
-                    <tr>
-                        <td style="padding: 20px;">
-                            <p style="text-align: center; font-size: 18px; margin: 0 0 10px;">TDL</p>
-                            <h1 style="color: #4285F4; margin: 0 0 15px; text-align: center; font-size: 24px;">문의</h1>
-                            <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
-                            <p><strong>문의 유형:</strong> {{ type }}</p>
-                            <p><strong>보낸 사람:</strong> {{ sender_email }}</p>
-                            <pre>{{ content }}</pre>
-                        </td>
-                    </tr>
-                </table>
-                <p style="text-align: center; font-size: 12px; color: #777; margin-top: 10px;">
-                    © 2024 TDL. All rights reserved.
-                </p>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-"""
+with open('templates/email/register.html', 'r', encoding='utf-8') as f:
+    register_html = f.read()
 
-register_html = """
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이메일 인증</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px;">
-    <div style="max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
-        <p style="text-align: center; font-size: 18px; margin: 0 0 10px;">TDL</p>
-        <h1 style="color: #4285F4; margin: 0 0 15px; text-align: center; font-size: 24px;">이메일 인증</h1>
-        <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
-        <p>안녕하세요,</p>
-        <p>TDL을 이용해 주셔서 진심으로 감사합니다<br>아래 버튼을 클릭하여 회원가입을 완료하세요</p>
-        <div style="margin-top: 20px;">
-            <a href="{{ verification_link }}" style="background-color: #4285F4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">이메일 인증</a>
-        </div>
-        <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd; margin: 15px 0;">
-        <p style="margin-top: 20px;">10분 동안 유효하며,<br>버튼이 작동하지 않을 경우 아래 링크로 접속해주세요</p>
-        <p style="color: gray;">{{ verification_link }}</p>
-    </div>
-</body>
-</html>
-"""
+with open('templates/email/notification.html', 'r', encoding='utf-8') as f:
+    notification_html = f.read()
 
-notification_html = """
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일정 알림</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.4; color: #333; margin: 0; padding: 0; background-color: #ffffff;">
-    <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-            <td align="center">
-                <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 600px; background-color: #ffffff; border: 1px solid #ddd; border-radius: 5px;">
-                    <tr>
-                        <td style="padding: 20px;">
-                            <p style="text-align: center; font-size: 18px; margin: 0 0 10px;">TDL</p>
-                            <h1 style="color: #4285F4; margin: 0 0 15px; text-align: center; font-size: 24px;">일정 알림</h1>
-                            <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
-                            <div style="margin-bottom: 20px;">
-                                <p style="font-size: 16px; margin: 0 0 10px;">
-                                    <strong>일정:</strong> {{ event_title }}
-                                </p>
-                                <p style="font-size: 16px; margin: 0 0 10px;">
-                                    <strong>시작 시간:</strong> {{ event_start_time }}
-                                </p>
-                                {% if event_url %}
-                                <p style="font-size: 16px; margin: 0 0 10px;">
-                                    <strong>URL:</strong> <a href="{{ event_url }}" style="color: #4285F4; text-decoration: none;">{{ event_url }}</a>
-                                </p>
-                                {% endif %}
-                                {% if event_memo %}
-                                <p style="font-size: 16px; margin: 0 0 10px;"><strong>메모:</strong></p>
-                                <p style="font-size: 16px; margin: 0 0 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">{{ event_memo }}</p>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                <p style="text-align: center; font-size: 12px; color: #777; margin-top: 10px;">
-                    © 2024 TDL. All rights reserved.
-                </p>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-"""
-
+# 메인 페이지 라우트
 @app.route('/', methods=['GET', 'POST'])
 def main():
-    user_id = session.get('user_id')
-    todo = get_todo_without_category(user_id, completed=False) if user_id else []
-    completed = get_todo_without_category(user_id, completed=True) if user_id else []
-    categories = get_categories(user_id) if user_id else []
-    is_todo_empty = len(todo) == 0
-    return render_template('main/main.html', user_id=user_id, todo=todo, completed=completed, categories=categories, datetime=datetime, is_todo_empty=is_todo_empty)
+    try:
+        user_id = session.get('user_id')
+        todo = get_todo_without_category(user_id, completed=False) if user_id else []
+        completed = get_todo_without_category(user_id, completed=True) if user_id else []
+        categories = get_categories(user_id) if user_id else []
+        is_todo_empty = len(todo) == 0
+        return render_template('main/main.html', 
+                             user_id=user_id, 
+                             todo=todo, 
+                             completed=completed, 
+                             categories=categories, 
+                             datetime=datetime, 
+                             is_todo_empty=is_todo_empty)
+    except Exception as e:
+        logger.error(f"메인 페이지 오류: {str(e)}")
+        return render_template('error.html', message="페이지 로딩 중 오류가 발생했습니다.")
 
+# 카테고리 관련 라우트
 @app.route('/delete_category', methods=['POST'])
 def delete_category():
-    data = request.json
-    category_id = data.get('category_id')
-    user_id = session.get('user_id')
+    try:
+        data = request.json
+        category_id = data.get('category_id')
+        user_id = session.get('user_id')
 
-    if not user_id:
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+        if not user_id:
+            return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
 
-    success = delete_category_db(user_id, category_id)
-    if success:
-        return jsonify({'success': True, 'message': '카테고리가 삭제되었습니다.'})
-    else:
-        return jsonify({'success': False, 'message': '카테고리 삭제에 실패했습니다.'})
+        success = delete_category_db(user_id, category_id)
+        return jsonify({
+            'success': success,
+            'message': '카테고리가 삭제되었습니다.' if success else '카테고리 삭제에 실패했습니다.'
+        })
+    except Exception as e:
+        logger.error(f"카테고리 삭제 오류: {str(e)}")
+        return jsonify({'success': False, 'message': '서버 오류가 발생했습니다.'})
 
 @app.route('/update_category', methods=['POST'])
 def update_category():
-    data = request.json
-    new_name = data.get('category_name')
-    category_id = data.get('category_id')
-    user_id = session.get('user_id')
+    try:
+        data = request.json
+        new_name = data.get('category_name')
+        category_id = data.get('category_id')
+        user_id = session.get('user_id')
 
-    if not user_id:
-        return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
+        if not user_id:
+            return jsonify({'success': False, 'message': '로그인이 필요합니다.'})
 
-    if not new_name:
-        return jsonify({'success': False, 'message': '카테고리 이름을 입력해주세요.'})
+        if not new_name:
+            return jsonify({'success': False, 'message': '카테고리 이름을 입력해주세요.'})
 
-    success = update_category_db(user_id, category_id, new_name)
-    if success:
-        return jsonify({'success': True, 'message': '카테고리가 수정되었습니다.'})
-    else:
-        return jsonify({'success': False, 'message': '카테고리 수정에 실패했습니다.'})
+        success = update_category_db(user_id, category_id, new_name)
+        return jsonify({
+            'success': success,
+            'message': '카테고리가 수정되었습니다.' if success else '카테고리 수정에 실패했습니다.'
+        })
+    except Exception as e:
+        logger.error(f"카테고리 수정 오류: {str(e)}")
+        return jsonify({'success': False, 'message': '서버 오류가 발생했습니다.'})
 
 @app.route('/check_login')
 def check_login():
@@ -718,13 +615,20 @@ def get_events():
         db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
         cursor = db.cursor(pymysql.cursors.DictCursor)
         
+        # 시간대 설정
+        cursor.execute("SET time_zone = '+09:00'")
+        
         sql = """
         SELECT * FROM calendar_events 
         WHERE user_id = %s 
-        AND DATE(start_datetime) <= DATE(%s)
-        AND DATE(end_datetime) >= DATE(%s)
+        AND (
+            (start_datetime BETWEEN %s AND %s)
+            OR (end_datetime BETWEEN %s AND %s)
+            OR (start_datetime <= %s AND end_datetime >= %s)
+        )
+        ORDER BY start_datetime ASC
         """
-        cursor.execute(sql, (user_id, end_date, start_date))
+        cursor.execute(sql, (user_id, start_date, end_date, start_date, end_date, start_date, end_date))
         events = cursor.fetchall()
         
         for event in events:
@@ -792,7 +696,7 @@ def send_help():
     try:
         msg = Message(f"TDL 문의: {type}",
                       sender=sender_email,
-                      recipients=[admin_email])
+                      recipients=[ADMIN_EMAIL])
         
         msg.html = render_template_string(help_html,
                                           type=type,

@@ -1,7 +1,40 @@
 import pymysql, re, bcrypt, random, string, secrets
 from datetime import datetime, timedelta
 
+# 데이터베이스 설정
+DB_CONFIG = {
+    'host': '127.0.0.1',
+    'user': 'root',
+    'password': '1234',
+    'db': 'TDL',
+    'charset': 'utf8'
+}
+
+def get_db_connection():
+    """데이터베이스 연결을 생성하고 반환합니다."""
+    return pymysql.connect(**DB_CONFIG)
+
+def execute_query(query, params=None, fetch=False):
+    """데이터베이스 쿼리를 실행하고 결과를 반환합니다."""
+    db = get_db_connection()
+    cursor = db.cursor(pymysql.cursors.DictCursor if fetch else None)
+    try:
+        cursor.execute(query, params or ())
+        if fetch:
+            result = cursor.fetchall()
+            return result
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        cursor.close()
+        db.close()
+
+# 캘린더 이벤트 관련 함수
 def update_calendar_event(db, event_id, event_data):
+    """캘린더 이벤트를 업데이트합니다."""
     cursor = db.cursor()
     try:
         cursor.execute("SET time_zone = '+09:00'")
@@ -36,6 +69,7 @@ def update_calendar_event(db, event_id, event_data):
         cursor.close()
 
 def save_calendar_event(db, event_data):
+    """새로운 캘린더 이벤트를 저장합니다."""
     cursor = db.cursor()
     try:
         sql = """
@@ -62,6 +96,7 @@ def save_calendar_event(db, event_data):
         cursor.close()
 
 def get_calendar_events(db, user_id, start_date, end_date):
+    """지정된 기간의 캘린더 이벤트를 조회합니다."""
     cursor = db.cursor()
     try:
         sql = """
@@ -96,27 +131,23 @@ def get_calendar_events(db, user_id, start_date, end_date):
     finally:
         cursor.close()
 
+# 사용자 관련 함수
 def update_user_id(current_id, new_id):
-    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-    cursor = db.cursor()
+    """사용자 ID를 업데이트합니다."""
     try:
-        cursor.execute("UPDATE account SET id = %s WHERE id = %s", (new_id, current_id))
-        cursor.execute("UPDATE todo SET user_id = %s WHERE user_id = %s", (new_id, current_id))
-        cursor.execute("UPDATE categories SET user_id = %s WHERE user_id = %s", (new_id, current_id))
-        db.commit()
+        execute_query("UPDATE account SET id = %s WHERE id = %s", (new_id, current_id))
+        execute_query("UPDATE todo SET user_id = %s WHERE user_id = %s", (new_id, current_id))
+        execute_query("UPDATE categories SET user_id = %s WHERE user_id = %s", (new_id, current_id))
         return True
     except Exception as e:
         print(f"아이디 업데이트 오류: {str(e)}")
-        db.rollback()
         return False
-    finally:
-        db.close()
 
+# 카테고리 관련 함수
 def update_categories_order(user_id, new_order):
-    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-    cursor = db.cursor()
+    """카테고리 순서를 업데이트합니다."""
     try:
-        cursor.execute("""
+        execute_query("""
             UPDATE categories 
             SET `order` = 9999
             WHERE user_id = %s
@@ -126,84 +157,62 @@ def update_categories_order(user_id, new_order):
             if category.get('id') is None or category.get('order') is None:
                 print(f"Skipping invalid category data: {category}")
                 continue
-            sql = "UPDATE categories SET `order` = %s WHERE id = %s AND user_id = %s"
-            cursor.execute(sql, (int(category['order']), int(category['id']), user_id))
-        db.commit()
+            execute_query(
+                "UPDATE categories SET `order` = %s WHERE id = %s AND user_id = %s",
+                (int(category['order']), int(category['id']), user_id)
+            )
         return True
     except Exception as e:
         print(f"카테고리 순서 업데이트 오류: {str(e)}")
-        db.rollback()
         return False
-    finally:
-        db.close()
 
 def delete_category_db(user_id, category_id):
-    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-    cursor = db.cursor()
+    """카테고리를 삭제합니다."""
     try:
-        sql = "UPDATE todo SET category_id = NULL WHERE category_id = %s AND user_id = %s"
-        cursor.execute(sql, (category_id, user_id))
-        sql = "DELETE FROM categories WHERE id = %s AND user_id = %s"
-        cursor.execute(sql, (category_id, user_id))
-        db.commit()
+        execute_query("UPDATE todo SET category_id = NULL WHERE category_id = %s AND user_id = %s", 
+                     (category_id, user_id))
+        execute_query("DELETE FROM categories WHERE id = %s AND user_id = %s", 
+                     (category_id, user_id))
         return True
     except Exception as e:
         print(f"카테고리 삭제 오류: {str(e)}")
-        db.rollback()
         return False
-    finally:
-        db.close()
 
 def update_category_db(user_id, category_id, new_name):
-    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-    cursor = db.cursor()
+    """카테고리 이름을 업데이트합니다."""
     try:
-        sql = """
-        UPDATE categories 
-        SET name = %s 
-        WHERE id = %s AND user_id = %s
-        """
-        cursor.execute(sql, (new_name, category_id, user_id))
-        db.commit()
+        execute_query("""
+            UPDATE categories 
+            SET name = %s 
+            WHERE id = %s AND user_id = %s
+        """, (new_name, category_id, user_id))
         return True
     except Exception as e:
         print(f"카테고리 수정 오류: {str(e)}")
-        db.rollback()
         return False
-    finally:
-        db.close()
 
+# 검색 관련 함수
 def get_todos_by_search(user_id, search_term):
-    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-    cursor = db.cursor(pymysql.cursors.DictCursor)
+    """할 일을 검색합니다."""
     try:
         sql = """
         SELECT id, title, detail, category_id 
         FROM todo 
         WHERE user_id = %s AND (title LIKE %s OR detail LIKE %s)
         """
-        cursor.execute(sql, (user_id, f"%{search_term}%", f"%{search_term}%"))
-        todos = cursor.fetchall()
-        return todos
+        return execute_query(sql, (user_id, f"%{search_term}%", f"%{search_term}%"), fetch=True)
     except Exception as e:
         print(f"할 일 검색 오류: {str(e)}")
         return []
-    finally:
-        db.close()
 
 def get_categories_by_search(user_id, search_term):
-    db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')
-    cursor = db.cursor(pymysql.cursors.DictCursor)
+    """카테고리를 검색합니다."""
     try:
         sql = "SELECT id, name FROM categories WHERE user_id = %s AND name LIKE %s"
-        cursor.execute(sql, (user_id, f"%{search_term}%"))
-        categories = cursor.fetchall()
-        return categories
+        return execute_query(sql, (user_id, f"%{search_term}%"), fetch=True)
     except Exception as e:
         print(f"카테고리 검색 오류: {str(e)}")
         return []
-    finally:
-        db.close()
 
 def add_category_db(user_id, category_name):
     db = pymysql.connect(host='127.0.0.1', user='root', password='1234', db='TDL', charset='utf8')

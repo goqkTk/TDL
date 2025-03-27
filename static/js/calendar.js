@@ -225,14 +225,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function getEventRows(events) {
         const rows = new Map();
         const eventPositions = new Map();
+        const eventSpans = new Map(); // 각 이벤트의 시작일과 종료일을 저장
     
-        events.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        events.sort((a, b) => {
+            const startDiffA = new Date(a.start_datetime);
+            const startDiffB = new Date(b.start_datetime);
+            if (startDiffA.getTime() === startDiffB.getTime()) {
+                return new Date(b.end_datetime) - new Date(a.end_datetime);
+            }
+            return startDiffA - startDiffB;
+        });
     
         events.forEach(event => {
             const start = new Date(event.start_datetime);
             const end = new Date(event.end_datetime);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            
             let rowIndex = 0;
             let foundRow = false;
+            
+            // 이벤트의 시작일과 종료일을 저장
+            eventSpans.set(event.id, { start, end });
+            
             while (!foundRow) {
                 foundRow = true;
                 for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
@@ -256,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
             eventPositions.set(event.id, rowIndex);
         });
     
-        return eventPositions;
+        return { eventPositions, eventSpans };
     }
     
     function renderEvents(calendarDays) {
@@ -290,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.events) {
-                    const eventPositions = getEventRows(data.events);
+                    const { eventPositions, eventSpans } = getEventRows(data.events);
                     const eventsByDay = new Map();
                     const hiddenEventIds = new Set();
                     
@@ -306,11 +321,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                 eventsByDay.set(dateKey, []);
                             }
                             
+                            const eventSpan = eventSpans.get(event.id);
+                            const isStart = date.getTime() === eventSpan.start.getTime();
+                            const isEnd = date.getTime() === eventSpan.end.getTime();
+                            
                             eventsByDay.get(dateKey).push({
                                 event,
-                                isStart: date.getTime() === startDate.getTime(),
-                                isEnd: date.getTime() === endDate.getTime(),
-                                isSingleDay: startDate.getTime() === endDate.getTime(),
+                                isStart,
+                                isEnd,
+                                isSingleDay: eventSpan.start.getTime() === eventSpan.end.getTime(),
                                 rowIndex: eventPositions.get(event.id)
                             });
                         }
@@ -373,6 +392,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     }
                                     if (isEnd) {
                                         eventBar.classList.add('end');
+                                    }
+                                    if (!isStart && !isEnd) {
+                                        eventBar.classList.add('middle');
                                     }
                                 }
                                 
@@ -1426,10 +1448,11 @@ document.addEventListener('DOMContentLoaded', function() {
         startDate.setHours(0, 0, 0, 0);
         const endDate = new Date(selectedDate);
         endDate.setHours(23, 59, 59, 999);
-    
-        const start = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString();
-        const end = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000)).toISOString();
-    
+
+        // 서버에 보낼 때는 UTC로 변환
+        const start = startDate.toISOString().slice(0, 19).replace('T', ' ');
+        const end = endDate.toISOString().slice(0, 19).replace('T', ' ');
+
         fetch(`/get_events?start=${start}&end=${end}`)
             .then(response => response.json())
             .then(data => {
@@ -1469,7 +1492,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function formatEventDate(dateStr) {
         const date = new Date(dateStr);
-        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        const options = { timeZone: 'Asia/Seoul' };
+        return date.toLocaleDateString('ko-KR', options).replace(/\./g, '년 ').replace(/ $/, '일');
     }
     
     function createEventElement(event) {
